@@ -107,7 +107,12 @@ if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url)) {
   }):null;
   const receiveEvent=ingest?async e=>{
     const result=await ingest(e);
-    if(result==="stored"&&responder)await responder(e);
+    if(result==="stored"&&responder)queueMicrotask(()=>{
+      void responder(e).catch(err=>{
+        // Sanitized diagnostic; no phone, message, API key or third-party body.
+        console.error("WHATSAPP_TEST_REPLY_FAILED",err instanceof Error?err.message.replace(/\d{8,}/g,"[ID]"):"unknown");
+      });
+    });
     return result;
   }:null;
   createGateway({onAuthorizedEvent:receiveEvent,autoReplies:Boolean(responder)}).listen(port,"127.0.0.1",()=>{
