@@ -38,3 +38,14 @@ El asistente pide el secreto sin mostrarlo, celular peruano con prefijo 51 y pre
 - Se probó código mediante Vitest; la prueba completa con evento Meta real y respuesta a celular no está confirmada.
 - No confiar en precios o stock simulados para ventas.
 - No se han habilitado publicaciones/DM de Instagram/Facebook; solo prueba WhatsApp explícita.
+
+
+## Añadir un segundo destinatario ya verificado en Meta
+
+No repetir el asistente inicial: lo reemplazaría por un solo número. Conserva el primer celular autorizado y añade otro con:
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File "C:\DESAROLLO\ARM-CRM\scripts\AGREGAR_CELULAR_WHATSAPP_PRUEBA_ARM.ps1"
+```
+
+Introduce el segundo celular peruano que ya aparece en Meta → WhatsApp → API Setup → To. Confirma `AGREGAR`. No solicita App Secret, no modifica la lista de Meta y no toca el CRM antiguo. Al concluir debe mostrar `ARM_WHATSAPP_EXTRA_NUMBER_READY=true` y `AUTHORIZED_TEST_NUMBERS=2`. Después escribe **desde el segundo celular** al emisor de prueba `+1 555-672-9256`. Meta debe haberlo verificado previamente: el backend ARM no puede verificarlo desde el API de configuración actual.
