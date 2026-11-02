@@ -22,60 +22,14 @@ async function signatureValid(raw:Uint8Array,header:string,secret:string){
 }
 type Db=ReturnType<typeof createClient>;
 async function storeMessage(db:Db,m:ReturnType<typeof parseMetaMessages>[number]){
- const {data:connection,error:connectionError}=await db.from("arm_channel_connections")
-  .select("workspace_id").eq("provider","meta_graph").eq("channel",m.channel)
-  .eq("external_account_ref",m.accountRef)
-  .in("status",["read_only","active"]).limit(1).maybeSingle();
- if(connectionError)throw connectionError;
- if(!connection)return "ignored" as const;
- const ws=connection.workspace_id as string;
- const {data:existingMessage,error:lookupError}=await db.from("arm_messages").select("id")
-  .eq("workspace_id",ws).eq("provider",m.channel).eq("external_message_id",m.messageId).maybeSingle();
- if(lookupError)throw lookupError;
- if(existingMessage)return "duplicate" as const;
- let {data:thread,error:threadLookup}=await db.from("arm_threads")
-   .select("id,contact_id,last_activity_at").eq("workspace_id",ws).eq("channel",m.channel)
-   .eq("external_account_ref",m.accountRef).eq("external_sender_id",m.senderId).maybeSingle();
- if(threadLookup)throw threadLookup;
- if(!thread){
-  const display=(m.senderName?.trim()||"Cliente "+m.channel+" "+m.senderId.slice(-4)).slice(0,200);
-  const {data:contact,error:contactError}=await db.from("arm_contacts").insert({
-    workspace_id:ws,display_name:display,source:m.channel,
-    phone:m.channel==="whatsapp"?m.senderId:null
-  }).select("id").single();
-  if(contactError)throw contactError;
-  const created=await db.from("arm_threads").insert({
-    workspace_id:ws,contact_id:contact.id,channel:m.channel,external_account_ref:m.accountRef,
-    external_sender_id:m.senderId,status:"pending",last_activity_at:m.occurredAt
-  }).select("id,contact_id,last_activity_at").single();
-  if(created.error){
-   if(created.error.code!=="23505")throw created.error;
-   const retry=await db.from("arm_threads").select("id,contact_id,last_activity_at")
-    .eq("workspace_id",ws).eq("channel",m.channel).eq("external_account_ref",m.accountRef)
-    .eq("external_sender_id",m.senderId).single();
-   if(retry.error)throw retry.error;
-   thread=retry.data;
-  }else thread=created.data;
- }
- const inserted=await db.from("arm_messages").insert({
-  workspace_id:ws,contact_id:thread!.contact_id,thread_id:thread!.id,
-  provider:m.channel,external_message_id:m.messageId,direction:"inbound",
-  content:m.content,message_type:m.messageType,created_at:m.occurredAt
- }).select("id").single();
- if(inserted.error){
-  if(inserted.error.code==="23505")return "duplicate" as const;
-  throw inserted.error;
- }
- if(m.occurredAt>thread!.last_activity_at){
-  const updated=await db.from("arm_threads").update({last_activity_at:m.occurredAt}).eq("workspace_id",ws).eq("id",thread!.id);
-  if(updated.error)throw updated.error;
- }
- const event=await db.from("arm_inbound_events").upsert({
-  workspace_id:ws,provider:m.channel,external_event_id:m.accountRef+":"+m.messageId,
-  processed_at:new Date().toISOString()
- },{onConflict:"workspace_id,provider,external_event_id",ignoreDuplicates:true});
- if(event.error)throw event.error;
- return "stored" as const;
+ const {data,error}=await db.rpc("arm_ingest_meta_message",{
+  p_channel:m.channel,p_account_ref:m.accountRef,p_sender_id:m.senderId,
+  p_message_id:m.messageId,p_content:m.content,p_message_type:m.messageType,
+  p_sender_name:m.senderName,p_occurred_at:m.occurredAt
+ });
+ if(error)throw error;
+ if(!["stored","ignored","duplicate","invalid"].includes(data))throw new Error("Unexpected ingestion result");
+ return data as "stored"|"ignored"|"duplicate"|"invalid";
 }
 Deno.serve(async(req:Request)=>{
  const verifyToken=Deno.env.get("ARM_META_VERIFY_TOKEN");
