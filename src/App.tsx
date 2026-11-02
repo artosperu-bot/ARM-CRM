@@ -42,7 +42,7 @@ export default function App(){
   oportunidades:<PipelinePage contacts={crm.contacts} deals={crm.deals} onCreate={crm.createDeal} onMove={crm.updateDealStage}/>,
   clientes:<ContactsPage contacts={crm.contacts} onCreate={crm.createContact}/>,
   seguimientos:<FollowupsPage contacts={crm.contacts} tasks={crm.followups} onCreate={crm.createFollowup} onComplete={crm.completeFollowup}/>,
-  mensajes:<InboxPage/>,
+  mensajes:<InboxPage workspaceId={crm.workspace!.id}/>,
   catalogo:<CatalogPage products={crm.products}/>,
   agente:<AgentPage products={crm.products}/>,
   consumo:<UsagePage workspaceId={crm.workspace!.id}/>,
