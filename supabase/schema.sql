@@ -96,10 +96,10 @@ create policy arm_ws_insert on public.arm_workspaces for insert to authenticated
  with check (owner_id = (select auth.uid()));
 create policy arm_ws_update on public.arm_workspaces for update to authenticated
  using (owner_id = (select auth.uid())) with check (owner_id = (select auth.uid()));
+-- Selección acotada a la membresía propia para evitar referencias RLS circulares.
+-- Los administradores consultarán miembros mediante endpoints autorizados de backend.
 create policy arm_member_select on public.arm_memberships for select to authenticated
- using (user_id = (select auth.uid()) or exists (
-  select 1 from public.arm_workspaces w where w.id = workspace_id and w.owner_id = (select auth.uid())
- ));
+ using (user_id = (select auth.uid()));
 create policy arm_member_insert on public.arm_memberships for insert to authenticated
  with check (exists (
   select 1 from public.arm_workspaces w where w.id = workspace_id and w.owner_id = (select auth.uid())
