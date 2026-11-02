@@ -88,17 +88,19 @@ async function handle(req,res){
     if(createErr)throw new Error("No se pudo abrir la conversación.");
     cid=created.id;
   }
-  const [history,initial,products]=await Promise.all([
+  const [history,initial,products,testOffers]=await Promise.all([
     db.from("arm_agent_turns").select("id,role,content,created_at").eq("workspace_id",workspaceId)
       .eq("conversation_id",cid).order("created_at",{ascending:false}).limit(10),
     db.from("arm_agent_turns").select("id,role,content,created_at").eq("workspace_id",workspaceId)
       .eq("conversation_id",cid).order("created_at",{ascending:true}).limit(2),
     db.from("arm_products").select("title,brand,partnumber,attributes,stock_erp,price_pen,verified_at")
-      .eq("workspace_id",workspaceId).limit(25)
+      .eq("workspace_id",workspaceId).limit(25),
+    simulated ? db.from("arm_offer_simulations").select("partnumber,price_pen,stock_status,is_test_data")
+      .eq("workspace_id",workspaceId).eq("is_test_data",true).limit(25) : Promise.resolve({data:[],error:null})
   ]);
-  if(history.error||initial.error||products.error)throw new Error("No fue posible leer el contexto comercial.");
+  if(history.error||initial.error||products.error||testOffers.error)throw new Error("No fue posible leer el contexto comercial.");
   const context=buildConversationContext(initial.data||[],history.data||[]);
-  const catalog=enrichCatalog(products.data||[],simulated);
+  const catalog=enrichCatalog(products.data||[],simulated,testOffers.data||[]);
   const abort=new AbortController(),timer=setTimeout(()=>abort.abort(),35000);
   let completion;
   try {
