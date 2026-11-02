@@ -10,9 +10,9 @@ const safeId=(v:unknown)=>typeof v==="string" && v.length>0 && v.length<=240 ?v:
 const types=new Set(["text","image","audio","video","document"]);
 const timestamp=(val:unknown)=>{
  const n=typeof val==="number"?val:typeof val==="string"?Number(val):NaN;
- if(!Number.isFinite(n)||n<=0)return new Date().toISOString();
+ if(!Number.isFinite(n)||n<=0)return new Date(0).toISOString();
  const date=new Date(n*1000);
- return Number.isFinite(date.getTime())&&date.getTime()<=Date.now()+300000?date.toISOString():new Date().toISOString();
+ return Number.isFinite(date.getTime())&&date.getTime()<=Date.now()+300000?date.toISOString():new Date(0).toISOString();
 };
 type Obj=Record<string,any>;
 const obj=(x:unknown):Obj|null=>x!==null&&typeof x==="object"&&!Array.isArray(x)?x as Obj:null;
