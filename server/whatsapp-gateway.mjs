@@ -2,7 +2,7 @@ import {createServer} from "node:http";
 import {readFileSync} from "node:fs";
 import {resolve,dirname} from "node:path";
 import {fileURLToPath} from "node:url";
-import {parseWhatsAppEvents,selectAuthorizedEvents,verifyMetaSignature} from "./whatsapp-webhook.mjs";
+import {parseWhatsAppEvents,selectAuthorizedEvents,verifyMetaSignature,summarizeWhatsAppEnvelope} from "./whatsapp-webhook.mjs";
 import {createArmWhatsAppIngest} from "./whatsapp-ingest.mjs";
 import {createWhatsAppTestResponder} from "./whatsapp-test-responder.mjs";
 
@@ -46,7 +46,9 @@ async function receive(req, limit=262144) {
 export function createGateway({verifyToken=verification,secret=appSecret,phoneId=expectedPhoneId,
   allowlist=authorizedNumbers,onAuthorizedEvent=null,since=started,autoReplies=false,getReplyStats=()=>({sent:0,failed:0})}={}) {
   const localKnown = onAuthorizedEvent ? new Set() : known;
-  const metrics={signedRequests:0,eligibleEvents:0,acceptedEvents:0};
+  const metrics={signedRequests:0,invalidSignatures:0,eligibleEvents:0,acceptedEvents:0,
+    incomingMessages:0,statusUpdates:0,lastSignedAt:null,
+    deliveryStatuses:{sent:0,delivered:0,read:0,failed:0,other:0}};
   const server=createServer(async(req,res)=>{
     const url=new URL(req.url||"/","http://localhost");
     if(req.method==="GET" && url.pathname==="/health")
@@ -54,7 +56,10 @@ export function createGateway({verifyToken=verification,secret=appSecret,phoneId
         service:"arm-whatsapp-gateway",webhookVerifiedReady:Boolean(secret&&verifyToken),
         phoneConfigured:Boolean(phoneId),testNumbersConfigured:allowlist.length,
         inboundConnected:Boolean(onAuthorizedEvent),automaticReplies:Boolean(autoReplies&&onAuthorizedEvent),
-        signedRequests:metrics.signedRequests,eligibleEvents:metrics.eligibleEvents,acceptedEvents:metrics.acceptedEvents,
+        signedRequests:metrics.signedRequests,invalidSignatures:metrics.invalidSignatures,
+        incomingMessages:metrics.incomingMessages,statusUpdates:metrics.statusUpdates,
+        deliveryStatuses:metrics.deliveryStatuses,lastSignedAt:metrics.lastSignedAt,
+        eligibleEvents:metrics.eligibleEvents,acceptedEvents:metrics.acceptedEvents,
         replyStats:getReplyStats()});
     if(url.pathname!=="/webhooks/whatsapp")return send(res,404,{error:"NOT_FOUND"});
     if(req.method==="GET"){
@@ -67,11 +72,19 @@ export function createGateway({verifyToken=verification,secret=appSecret,phoneId
     if(!secret)return send(res,503,{error:"META_APP_SECRET_NOT_CONFIGURED"});
     let raw;
     try{raw=await receive(req);}catch(e){return send(res,e.status||400,{error:"INVALID_BODY"});}
-    if(!verifyMetaSignature(raw,req.headers["x-hub-signature-256"],secret))return send(res,403,{error:"INVALID_SIGNATURE"});
-    metrics.signedRequests++;
+    if(!verifyMetaSignature(raw,req.headers["x-hub-signature-256"],secret)){
+      metrics.invalidSignatures++;return send(res,403,{error:"INVALID_SIGNATURE"});
+    }
+    metrics.signedRequests++;metrics.lastSignedAt=new Date().toISOString();
     let json;
     try{json=JSON.parse(raw.toString("utf8"));}
     catch{return send(res,400,{error:"INVALID_JSON"});}
+    const summary=summarizeWhatsAppEnvelope(json);
+    metrics.incomingMessages+=summary.receivedMessages;
+    metrics.statusUpdates+=summary.statusUpdates;
+    for(const key of Object.keys(metrics.deliveryStatuses)){
+      metrics.deliveryStatuses[key]+=summary.deliveryStatuses[key];
+    }
     const events=parseWhatsAppEvents(json);
     const allowed=selectAuthorizedEvents(events,{phoneNumberId:phoneId,authorizedNumbers:allowlist,enabledSince:since});
     metrics.eligibleEvents+=allowed.length;
