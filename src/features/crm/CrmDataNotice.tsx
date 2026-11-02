@@ -1,10 +1,4 @@
-
-import { Database, ShieldCheck } from "lucide-react";
-
-export function CrmDataNotice({ live, workspace }: { live: boolean; workspace?: string }) {
-  return <div className={"data-notice " + (live ? "live" : "demo")}>
-    {live ? <Database size={16}/> : <ShieldCheck size={16}/>}
-    <span><strong>{live ? "Datos reales · Supabase" : "Modo de demostración"}</strong>
-    {live ? " · Espacio: " + (workspace || "Cargando") : " · Los cambios son temporales y no se envían a clientes"}</span>
-  </div>;
+import { Database } from "lucide-react";
+export function CrmDataNotice({ workspace }: { workspace?: string }) {
+ return <div className="data-notice live"><Database size={16}/><span><strong>Datos reales · Supabase</strong> · Espacio: {workspace || "STECH PERU"}</span></div>;
 }
