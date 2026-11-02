@@ -7,6 +7,13 @@ export const specsByPn = Object.freeze({
    note:"Resistencia no permanente. Según el fabricante, los daños por líquidos no están cubiertos por la garantía.",
    source:"https://store.ulefone.com/es/pages/armor22-spec"
  },
+ "ARMOR-X13":{
+   certifications:["IP68","IP69K","MIL-STD-810H"],
+   ip68:"1,5 m durante un máximo de 30 minutos bajo condiciones de laboratorio",
+   battery:"6320 mAh",storage:"64 GB",highlights:["cámara principal de 50 MP","cámara de visión nocturna de 24 MP"],
+   note:"Certificación bajo pruebas controladas. La resistencia puede disminuir; daños por líquidos excluidos según el fabricante.",
+   source:"https://store.ulefone.com/es/pages/armorx13-spec"
+ },
  "ARMOR-25TPro-256GB":{
    certifications:["IP68","IP69K","MIL-STD-810H"],
    ip68:"2,0 m durante un máximo de 30 minutos bajo condiciones de laboratorio",
