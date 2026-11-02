@@ -1,39 +1,32 @@
-# Acceso interno STECH — Google + Supabase
+# Acceso interno STECH — Google OAuth y correos autorizados
 
-## Decisión del proyecto
-- **Sin registro público**, sin formulario de email/contraseña ni acceso demo anónimo.
-- Ingreso: **Continuar con Google**.
-- La sesión de Google **NO otorga acceso por sí sola**. El correo debe estar activo en `public.crm_usuarios`.
-- Roles reconocidos: `ADMIN` y `ASESOR`.
-- `ADMIN` puede crear el espacio comercial; `ASESOR` necesita membresía de un administrador.
-- Los datos de CRM tienen RLS y el acceso a workspaces depende de la lista activa. Un usuario no autorizado no puede consultar el CRM.
+## Implementado y usado en PC020
+- ARM-CRM trabaja en `http://127.0.0.1:5175/`.
+- Supabase activo: **proyecto anterior** `iipamvqbipbolchlozoj`. Se reutiliza porque **Google OAuth ya estaba habilitado** y existe el administrador real de STECH.
+- El proyecto `stech-crm-ai-v2` (`rxewmgnndzacthnhdxjx`) sigue separado; Google allí está deshabilitado, **por lo que NO es el backend actual de ARM-CRM**.
+- La URL y la clave **publishable** del proyecto activo están únicamente en `C:\DESAROLLO\ARM-CRM\.env.local`, ignorado en Git.
+- En el antiguo `crm_usuarios` había una cuenta habilitada: `artosperu@gmail.com` (`ADMIN`). No se añadieron correos nuevos.
+- `ADMIN` puede crear workspaces, `ASESOR` necesita membresía; siempre se exige `crm_usuarios.activo`.
+- La interfaz no tiene registro público, entrada demo, ni formulario contraseña. Solo **Continuar con Google**.
+- RLS protege las nuevas tablas `arm_*` y depende del workspace y autorización del correo.
+- Un usuario que Google autentique sin correo previamente aprobado no puede ingresar ni consultar tablas ARM. El antiguo Supabase mantiene su configuración de signup general; **no se cambió Auth de otros sistemas en producción**.
 
-## Evidencia recuperada del CRM anterior
-- `C:\DESAROLLO\crm-frontend\src\features\auth\LoginPage.tsx`: Google OAuth, sin registro público.
-- `AuthProvider.tsx`: validación de `crm_usuarios`, `activo`, `rol`.
-- En el proyecto Supabase antiguo había **una sola cuenta activa**: `artosperu@gmail.com`, rol `ADMIN`. Se transfirió solo esa autorización a `stech-crm-ai-v2`.
-- No inventar ni añadir otros correos. Se habilitan únicamente desde backend privilegiado y con decisión administrativa.
+## Validaciones confirmadas
+1. Supabase antiguo `/auth/v1/settings`: Google habilitado.
+2. Playwright Chrome aislado en PC020: HTTP 200, un único botón Google, sin registro ni demo.
+3. Click Google en Playwright: redirección a `accounts.google.com` sin error.
+4. Test transaccional RLS aprobado con identidad Google autorizada: lectura de workspace/catálogo, creación de cliente/oportunidad/seguimiento, cambio de estado; transacción revertida sin datos de prueba.
+5. Test RLS identidad no autorizada: sin acceso a workspace, productos ni clientes.
+6. **Pendiente exclusivamente la prueba interactiva de completar Google y volver al ARM-CRM con sesión real de navegador**. Playwright no seleccionó cuentas ni introdujo contraseñas, por seguridad.
 
-## Base de datos aplicada
-- `supabase/migrations/20261102_crm_google_access_allowlist.sql`: tabla `crm_usuarios` y políticas de workspace.
-- `supabase/migrations/20261102_auth_hook_allow_google.sql`: función `crm_private.allow_google_stech_users(jsonb)`.
-- La función se verificó con tres escenarios: cuenta activa Google permitida, cuenta ajena denegada, mismo correo usando otro proveedor denegado.
-- **La función de Auth Hook está creada pero aún NO vinculada/activada en Supabase Auth.** Hasta que esté activa, el CRM y su base de datos bloquean cuentas externas, pero Supabase Auth podría crear una identidad para ellas si la configuración global lo permite. No confundir ambas protecciones.
+## Protección de los sistemas existentes
+- Nunca se modificó `crm_usuarios` ni se migraron clientes o conversaciones del CRM antiguo.
+- Solamente se crearon tablas prefijadas `arm_*` y sus políticas en el Supabase antiguo.
+- Se importaron 4 productos Ulefone existentes a `arm_products` del nuevo workspace, sin precios ni stock inventados.
+- Mantener el CRM antiguo operativo y sus scopes de Google intactos.
 
-## Configuración pendiente (Supabase stech-crm-ai-v2)
-**Detectado por lectura de Auth settings**: `external.google=false` y `disable_signup=false`.
+## Supabase nuevo — futuro
+El proyecto `stech-crm-ai-v2` conserva sus tablas `arm_*` y una función de validación de nuevos registros preparada, pero aún no se activó su Auth Hook ni el proveedor Google.
+Migrar a él únicamente cuando sus credenciales OAuth y redirects estén configurados y validados, evitando apagar el login activo.
 
-Para que el acceso Google funcione de extremo a extremo:
-1. En el proyecto `rxewmgnndzacthnhdxjx`, ir a **Authentication → Sign In / Providers → Google** y habilitarlo con un cliente OAuth propio. El cliente debe estar configurado de manera segura en Google Cloud. El callback de Supabase es `https://rxewmgnndzacthnhdxjx.supabase.co/auth/v1/callback`.
-2. En **Authentication → URL Configuration**, permitir `http://127.0.0.1:5175` para desarrollo local; agregar URLs de producción solo cuando se despliegue.
-3. **Antes de habilitar acceso general**, ir a **Authentication → Hooks → Before User Created**, escoger la función Postgres `crm_private.allow_google_stech_users` y activarla. Esto impide la creación de identidades no autorizadas.
-4. Comprobar con cuenta autorizada: redirección Google, `crm_usuarios` activo, creación de workspace admin. Comprobar con cuenta ajena: rechazo en Auth y acceso nulo al CRM.
-5. Proteger secretos Google OAuth en Supabase/Google Cloud; nunca usar variables `VITE_` para un client secret.
-
-No hay credenciales Google OAuth en `.env.local`. No se requiere ni debe copiar el `.env` de HERMES.
-No modificar el proyecto Supabase antiguo `iipamvqbipbolchlozoj`.
-
-## URLs y referencias
-- https://supabase.com/dashboard/project/rxewmgnndzacthnhdxjx
-- https://supabase.com/docs/guides/auth/social-login/auth-google
-- https://supabase.com/docs/guides/auth/auth-hooks/before-user-created-hook
+Docs oficiales: https://supabase.com/docs/guides/auth/social-login/auth-google
