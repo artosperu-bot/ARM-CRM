@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Activity, ArrowLeft, ArrowRight, Bot, Check, ChevronRight, CircleHelp, ContactRound, Database, Inbox, Kanban, LayoutDashboard, MessageSquare, Package, PlugZap, Plus, Search, Send, Settings2, ShieldCheck, Sparkles, Users, X } from "lucide-react";
+import { Activity, ArrowLeft, ArrowRight, Bot, Check, ChevronRight, CircleHelp, ContactRound, Database, Inbox, Kanban, LayoutDashboard, MessageSquare, Package, PlugZap, Plus, Search, Send, ShieldCheck, Sparkles, Users, X } from "lucide-react";
 import { createSafeDraft, detectBuyerIntent } from "./agent";
 import { sampleContacts, sampleDeals, sampleInbox, sampleProducts } from "./demo";
 import { STAGES } from "./types";
