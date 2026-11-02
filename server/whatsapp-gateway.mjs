@@ -46,7 +46,7 @@ export function createGateway({verifyToken=verification,secret=appSecret,phoneId
   const server=createServer(async(req,res)=>{
     const url=new URL(req.url||"/","http://localhost");
     if(req.method==="GET" && url.pathname==="/health")
-      return send(res,200,{status:secret&&verifyToken&&phoneId?"standby":"missing_config",
+      return send(res,200,{status:secret&&verifyToken&&phoneId&&allowlist.length&&onAuthorizedEvent?"ready_for_signed_ingest":"missing_config",
         service:"arm-whatsapp-gateway",webhookVerifiedReady:Boolean(secret&&verifyToken),
         phoneConfigured:Boolean(phoneId),testNumbersConfigured:allowlist.length,
         inboundConnected:Boolean(onAuthorizedEvent),automaticReplies:false,
@@ -72,7 +72,7 @@ export function createGateway({verifyToken=verification,secret=appSecret,phoneId
     metrics.eligibleEvents+=allowed.length;
     // Never acknowledge as processed a real customer message until the new CRM
     // has a durable persistence handler. This gateway cannot send to Graph API.
-    if(allowed.length && !onAuthorizedEvent)return send(res,503,{error:"CRM_INBOUND_NOT_CONNECTED"});
+    if(events.length && !onAuthorizedEvent)return send(res,503,{error:"CRM_INBOUND_NOT_CONNECTED"});
     for(const event of allowed){
       if(localKnown.has(event.messageId))continue;
       try{await onAuthorizedEvent(event);}
