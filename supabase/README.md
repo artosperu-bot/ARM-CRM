@@ -1,9 +1,10 @@
-# Supabase — propuesta NO aplicada
+# Persistencia Supabase STECH ARM-CRM
 
-El archivo schema.sql propone un esquema aislado multiusuario/multitenant con RLS.
-No ejecutar contra el proyecto previo sin auditar tablas, policies, duplicados y roles.
-No se ha conectado ni cambiado ningún proyecto Supabase.
+ARM-CRM usa actualmente el proyecto Supabase original `iipamvqbipbolchlozoj`, donde el proveedor Google OAuth funciona y ya existen usuarios autorizados. 
+Se añadieron exclusivamente las tablas `public.arm_*` con RLS, workspace para el administrador y 4 productos Ulefone reales importados por PN, sin precio ni stock inventados.
 
-En un proyecto NUEVO, probar primero en entorno aislado, revisar permisos y políticas, luego generar una migración usando Supabase CLI (verificar `supabase migration new --help`). Este archivo es el diseño de partida, no una migración activa.
+La estructura `supabase/schema.sql` también fue aplicada previamente al proyecto `stech-crm-ai-v2` que aún no tiene Google OAuth habilitado. No mezclar las claves de ambos proyectos.
 
-**Importante:** el frontend actual está en DEMO y NO utiliza este esquema. Para habilitar modo real faltan autenticación, API de datos, y pruebas de seguridad.
+No eliminar ni restablecer tablas del proyecto antiguo. Las integraciones pendientes y migración futura se planificarán de forma no destructiva.
+
+No imprimir, almacenar en Git ni exponer service-role, tokens Meta/Google ni credenciales SQL. Solo usar la clave publishable en frontend.
