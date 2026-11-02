@@ -22,21 +22,22 @@ export const specsByPn = Object.freeze({
    source:"https://store.ulefone.com/es/pages/armor-25t-pro-specs"
  }
 });
-export function enrichCatalog(rows, simulated=false) {
- const fictitious={
- "ARMOR-22-256G":999,"ARMOR-25TPro-256GB":1799,
- "ARMOR-X12Pro":659,"ARMOR-X13":799
- };
+/** Real offers are never filled from laboratory records. For simulations only use saved Supabase test offers. */
+export function enrichCatalog(rows, simulated=false, testOffers=[]) {
+ const offers = new Map((testOffers||[]).filter(o=>o.is_test_data===true).map(o=>[String(o.partnumber).toLowerCase(),o]));
  return (rows||[]).map(row=>{
-  const price=simulated?(fictitious[row.partnumber]??null):row.verified_at?row.price_pen:null;
-  const available=simulated?"disponible":row.verified_at?(row.stock_erp>0?"disponible":"no disponible"):"por confirmar";
+  const demo=simulated?offers.get(String(row.partnumber).toLowerCase()):null;
+  const price=simulated?(demo?Number(demo.price_pen):null):row.verified_at?row.price_pen:null;
+  const availability=simulated?(demo?.stock_status||"por confirmar"):
+    row.verified_at?(row.stock_erp>0?"disponible":"no disponible"):"por confirmar";
   return {
    titulo:row.title,marca:row.brand,partnumber:row.partnumber,
    especificaciones_fabricante:specsByPn[row.partnumber]||null,
    atributos_ficha:row.attributes||{},
    precio_soles:price,
-   disponibilidad:available,
-   oferta_simulada:simulated
+   disponibilidad:availability,
+   oferta_simulada:simulated,
+   origen_datos:simulated?"simulacion_solo_pruebas":(row.verified_at?"erp_verificado":"sin_verificar")
   };
  });
 }
