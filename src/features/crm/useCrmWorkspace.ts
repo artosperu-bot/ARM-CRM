@@ -2,9 +2,10 @@
 import { useCallback, useEffect, useState } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { supabase } from "../../lib/supabase";
+import { resolveAccess, type CrmProfile, type CrmRole } from "../auth/access";
 import type { Channel, Contact, Deal, DealStage, Product } from "../../types";
 
-export type CrmStatus = "checking" | "signed-out" | "no-workspace" | "ready" | "error";
+export type CrmStatus = "checking" | "signed-out" | "blocked" | "no-workspace" | "ready" | "error";
 type Workspace = { id: string; name: string };
 type ContactRow = {
   id: string; display_name: string; phone: string | null; email: string | null;
@@ -24,6 +25,7 @@ function channel(value: Channel | "manual"): Channel {
 
 export function useCrmWorkspace(enabled: boolean) {
   const [session, setSession] = useState<Session | null>(null);
+  const [role, setRole] = useState<CrmRole | null>(null);
   const [status, setStatus] = useState<CrmStatus>("checking");
   const [workspace, setWorkspace] = useState<Workspace | null>(null);
   const [contacts, setContacts] = useState<Contact[]>([]);
@@ -34,6 +36,20 @@ export function useCrmWorkspace(enabled: boolean) {
   const refresh = useCallback(async (current: Session, active = true) => {
     if (!supabase) return;
     try {
+      const email = current.user.email?.trim().toLowerCase() || "";
+      if (!email) {
+        if (active) { setStatus("blocked"); setWorkspace(null); setRole(null); }
+        return;
+      }
+      const { data: profile, error: profileError } = await supabase.from("crm_usuarios")
+        .select("email,nombre,rol,activo").eq("email", email).maybeSingle<CrmProfile>();
+      if (profileError) throw profileError;
+      const resolved = resolveAccess(email, profile);
+      if (!resolved.allowed) {
+        if (active) { setStatus("blocked"); setWorkspace(null); setContacts([]); setDeals([]); setProducts([]); setRole(null); }
+        return;
+      }
+      if (active) setRole(resolved.role);
       const { data: ws, error: wsError } = await supabase.from("arm_workspaces")
         .select("id,name").order("created_at", { ascending: true }).limit(1);
       if (wsError) throw wsError;
@@ -96,7 +112,7 @@ export function useCrmWorkspace(enabled: boolean) {
       if (event === "TOKEN_REFRESHED") { setSession(nextSession); return; }
       setSession(nextSession);
       if (!nextSession) {
-        setWorkspace(null); setContacts([]); setDeals([]); setProducts([]); setStatus("signed-out");
+        setWorkspace(null); setContacts([]); setDeals([]); setProducts([]); setRole(null); setStatus("signed-out");
       } else {
         // Schedule async data queries out of the auth callback, avoiding lock contention.
         queueMicrotask(() => { if (active) void refresh(nextSession, active); });
@@ -140,7 +156,7 @@ export function useCrmWorkspace(enabled: boolean) {
   }
 
   return {
-    session, status, workspace, contacts, deals, products, error,
+    session, role, status, workspace, contacts, deals, products, error,
     refresh: () => session ? refresh(session) : Promise.resolve(),
     createWorkspace, createContact, createDeal, updateDealStage,
     signOut: () => supabase?.auth.signOut(),
