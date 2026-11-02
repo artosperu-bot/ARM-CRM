@@ -8,7 +8,17 @@ describe("ventas y escenarios aislados",()=>{
   expect(v.especificaciones_fabricante.certifications).toContain("IP68");
  });
  it("oferta simulada solo activada explícitamente en pruebas",()=>{
-  const v=enrichCatalog(catalog,true)[0];expect(v.precio_soles).toBe(999);expect(v.oferta_simulada).toBe(true);
+  const v=enrichCatalog(catalog,true,[{partnumber:"ARMOR-22-256G",price_pen:999,stock_status:"disponible",is_test_data:true}])[0];expect(v.precio_soles).toBe(999);expect(v.disponibilidad).toBe("disponible");expect(v.oferta_simulada).toBe(true);
+ });
+ it("simulación sin registro verificado no inventa precios",()=>{
+  const v=enrichCatalog(catalog,true,[])[0];
+  expect(v.precio_soles).toBe(null);
+  expect(v.disponibilidad).toBe("por confirmar");
+ });
+ it("descarta ofertas sin bandera de simulación y mantiene cotización real aislada",()=>{
+  const record={partnumber:"ARMOR-22-256G",price_pen:999,stock_status:"disponible",is_test_data:false};
+  expect(enrichCatalog(catalog,true,[record])[0].precio_soles).toBe(null);
+  expect(enrichCatalog(catalog,false,[{...record,is_test_data:true}])[0].precio_soles).toBe(null);
  });
  it("valida teléfono peruano",()=>{expect(normalizedPhone("+51 987654321")).toBe("987654321");expect(normalizedPhone("12345")).toBe(null);});
  it("no infiere consentimiento desde pedir un horario",()=>{
