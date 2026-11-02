@@ -3,6 +3,7 @@ import {readFileSync} from "node:fs";
 import {resolve,dirname} from "node:path";
 import {fileURLToPath} from "node:url";
 import {parseWhatsAppEvents,selectAuthorizedEvents,verifyMetaSignature} from "./whatsapp-webhook.mjs";
+import {createArmWhatsAppIngest} from "./whatsapp-ingest.mjs";
 
 function loadEnv(path) {
   const result={};
@@ -90,9 +91,12 @@ export function createGateway({verifyToken=verification,secret=appSecret,phoneId
   return server;
 }
 if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url)) {
-  createGateway().listen(port,"127.0.0.1",()=>{
+  const ingest=appSecret&&authorizedNumbers.length>0?createArmWhatsAppIngest({
+    supabaseUrl:get("SUPABASE_URL"),serviceRoleKey:get("SUPABASE_SERVICE_ROLE_KEY")
+  }):null;
+  createGateway({onAuthorizedEvent:ingest}).listen(port,"127.0.0.1",()=>{
     console.log("ARM_WHATSAPP_GATEWAY_READY port="+port+" signedValidation="+Boolean(appSecret)+
       " verifyConfigured="+Boolean(verification)+" testNumbers="+authorizedNumbers.length+
-      " messages=disabled replies=disabled");
+      " durableIngest="+Boolean(ingest)+" replies=disabled");
   });
 }
