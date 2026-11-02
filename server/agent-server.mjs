@@ -123,7 +123,7 @@ async function handle(req,res){
      return send(res,502,{error:"El agente no devolvió una respuesta válida."});
   let answer=structured.reply.trim(),booking=null;
   const customerTurns=[...(history.data||[]).filter(t=>t.role==="user").map(t=>t.content),msg];
-  const proposal=validateBookingProposal(structured.followup,customerTurns,msg);
+  const proposal=simulated?null:validateBookingProposal(structured.followup,customerTurns,msg);
   if(proposal){
     const {data:rows,error:bookingError}=await db.rpc("arm_book_agent_followup",{
       p_workspace_id:workspaceId,p_conversation_id:cid,p_full_name:proposal.name,
