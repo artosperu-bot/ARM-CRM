@@ -67,7 +67,7 @@ export default function App(){
   resumen:<DashboardPage contacts={crm.contacts} deals={crm.deals} followups={crm.followups} products={crm.products} onNavigate={setSection}/>,
   oportunidades:<PipelinePage contacts={crm.contacts} deals={crm.deals} onCreate={crm.createDeal} onMove={crm.updateDealStage}/>,
   clientes:<ContactsPage contacts={crm.contacts} onCreate={crm.createContact}/>,
-  seguimientos:<FollowupsPage contacts={crm.contacts} tasks={crm.followups} onCreate={crm.createFollowup} onComplete={crm.completeFollowup}/>,
+  seguimientos:<FollowupsPage contacts={crm.contacts} tasks={crm.followups} onCreate={crm.createFollowup} onComplete={crm.completeFollowup} onCancel={crm.cancelFollowup}/>,
   mensajes:<InboxPage workspaceId={crm.workspace!.id}/>,
   catalogo:<CatalogPage products={crm.products}/>,
   agente:<AgentPage workspaceId={crm.workspace!.id} contacts={crm.contacts} onNavigate={setSection} onCreateFollowup={crm.createFollowup} onCreateDeal={crm.createDeal}/>,
