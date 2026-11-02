@@ -1,11 +1,13 @@
 import { useMemo,useState } from "react";
 import { Activity,ArrowDown,ArrowUp,CalendarRange,Coins,Database,RefreshCw,Search,ShieldCheck,Zap } from "lucide-react";
 import { useAiUsage } from "./useAiUsage";
+import { supabase } from "../../lib/supabase";
 import { fmtTokens,groupSessions,modelTotals,sumUsage } from "./usage";
 import "./usage.css";
 const localDate=(s:string)=>new Date(s).toLocaleString("es-PE",{year:"numeric",month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"});
-export default function UsagePage({workspaceId}:{workspaceId:string}){
+export default function UsagePage({workspaceId,isAdmin}:{workspaceId:string;isAdmin:boolean}){
  const {events,status,error,truncated,refresh}=useAiUsage(workspaceId);
+ const [syncing,setSyncing]=useState(false);const [syncNotice,setSyncNotice]=useState("");
  const [query,setQuery]=useState("");const [model,setModel]=useState("todos");const [selected,setSelected]=useState<string|null>(null);
  const models=useMemo(()=>[...new Set(events.map(e=>e.model))].sort(),[events]);
  const filtered=useMemo(()=>events.filter(e=>(model==="todos"||e.model===model) && (!query || (e.session_id+" "+e.model+" "+(e.message_id||"")).toLowerCase().includes(query.toLowerCase()))),[events,model,query]);
@@ -16,9 +18,21 @@ export default function UsagePage({workspaceId}:{workspaceId:string}){
  const selectedEvents=selected?filtered.filter(e=>e.session_id===selected).sort((a,b)=>a.occurred_at.localeCompare(b.occurred_at)):[];
  const maxTokens=Math.max(...byModel.map(e=>e.input+e.output),1);
  const newest=events.reduce((last,e)=>e.occurred_at>last?e.occurred_at:last,"");
+ async function syncHistory(){
+  if(!supabase||!isAdmin)return;
+  setSyncing(true);setSyncNotice("");
+  try{
+   const {data,error:syncError}=await supabase.functions.invoke("arm-sync-usage",{body:{workspaceId}});
+   if(syncError)throw syncError;
+   if(!data?.ok)throw new Error(data?.error||"La sincronización no devolvió confirmación.");
+   await refresh();setSyncNotice("Historial sincronizado: "+data.recorded+" eventos del CRM anterior.");
+  }catch(error){setSyncNotice("No se pudo actualizar: "+(error instanceof Error?error.message:"Error de servidor."));}
+  finally{setSyncing(false);}
+ }
  return <div className="usage-page">
    <div className="usage-hero"><div><div className="usage-kicker"><Zap size={17}/> OBSERVABILIDAD DE IA</div><h2>Consumo por conversación</h2><p>Tokens reales registrados por el CRM anterior, separados por modelo, conversación y llamadas.</p><span className="usage-data-info"><Database size={13}/> Fuente: historial importado · Último registro: {newest?localDate(newest):"sin datos"}</span></div><div className="usage-hero-icon"><Activity size={50}/></div></div>
-   <div className="usage-controls"><label className="usage-search"><Search size={17}/><input placeholder="Buscar ID de conversación o modelo" value={query} onChange={e=>setQuery(e.target.value)}/></label><label className="usage-select"><span>Modelo</span><select aria-label="Filtrar modelo" value={model} onChange={e=>setModel(e.target.value)}><option value="todos">Todos los modelos</option>{models.map(m=><option key={m} value={m}>{m}</option>)}</select></label><button className="secondary-button" disabled={status==="loading"} onClick={()=>void refresh()}><RefreshCw size={16}/> Actualizar lectura</button></div>
+   <div className="usage-controls"><label className="usage-search"><Search size={17}/><input placeholder="Buscar ID de conversación o modelo" value={query} onChange={e=>setQuery(e.target.value)}/></label><label className="usage-select"><span>Modelo</span><select aria-label="Filtrar modelo" value={model} onChange={e=>setModel(e.target.value)}><option value="todos">Todos los modelos</option>{models.map(m=><option key={m} value={m}>{m}</option>)}</select></label><button className="secondary-button" disabled={status==="loading"} onClick={()=>void refresh()}><RefreshCw size={16}/> Actualizar lectura</button>{isAdmin&&<button className="primary-button" disabled={syncing||status==="loading"} onClick={()=>void syncHistory()}><RefreshCw size={16}/> {syncing?"Sincronizando…":"Sincronizar historial"}</button>}</div>
+   {syncNotice&&<div className="notice" role="status">{syncNotice}</div>}
    {status==="loading"&&<div className="usage-loading">Consultando registros protegidos por RLS…</div>}
    {status==="error"&&<div className="auth-error" role="alert">{error}</div>}
    {truncated&&<div className="auth-error">La consulta superó el límite de 15,000 eventos. Las cifras mostradas son parciales.</div>}
