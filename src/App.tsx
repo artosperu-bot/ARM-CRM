@@ -5,7 +5,7 @@ import { CrmDataNotice } from "./features/crm/CrmDataNotice";
 import FollowupsPage from "./features/crm/FollowupsPage";
 import { useCrmWorkspace } from "./features/crm/useCrmWorkspace";
 import { isSupabaseConfigured } from "./lib/supabase";
-import { Activity, ArrowLeft, ArrowRight, Bot, Check, ChevronRight, CircleHelp, ContactRound, Database, Inbox, Kanban, LayoutDashboard, LogOut, CalendarClock, MessageSquare, Package, PlugZap, Plus, Search, Send, ShieldCheck, Sparkles, Users, X } from "lucide-react";
+import { Activity, ArrowLeft, ArrowRight, Bot, Check, ChevronRight, CircleHelp, ContactRound, Database, Inbox, Kanban, LayoutDashboard, LogOut, CalendarClock, Package, PlugZap, Plus, Search, Send, ShieldCheck, Sparkles, Users, X } from "lucide-react";
 import { createSafeDraft, detectBuyerIntent } from "./agent";
 import { sampleContacts, sampleDeals, sampleInbox, sampleProducts } from "./demo";
 import { STAGES } from "./types";
