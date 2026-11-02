@@ -18,6 +18,7 @@ export default function AgentPage({workspaceId,contacts,onNavigate,onCreateFollo
  const [turns,setTurns]=useState<Turn[]>([]);
  const [question,setQuestion]=useState("");
  const [sending,setSending]=useState(false);
+ const [simulated,setSimulated]=useState(false);
  const [error,setError]=useState("");
  const [notice,setNotice]=useState("");
  const [usage,setUsage]=useState<Usage|null>(null);
@@ -91,13 +92,13 @@ export default function AgentPage({workspaceId,contacts,onNavigate,onCreateFollo
    if(sessionError||!session?.access_token)throw new Error("La sesión expiró. Vuelve a iniciar sesión.");
    const response=await fetch("http://127.0.0.1:8789/chat",{
     method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+session.access_token},
-    body:JSON.stringify({workspaceId,conversationId:selected,message:msg})
+    body:JSON.stringify({workspaceId,conversationId:selected,message:msg,simulated})
    });
    const result=await response.json();
    if(!response.ok||!result.ok)throw new Error(result.error||"No fue posible consultar OpenAI.");
    setQuestion("");setSelected(result.conversationId);
    setUsage(result.usage);
-   setNotice("Respuesta real de OpenAI · supervisada · sin envío al cliente.");
+   setNotice(result.booking?.saved?"Seguimiento registrado automáticamente en Supabase.": "Respuesta real de OpenAI · sin envío al cliente.");
    const {data,error:turnError}=await supabase.from("arm_agent_turns").select("id,role,content,created_at")
     .eq("workspace_id",workspaceId).eq("conversation_id",result.conversationId)
     .order("created_at",{ascending:true}).limit(100);
@@ -111,6 +112,11 @@ export default function AgentPage({workspaceId,contacts,onNavigate,onCreateFollo
      <span className={"agent-state "+(ready?"good":"waiting")}>{ready?"Servicio OpenAI configurado":"Servicio local no disponible"}</span>
    </section>
    <div className="agent-stat-strip"><span><ShieldCheck size={16}/> Supervisado: no responde en redes</span><span><Zap size={16}/> Máximo 350 tokens de salida</span><span><Coins size={16}/> Hasta 20 consultas/día</span></div>
+   <label className={"agent-sandbox-switch "+(simulated?"is-on":"")}>
+     <input type="checkbox" checked={simulated} disabled={sending} onChange={e=>{setSimulated(e.target.checked);setSelected(null);setTurns([]);setUsage(null);setError("");setNotice("");}}/>
+     <span><strong>Simular precios y disponibilidad</strong><small>Solo laboratorio privado: cifras inventadas, etiquetadas como prueba. No se mezclan con ventas reales ni se agendan tareas.</small></span>
+     {simulated&&<strong className="agent-sandbox-badge">SIMULACIÓN</strong>}
+   </label>
    <div className="agent-layout-real">
     <aside className="agent-sessions"><div className="agent-side-head"><strong>Conversaciones</strong><button aria-label="Nueva conversación" title="Nueva conversación" onClick={()=>{setSelected(null);setTurns([]);setUsage(null);setError("");setNotice("");}}><Plus size={17}/></button></div>
      {conversations.length===0&&<p className="agent-empty-sessions">Aún no hay conversaciones.</p>}
@@ -149,10 +155,11 @@ export default function AgentPage({workspaceId,contacts,onNavigate,onCreateFollo
           <button disabled={savingAction||!linkedContact} className="secondary-button" type="button" onClick={()=>void createOpportunity()}>Crear oportunidad</button></div>
         </form>}
       </div>}
+      {simulated&&<div className="agent-sandbox-banner">Simulación interna activada: los precios y la disponibilidad no representan datos comerciales reales.</div>}
       {usage&&<div className="agent-usage"><CheckCircle2 size={16}/><span>{usage.model} · {usage.inputTokens} entrada · {usage.outputTokens} salida · {usage.cachedTokens} caché · Est. USD {usage.estimatedUsd.toFixed(5)}{!usage.usageRecorded?" · Métrica no guardada":""}</span></div>}
       {notice&&<div className="agent-notice" role="status">{notice}</div>}
       {error&&<div className="auth-error" role="alert">{error}</div>}
-      <form onSubmit={e=>void submit(e)} className="agent-compose"><label htmlFor="agent-question">Escribe la consulta comercial</label><div className="agent-compose-row"><textarea id="agent-question" value={question} onChange={e=>setQuestion(e.target.value)} maxLength={800} rows={2} placeholder="Ej.: Necesito recomendar un Ulefone resistente para construcción. ¿Cuál tenemos registrado?"/><button type="submit" className="primary-button" disabled={sending||!ready||question.trim().length<2}><Send size={17}/>{sending?"Generando…":"Consultar IA"}</button></div><small>El uso de OpenAI API puede generar cargos por tokens. No hay búsqueda web, imágenes ni mensajes automáticos.</small></form>
+      <form onSubmit={e=>void submit(e)} className="agent-compose"><label htmlFor="agent-question">Escribe la consulta comercial</label><div className="agent-compose-row"><textarea id="agent-question" value={question} onChange={e=>setQuestion(e.target.value)} maxLength={800} rows={2} placeholder="Ej.: Necesito recomendar un Ulefone resistente para construcción. ¿Cuál tenemos registrado?"/><button type="submit" className="primary-button" disabled={sending||!ready||question.trim().length<2}><Send size={17}/>{sending?"Generando…":"Consultar IA"}</button></div><small>El uso de OpenAI API puede generar cargos por tokens. En modo real, un seguimiento solo se agenda tras obtener nombre y apellido, teléfono, fecha/hora y consentimiento. No se envían mensajes automáticos.</small></form>
      </div>
    </div>
  </div>;
