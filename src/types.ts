@@ -1,6 +1,6 @@
 export type Channel = "whatsapp" | "instagram" | "facebook" | "web";
 export type DealStage = "nuevo" | "interesado" | "cotizado" | "negociacion" | "ganado";
-export type Section = "resumen" | "oportunidades" | "clientes" | "seguimientos" | "mensajes" | "catalogo" | "agente" | "integraciones";
+export type Section = "resumen" | "oportunidades" | "clientes" | "seguimientos" | "mensajes" | "catalogo" | "agente" | "consumo" | "integraciones";
 export type Contact = { id: string; name: string; phone: string; email?: string; source: Channel; interest: string; createdAt: string };
 export type Deal = { id: string; contactId: string; title: string; stage: DealStage; amount: number | null; channel: Channel; lastActivity: string };
 export type Followup = { id: string; contactId: string; dealId: string | null; dueAt: string; status: "pending" | "completed" | "cancelled"; description: string };
