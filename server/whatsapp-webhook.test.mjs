@@ -1,7 +1,7 @@
 import {describe,it,expect} from "vitest";
 import {createHmac} from "node:crypto";
 import {createGateway} from "./whatsapp-gateway.mjs";
-import {parseWhatsAppEvents,verifyMetaSignature,selectAuthorizedEvents} from "./whatsapp-webhook.mjs";
+import {parseWhatsAppEvents,verifyMetaSignature,selectAuthorizedEvents,summarizeWhatsAppEnvelope} from "./whatsapp-webhook.mjs";
 
 const original = {
  object:"whatsapp_business_account",
@@ -34,6 +34,15 @@ describe("signed WhatsApp gateway based on legacy CRM",()=>{
   expect(selectAuthorizedEvents(events,{phoneNumberId:"phone-123",authorizedNumbers:[],enabledSince:0})).toHaveLength(0);
   expect(selectAuthorizedEvents(events,{phoneNumberId:"wrong",authorizedNumbers:["51922920517"],enabledSince:0})).toHaveLength(0);
   expect(selectAuthorizedEvents(events,{phoneNumberId:"phone-123",authorizedNumbers:["51922920517"],enabledSince:0})).toHaveLength(1);
+ });
+ it("measures delivery acknowledgements without exposing message IDs",()=>{
+  const sample={object:"whatsapp_business_account",entry:[{changes:[{field:"messages",value:{
+    statuses:[{id:"wm1",status:"sent"},{id:"wm1",status:"delivered"},{id:"wm2",status:"read"}]
+  }}]}]};
+  expect(summarizeWhatsAppEnvelope(sample)).toEqual({
+    statusUpdates:3,receivedMessages:0,
+    deliveryStatuses:{sent:1,delivered:1,read:1,failed:0,other:0}
+  });
  });
  it("validates GET Meta challenge without exposing secret",async()=>{
   await withGateway({verifyToken:"private-test",secret:"secret",phoneId:"phone-123",allowlist:[]},async url=>{
