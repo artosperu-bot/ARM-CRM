@@ -25,7 +25,7 @@ const ai=envFile(process.env.OPENAI_ENV_FILE||"C:\\DESAROLLO\\STECH_AGENT\\.env"
 const apiKey=process.env.OPENAI_API_KEY||ai.OPENAI_API_KEY;
 const supabaseUrl=process.env.SUPABASE_URL||crm.VITE_SUPABASE_URL;
 const publishableKey=process.env.SUPABASE_PUBLISHABLE_KEY||crm.VITE_SUPABASE_PUBLISHABLE_KEY;
-const origin="http://127.0.0.1:5175",port=8789,model="gpt-5.4-mini",maxOutput=350,maxDaily=20;
+const origin="http://127.0.0.1:5175",port=8789,model="gpt-5.4-mini",maxOutput=450,maxDaily=20;
 const busy=new Set(), localCount=new Map();
 function send(res,status,value) {
   res.writeHead(status,{"Content-Type":"application/json; charset=utf-8","Cache-Control":"no-store",
@@ -102,7 +102,7 @@ async function handle(req,res){
       method:"POST",signal:abort.signal,
       headers:{"Content-Type":"application/json","Authorization":"Bearer "+apiKey},
       body:JSON.stringify({
-        model,store:false,max_output_tokens:450,reasoning:{effort:"none"},
+        model,store:false,max_output_tokens:maxOutput,reasoning:{effort:"none"},
         text:{format:crmResponseSchema},
         instructions:salesInstructions(catalog,{simulated,nowIso:new Date().toISOString()})+"\nDevuelve JSON con reply y followup. Los campos followup se extraen únicamente de mensajes DEL CLIENTE, jamás inventes nombres, teléfonos, fechas ni consentimiento. requested=true solo para seguimiento solicitado; explicit_consent=true solo si el último mensaje incluye autorización para AGENDAR. Si falta dato usa null. Jamás afirmes registro exitoso en reply.",
         input:[...(history.data||[]).reverse().map(t=>({role:t.role,content:t.content})),{role:"user",content:msg}]
