@@ -7,7 +7,7 @@ export function normalizedPhone(text){
 }
 export function consentInLastMessage(text){
  const v=String(text||"").toLowerCase();
- const confirmed=/\b(s[ií]|autorizo|acepto|confirmo|de acuerdo)\b/u.test(v);
+ const confirmed=/(?:^|[\s,.;¡!¿?])(s[ií]|autorizo|acepto|confirmo|de acuerdo)(?=$|[\s,.;¡!¿?])/iu.test(v);
  const action=/(ag[eé]nd|program|contact|escr[ií]b|ll[aá]ma|recu[eé]rd|seguim|confirm[aá]melo)/u.test(v);
  return confirmed&&action;
 }
