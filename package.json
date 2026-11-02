@@ -9,7 +9,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "preview": "vite preview --host 127.0.0.1",
-    "agent": "node server/agent-server.mjs"
+    "agent": "node server/agent-server.mjs",
+    "whatsapp:gateway": "node server/whatsapp-gateway.mjs"
   },
   "dependencies": {
     "lucide-react": "0.468.0",
