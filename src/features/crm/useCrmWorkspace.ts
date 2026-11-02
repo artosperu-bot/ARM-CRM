@@ -187,10 +187,19 @@ export function useCrmWorkspace(enabled: boolean) {
     await refresh(session);
   }
 
+  async function cancelFollowup(id: string) {
+    if (!supabase || !workspace || !session) throw new Error("No hay un espacio comercial activo.");
+    const { data, error: updateError } = await supabase.from("arm_followups")
+      .update({ status: "cancelled" }).eq("workspace_id", workspace.id)
+      .eq("id", id).eq("status", "pending").select("id");
+    if (updateError) throw updateError;
+    if (!data?.length) throw new Error("El seguimiento ya cambió o no tienes permiso.");
+    await refresh(session);
+  }
   return {
     session, role, status, workspace, contacts, deals, products, followups, error,
     refresh: () => session ? refresh(session) : Promise.resolve(),
-    createWorkspace, createContact, createDeal, updateDealStage, createFollowup, completeFollowup,
+    createWorkspace, createContact, createDeal, updateDealStage, createFollowup, completeFollowup, cancelFollowup,
     signOut: () => supabase?.auth.signOut(),
   };
 }
