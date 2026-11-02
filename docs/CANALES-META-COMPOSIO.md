@@ -13,6 +13,16 @@ Proyecto: `artosperu_workspace_first_project`
 
 **Atención:** el contador «Connections» no confirma que esas cuentas estén `ACTIVE`, ni qué permisos otorgaron. La sesión Composio MCP del asistente es diferente y no puede verificar estas conexiones; sus Auth Configs no se deben recrear ni borrar.
 
+## Verificación real del 02/11/2026 — completada
+- `COMPOSIO_API_KEY` quedó configurada como secreto en Supabase (no se expuso el valor).
+- Comprobación autenticada ejecutada desde ARM-CRM con el usuario ADMIN. Confirmada respuesta correcta de la API v3.1 de Composio; el panel mostró «Composio verificado: 3 conexiones OAuth activas detectadas».
+- WhatsApp: **1 ACTIVE**, **1 EXPIRED**.
+- Facebook: **1 ACTIVE**, **0 EXPIRED**.
+- Instagram: **1 ACTIVE**, **1 EXPIRED**.
+- Los tres canales se registraron en `arm_channel_connections` como `read_only` y `write_enabled=false`, revisados a las 11:24 hora de Lima (16:24 UTC).
+- Las 2 conexiones EXPIRED se conservaron sin renovar ni eliminar; no deben confundirse con las ACTIVE.
+- Este resultado demuestra autenticación OAuth activa, **no prueba recepción de DMs/WhatsApp ni permiso de publicación**. Mantener el receptor Meta a la espera de secretos y subscripciones verificadas.
+
 ## Lo realizado
 - Pantalla multicanal real `src/features/inbox`: filtros, contactos, conversación, estado pendiente/humano/cerrada. Búsquedas desde `arm_threads` y `arm_messages`.
 - Nuevas tablas `arm_threads` y `arm_channel_accounts` con RLS y sin datos de prueba; mensajes enriquecidos con `thread_id`.
@@ -22,12 +32,11 @@ Proyecto: `artosperu_workspace_first_project`
 - El proyecto Supabase operativo es el antiguo STECH `iipamvqbipbolchlozoj`; su catálogo y autenticación permanecen intactos.
 - Pruebas SQL de lectura de mensajes y cambio de estado con usuario autorizado ejecutadas con `ROLLBACK`.
 
-## Paso de conexión pendiente (NO introducir claves en chat)
-1. Crear o utilizar una API key **del proyecto de Composio `artosperu_workspace_first_project`** desde su menú **API Keys**. No confundirla con el Auth Config ID.
-2. Guardar `COMPOSIO_API_KEY` solo en Supabase → proyecto `iipamvqbipbolchlozoj` → Edge Functions → Secrets.
-3. En ARM-CRM → Integraciones → **Verificar en Composio**, iniciar sesión Google como ADMIN y ejecutar la comprobación. El servidor marcará `read_only` si encuentra una cuenta `ACTIVE`, nunca `active` con envío habilitado.
-4. Validar que cada cuenta `ACTIVE` corresponda a la página, Instagram profesional y WABA correcta antes de asociar identificadores de mensaje.
-5. Elegir **un solo origen de ingesta por canal**: webhooks Meta directos O triggers Composio con autenticación y deduplicación. Nunca ambos escribiendo sin coordinar.
+## Próximos pasos de integración
+1. La API key de Composio **ya está configurada y verificada** en Supabase, sin exponer secretos.
+2. Las cuentas OAuth ACTIVE están verificadas. Revisar correspondencia de WABA, Page ID e Instagram profesional antes de elegir el canal emisor.
+3. Habilitar recepción de eventos mediante conectores autorizados y probar con cuenta de pruebas (sin envíos masivos).
+4. Elegir **un solo origen de ingesta por canal**: webhooks Meta directos O triggers Composio con autenticación y deduplicación. Nunca ambos escribiendo sin coordinar.
 
 ## Para activar recepción directa Meta (si se selecciona ese camino)
 - Endpoint: `https://iipamvqbipbolchlozoj.supabase.co/functions/v1/arm-meta-webhook`.
