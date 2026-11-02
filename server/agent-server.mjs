@@ -137,7 +137,7 @@ async function handle(req,res){
     });
     if(bookingError){
       console.error("arm_book_agent_followup: rejected",bookingError.code||"unknown");
-      answer+="\n\nNo pude registrar aún el seguimiento en el CRM. Un asesor debe revisarlo; no está confirmado.";
+      answer="No se pudo registrar el seguimiento en el CRM. Sigue pendiente; por favor intenta de nuevo o solicita ayuda a un asesor.";
     }else if(rows?.length){
       booking={saved:true,followupId:rows[0].followup_id,alreadyScheduled:rows[0].already_scheduled,dueAt:proposal.dueAt};
       answer="✅ "+(rows[0].already_scheduled?"Tu seguimiento ya estaba agendado":"Tu seguimiento quedó registrado automáticamente")+" en STECH para el "+new Date(proposal.dueAt).toLocaleString("es-PE",{timeZone:"America/Lima",dateStyle:"full",timeStyle:"short"})+". El equipo puede verlo en la agenda; aún no se envía ningún mensaje automático.";
