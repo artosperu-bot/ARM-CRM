@@ -64,7 +64,7 @@ export default function AgentPage({workspaceId}:{workspaceId:string}){
     .order("created_at",{ascending:true}).limit(100);
    if(!turnError)setTurns((data||[]) as Turn[]);
    await refresh();
-  }catch(cause){setError(cause instanceof Error?cause.message:"Error de conexión.");setReady(false);}
+  }catch(cause){setError(cause instanceof Error?cause.message:"Error de conexión.");}
   finally{setSending(false);}
  }
  return <div className="arm-agent">
