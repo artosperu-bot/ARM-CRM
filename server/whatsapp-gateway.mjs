@@ -44,7 +44,7 @@ async function receive(req, limit=262144) {
   return Buffer.concat(buffers);
 }
 export function createGateway({verifyToken=verification,secret=appSecret,phoneId=expectedPhoneId,
-  allowlist=authorizedNumbers,onAuthorizedEvent=null,since=started,autoReplies=false}={}) {
+  allowlist=authorizedNumbers,onAuthorizedEvent=null,since=started,autoReplies=false,getReplyStats=()=>({sent:0,failed:0})}={}) {
   const localKnown = onAuthorizedEvent ? new Set() : known;
   const metrics={signedRequests:0,eligibleEvents:0,acceptedEvents:0};
   const server=createServer(async(req,res)=>{
@@ -54,7 +54,8 @@ export function createGateway({verifyToken=verification,secret=appSecret,phoneId
         service:"arm-whatsapp-gateway",webhookVerifiedReady:Boolean(secret&&verifyToken),
         phoneConfigured:Boolean(phoneId),testNumbersConfigured:allowlist.length,
         inboundConnected:Boolean(onAuthorizedEvent),automaticReplies:Boolean(autoReplies&&onAuthorizedEvent),
-        signedRequests:metrics.signedRequests,eligibleEvents:metrics.eligibleEvents,acceptedEvents:metrics.acceptedEvents});
+        signedRequests:metrics.signedRequests,eligibleEvents:metrics.eligibleEvents,acceptedEvents:metrics.acceptedEvents,
+        replyStats:getReplyStats()});
     if(url.pathname!=="/webhooks/whatsapp")return send(res,404,{error:"NOT_FOUND"});
     if(req.method==="GET"){
       const mode=url.searchParams.get("hub.mode"),token=url.searchParams.get("hub.verify_token");
@@ -105,17 +106,21 @@ if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url)) {
     allowedNumbers:authorizedNumbers,testOffers:simulatedOffers,
     graphVersion:get("WHATSAPP_GRAPH_API_VERSION")||"v25.0"
   }):null;
+  const replyStats={sent:0,failed:0,lastReplyAt:null};
   const receiveEvent=ingest?async e=>{
     const result=await ingest(e);
     if(result==="stored"&&responder)queueMicrotask(()=>{
-      void responder(e).catch(err=>{
+      void responder(e).then(result=>{
+        if(result?.status==="sent"){replyStats.sent++;replyStats.lastReplyAt=new Date().toISOString();}
+      }).catch(err=>{
+        replyStats.failed++;
         // Sanitized diagnostic; no phone, message, API key or third-party body.
         console.error("WHATSAPP_TEST_REPLY_FAILED",err instanceof Error?err.message.replace(/\d{8,}/g,"[ID]"):"unknown");
       });
     });
     return result;
   }:null;
-  createGateway({onAuthorizedEvent:receiveEvent,autoReplies:Boolean(responder)}).listen(port,"127.0.0.1",()=>{
+  createGateway({onAuthorizedEvent:receiveEvent,autoReplies:Boolean(responder),getReplyStats:()=>replyStats}).listen(port,"127.0.0.1",()=>{
     console.log("ARM_WHATSAPP_GATEWAY_READY port="+port+" signedValidation="+Boolean(appSecret)+
       " verifyConfigured="+Boolean(verification)+" testNumbers="+authorizedNumbers.length+
       " durableIngest="+Boolean(ingest)+" replies="+Boolean(responder)+" testOffers="+Boolean(responder&&simulatedOffers));
