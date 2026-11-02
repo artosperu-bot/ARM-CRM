@@ -4,6 +4,7 @@ import {resolve,dirname} from "node:path";
 import {fileURLToPath} from "node:url";
 import {parseWhatsAppEvents,selectAuthorizedEvents,verifyMetaSignature} from "./whatsapp-webhook.mjs";
 import {createArmWhatsAppIngest} from "./whatsapp-ingest.mjs";
+import {createWhatsAppTestResponder} from "./whatsapp-test-responder.mjs";
 
 function loadEnv(path) {
   const result={};
@@ -24,6 +25,9 @@ const appSecret=get("ARM_META_APP_SECRET")||get("WHATSAPP_APP_SECRET")||get("MET
 const expectedPhoneId=get("WHATSAPP_PHONE_NUMBER_ID");
 const authorizedNumbers=(get("ARM_WHATSAPP_TEST_NUMBERS")||"").split(",").map(x=>x.replace(/\D/g,"")).filter(Boolean);
 const port=3000, started=Date.now();
+const autoReplyEnabled=get("ARM_WHATSAPP_AUTO_REPLY")==="enabled";
+const simulatedOffers=get("ARM_WHATSAPP_TEST_OFFERS")==="enabled";
+const modelEnv=loadEnv(process.env.OPENAI_ENV_FILE||"C:\\DESAROLLO\\STECH_AGENT\\.env");
 let received=0, authorized=0;
 const known=new Set();
 function send(res,status,body,contentType="application/json; charset=utf-8") {
@@ -40,7 +44,7 @@ async function receive(req, limit=262144) {
   return Buffer.concat(buffers);
 }
 export function createGateway({verifyToken=verification,secret=appSecret,phoneId=expectedPhoneId,
-  allowlist=authorizedNumbers,onAuthorizedEvent=null,since=started}={}) {
+  allowlist=authorizedNumbers,onAuthorizedEvent=null,since=started,autoReplies=false}={}) {
   const localKnown = onAuthorizedEvent ? new Set() : known;
   const metrics={signedRequests:0,eligibleEvents:0,acceptedEvents:0};
   const server=createServer(async(req,res)=>{
@@ -49,7 +53,7 @@ export function createGateway({verifyToken=verification,secret=appSecret,phoneId
       return send(res,200,{status:secret&&verifyToken&&phoneId&&allowlist.length&&onAuthorizedEvent?"ready_for_signed_ingest":"missing_config",
         service:"arm-whatsapp-gateway",webhookVerifiedReady:Boolean(secret&&verifyToken),
         phoneConfigured:Boolean(phoneId),testNumbersConfigured:allowlist.length,
-        inboundConnected:Boolean(onAuthorizedEvent),automaticReplies:false,
+        inboundConnected:Boolean(onAuthorizedEvent),automaticReplies:Boolean(autoReplies&&onAuthorizedEvent),
         signedRequests:metrics.signedRequests,eligibleEvents:metrics.eligibleEvents,acceptedEvents:metrics.acceptedEvents});
     if(url.pathname!=="/webhooks/whatsapp")return send(res,404,{error:"NOT_FOUND"});
     if(req.method==="GET"){
@@ -94,9 +98,21 @@ if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url)) {
   const ingest=appSecret&&authorizedNumbers.length>0?createArmWhatsAppIngest({
     supabaseUrl:get("SUPABASE_URL"),serviceRoleKey:get("SUPABASE_SERVICE_ROLE_KEY")
   }):null;
-  createGateway({onAuthorizedEvent:ingest}).listen(port,"127.0.0.1",()=>{
+  const responder=ingest&&autoReplyEnabled?createWhatsAppTestResponder({
+    supabaseUrl:get("SUPABASE_URL"),serviceRoleKey:get("SUPABASE_SERVICE_ROLE_KEY"),
+    openaiKey:get("OPENAI_API_KEY")||modelEnv.OPENAI_API_KEY,
+    whatsappToken:get("WHATSAPP_ACCESS_TOKEN"),phoneId:expectedPhoneId,
+    allowedNumbers:authorizedNumbers,testOffers:simulatedOffers,
+    graphVersion:get("WHATSAPP_GRAPH_API_VERSION")||"v25.0"
+  }):null;
+  const receiveEvent=ingest?async e=>{
+    const result=await ingest(e);
+    if(result==="stored"&&responder)await responder(e);
+    return result;
+  }:null;
+  createGateway({onAuthorizedEvent:receiveEvent,autoReplies:Boolean(responder)}).listen(port,"127.0.0.1",()=>{
     console.log("ARM_WHATSAPP_GATEWAY_READY port="+port+" signedValidation="+Boolean(appSecret)+
       " verifyConfigured="+Boolean(verification)+" testNumbers="+authorizedNumbers.length+
-      " durableIngest="+Boolean(ingest)+" replies=disabled");
+      " durableIngest="+Boolean(ingest)+" replies="+Boolean(responder)+" testOffers="+Boolean(responder&&simulatedOffers));
   });
 }
