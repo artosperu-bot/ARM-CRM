@@ -2,6 +2,7 @@ import { createServer } from "node:http";
 import { readFileSync } from "node:fs";
 import { createClient } from "@supabase/supabase-js";
 import { randomUUID } from "node:crypto";
+import { estimateUsd } from "./agent-cost.mjs";
 import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
 
@@ -23,9 +24,6 @@ const supabaseUrl=process.env.SUPABASE_URL||crm.VITE_SUPABASE_URL;
 const publishableKey=process.env.SUPABASE_PUBLISHABLE_KEY||crm.VITE_SUPABASE_PUBLISHABLE_KEY;
 const origin="http://127.0.0.1:5175",port=8789,model="gpt-5.4-mini",maxOutput=350,maxDaily=20;
 const busy=new Set(), localCount=new Map();
-export function estimateUsd(input,output,cached) {
-  return Math.round(((Math.max(0,input-cached)*.75+cached*.075+output*4.50)/1000000)*1e8)/1e8;
-}
 function send(res,status,value) {
   res.writeHead(status,{"Content-Type":"application/json; charset=utf-8","Cache-Control":"no-store",
     "Access-Control-Allow-Origin":origin,"Access-Control-Allow-Methods":"GET,POST,OPTIONS",
