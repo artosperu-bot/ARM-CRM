@@ -1,1 +1,19 @@
 .crm-inline-form{background:#f8fbfe;border:1px solid #dbe8ee;border-radius:12px;padding:16px;display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;margin:14px 0 20px}.crm-inline-form label{display:flex;flex-direction:column;gap:8px;min-width:180px;flex:1;font-size:11px;font-weight:800;color:#557285}.crm-inline-form input,.crm-inline-form select{border:1px solid #d9e6ed;border-radius:9px;padding:12px;font-size:12px;background:#fff;color:#284354;outline-color:#7ddcff}.pipeline-bar{display:flex;gap:15px;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;margin-bottom:18px}.pipeline-bar .search-box{flex:1;margin:0}.pipeline-bar .primary-button{min-height:42px}.followup-kpi{flex:0 1 240px}.agent-box{display:flex;flex-direction:column;gap:13px}.agent-box label{font-size:11px;font-weight:800;color:#4b6c82}.agent-box .primary-button{align-self:flex-start}.empty-records svg{margin:0 auto;display:block;color:#75aec0}.funnel-row .bar div{min-width:0}.demo-chip.live-chip{background:#e7f8f0;color:#287e60}@media(max-width:760px){.pipeline-bar{flex-direction:column}.pipeline-bar .search-box{width:100%;max-width:none}.crm-inline-form{flex-direction:column;align-items:stretch}.crm-inline-form label{min-width:100%}}
+
+/* STECH visual refresh: azul marino y celeste suave #7DDCFF, más jerarquía y contraste */
+:root{--stech-cyan:#7ddcff;--stech-blue:#0c668d;--stech-navy:#0c2037;--stech-bg:#eff7fb;--stech-border:#d6e7f0}
+body{background:linear-gradient(145deg,#f1faff,#f2f6fd 55%,#eaf8fc);color:#14344b}
+.sidebar{background:linear-gradient(170deg,#09192e 0%,#0b3049 70%,#0d4760 100%);box-shadow:5px 0 24px #12344b16}
+.brand{border-bottom:1px solid #8edcfa24}.brand-icon{box-shadow:0 5px 20px #7ddcff32}.nav-label{color:#88c7db}
+.nav-link{transition:background .15s ease,color .15s ease;letter-spacing:.05px}.nav-link:hover{background:#ffffff11;color:#fff}
+.nav-link.active{background:linear-gradient(95deg,#7ddcff31,#35a0c127);border-color:#7ddcff55;color:#c2f4ff;box-shadow:inset 3px 0 #7ddcff}
+.topbar{background:#ffffffed;backdrop-filter:blur(8px);border-bottom:1px solid #d6e9f1}
+.heading{background:linear-gradient(115deg,#fff 0%,#f4fcff 75%,#e4f6fd 100%);padding:22px 26px;border:1px solid #d8edf5;border-radius:18px;box-shadow:0 6px 20px #11557309}
+.heading h1{color:#133a55;font-size:30px}.heading p{color:#64849b}
+.eyebrow{color:#168db5}.stat,.panel,.integration,.deal-card{box-shadow:0 8px 25px #12506a0b;border-color:#dbe9ef}
+.stat-icon,.integration-icon{background:#e3f7ff;color:#0988b8}.stat strong{color:#143d59}
+.primary-button{background:linear-gradient(110deg,#7ddcff,#52c9f4);border-color:#51b8e7;color:#103952;box-shadow:0 4px 12px #32a4d829}
+.primary-button:hover{background:linear-gradient(110deg,#6bd0f5,#36bee9)}
+.kanban-column{background:#e8f3f9;border:1px solid #d6e7ee}.kanban-title strong{color:#274d65}.deal-card:hover{border-color:#a3ddec;box-shadow:0 10px 25px #0a678d14}
+.footer{color:#7496aa}.auth-form-card{border-color:#d7ebf4}.integration{transition:transform .16s ease}.integration:hover{transform:translateY(-2px)}
+@media(max-width:780px){.heading{padding:16px}.heading h1{font-size:24px}.sidebar{box-shadow:none}}
