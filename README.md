@@ -10,7 +10,8 @@ CRM comercial de STECH PERU con **React 19, TypeScript, Vite 8 y Supabase Postgr
 - Workspace STECH PERU creado para el administrador autorizado.
 - 4 celulares Ulefone importados del catálogo comercial existente; precio y stock sin validar se muestran como **sin verificar**, nunca como cantidades inventadas.
 - No hay datos ni acceso de demostración.
-- **No están conectados todavía** los webhooks de WhatsApp, Instagram, Facebook, el agente LLM ni los valores de stock/ERP. No se simulan conversaciones ni se permite envío automático de mensajes.
+- **Agente comercial OpenAI API (solo OpenAI)**: backend local PC020, modelo económico fijo `gpt-5.4-mini`, chat interno supervisado y consumo por conversación. La clave queda únicamente en el servidor. La primera respuesta autenticada completa aún requiere prueba desde la interfaz.
+- **Webhooks Meta**: receptor y bandeja preparados, pero sin entrega real confirmada; no se envían mensajes automáticos ni se simulan conversaciones. Precio/stock ERP aún sin integrar.
 
 ## Autenticación reutilizada
 Para habilitar acceso real inmediatamente sin solicitar credenciales OAuth nuevas, ARM-CRM está configurado en PC020 para usar el **proyecto Supabase anterior** `iipamvqbipbolchlozoj`, que ya tenía Google OAuth funcionando y el usuario administrador de STECH.
@@ -22,6 +23,8 @@ La nueva base `stech-crm-ai-v2` (`rxewmgnndzacthnhdxjx`) se mantiene intacta par
 cd C:\DESAROLLO\ARM-CRM
 npm ci
 npm run dev -- --port 5175
+# En otra terminal, iniciar solo el backend privado de OpenAI:
+npm run agent
 ```
 Abre `http://127.0.0.1:5175/`, pulsa **Continuar con Google** y utiliza el correo previamente autorizado por STECH.
 
@@ -42,12 +45,12 @@ Se probó en PC020 con Playwright en navegador Chrome aislado: el formulario no 
 - `src/features/contacts`: contactos
 - `src/features/pipeline`: embudo Kanban
 - `src/features/catalog`: productos
-- `src/features/agent`: clasificador/buscador de catálogo con límites transparentes
+- `src/features/agent`: chat supervisado con OpenAI, conversaciones privadas y consumo real de tokens
 - `src/features/inbox`: estado de mensajería, sin datos simulados
 - `src/features/integrations`: integraciones y estados
 - `supabase/schema.sql`: esquema base, aplicado a ambos proyectos de forma aislada.
 
 ## Lo siguiente para integrar
-Agente real con LLM y RAG de celulares, acceso de solo lectura a stock/precios ERP, webhooks Meta/Composio con idempotencia, supervisión y permisos por canal. El CRM anterior y HERMES se mantienen sin alteraciones.
+Validar primera conversación de extremo a extremo con OpenAI, mejorar los atributos verificados de celulares, agregar acceso de solo lectura a stock/precios ERP y completar recepción webhooks Meta/Composio. El CRM anterior y HERMES se mantienen sin alteraciones.
 
-Para seguridad y configuración: `docs/ACCESO-INTERNO.md`, `docs/ARQUITECTURA.md`, `docs/INTEGRACIONES-SOCIALES.md`.
+Para costos, límites y configuración del agente: `docs/AGENTE-OPENAI.md`. Para seguridad y configuración: `docs/ACCESO-INTERNO.md`, `docs/ARQUITECTURA.md`, `docs/INTEGRACIONES-SOCIALES.md`.
