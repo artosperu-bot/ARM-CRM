@@ -6,6 +6,7 @@ import {supabase} from "../../lib/supabase";
 import "./agent.css";
 
 type Conversation={id:string;title:string;created_at:string};
+type TestOffer={partnumber:string;price_pen:number;stock_status:string};
 type Turn={id:string;role:"user"|"assistant";content:string;created_at:string};
 type Usage={model:string;inputTokens:number;outputTokens:number;cachedTokens:number;estimatedUsd:number;usageRecorded:boolean};
 export default function AgentPage({workspaceId,contacts,onNavigate,onCreateFollowup,onCreateDeal}:{
@@ -19,6 +20,9 @@ export default function AgentPage({workspaceId,contacts,onNavigate,onCreateFollo
  const [question,setQuestion]=useState("");
  const [sending,setSending]=useState(false);
  const [simulated,setSimulated]=useState(false);
+ const [testOffers,setTestOffers]=useState<TestOffer[]>([]);
+ const [offersLoading,setOffersLoading]=useState(false);
+ const [offersError,setOffersError]=useState("");
  const [error,setError]=useState("");
  const [notice,setNotice]=useState("");
  const [usage,setUsage]=useState<Usage|null>(null);
@@ -66,6 +70,20 @@ export default function AgentPage({workspaceId,contacts,onNavigate,onCreateFollo
   else setConversations((data||[]) as Conversation[]);
   setLoading(false);
  },[workspaceId]);
+ useEffect(()=>{
+  if(!simulated||!supabase){setTestOffers([]);setOffersError("");return;}
+  let active=true;setOffersLoading(true);setOffersError("");
+  void supabase.from("arm_offer_simulations")
+    .select("partnumber,price_pen,stock_status")
+    .eq("workspace_id",workspaceId).eq("is_test_data",true).order("partnumber")
+    .then(({data,error:readError})=>{
+      if(!active)return;
+      if(readError)setOffersError("No se pudieron consultar las ofertas simuladas en Supabase.");
+      else setTestOffers((data||[]) as TestOffer[]);
+      setOffersLoading(false);
+    });
+  return()=>{active=false;};
+ },[workspaceId,simulated]);
  useEffect(()=>{void refresh();void fetch("http://127.0.0.1:8789/health")
   .then(r=>r.json()).then(d=>setReady(d.ok===true)).catch(()=>setReady(false));},[refresh]);
  useEffect(()=>{
@@ -117,6 +135,15 @@ export default function AgentPage({workspaceId,contacts,onNavigate,onCreateFollo
      <span><strong>Simular precios y disponibilidad</strong><small>Solo laboratorio privado: cifras inventadas, etiquetadas como prueba. No se mezclan con ventas reales ni se agendan tareas.</small></span>
      {simulated&&<strong className="agent-sandbox-badge">SIMULACIÓN</strong>}
    </label>
+   {simulated&&<section className="agent-db-test-offers" aria-label="Ofertas ficticias desde Supabase">
+    <strong>Precios de prueba leídos desde Supabase</strong>
+    {offersLoading?<span>Cargando ofertas…</span>:offersError?<span role="alert">{offersError}</span>:
+     testOffers.length===0?<span>No hay ofertas ficticias registradas en este espacio.</span>:
+     <div className="agent-db-test-grid">{testOffers.map(offer=><div key={offer.partnumber}>
+      <strong>{offer.partnumber}</strong><span>S/ {Number(offer.price_pen).toFixed(2)}</span><small>{offer.stock_status}</small>
+     </div>)}</div>}
+    <small>Solo para pruebas internas. El agente nunca debe publicar estas cifras en WhatsApp ni en modo real.</small>
+   </section>}
    <div className="agent-layout-real">
     <aside className="agent-sessions"><div className="agent-side-head"><strong>Conversaciones</strong><button aria-label="Nueva conversación" title="Nueva conversación" onClick={()=>{setSelected(null);setTurns([]);setUsage(null);setError("");setNotice("");}}><Plus size={17}/></button></div>
      {conversations.length===0&&<p className="agent-empty-sessions">Aún no hay conversaciones.</p>}
