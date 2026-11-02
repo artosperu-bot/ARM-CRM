@@ -4,6 +4,8 @@ import { createClient } from "@supabase/supabase-js";
 import { randomUUID } from "node:crypto";
 import { estimateUsd } from "./agent-cost.mjs";
 import { salesInstructions } from "./sales-policy.mjs";
+import { enrichCatalog } from "./product-knowledge.mjs";
+import { crmResponseSchema,validateBookingProposal } from "./followup-automation.mjs";
 import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
 
@@ -52,6 +54,7 @@ async function handle(req,res){
  if(!jwt)return send(res,401,{error:"Inicia sesión en ARM-CRM."});
  const body=await requestJson(req),msg=typeof body.message==="string"?body.message.trim():"";
  const workspaceId=body.workspaceId,conversationId=body.conversationId??null;
+ const simulated=body.simulated===true; // strictly private sandbox; never used by social connectors
  if(!uuid(workspaceId)||(conversationId&&!uuid(conversationId))||msg.length<2||msg.length>800)
    return send(res,400,{error:"Pregunta entre 2 y 800 caracteres; conversación inválida."});
  const db=clientFor(jwt);
@@ -91,10 +94,7 @@ async function handle(req,res){
       .eq("workspace_id",workspaceId).limit(25)
   ]);
   if(history.error||products.error)throw new Error("No fue posible leer el contexto comercial.");
-  const catalog=(products.data||[]).map(p=>({
-    titulo:p.title,marca:p.brand,partnumber:p.partnumber,atributos:p.attributes,
-    precio_verificado:p.verified_at?p.price_pen:null,stock_verificado:p.verified_at?p.stock_erp:null
-  }));
+  const catalog=enrichCatalog(products.data||[],simulated);
   const abort=new AbortController(),timer=setTimeout(()=>abort.abort(),35000);
   let completion;
   try {
@@ -102,8 +102,9 @@ async function handle(req,res){
       method:"POST",signal:abort.signal,
       headers:{"Content-Type":"application/json","Authorization":"Bearer "+apiKey},
       body:JSON.stringify({
-        model,store:false,max_output_tokens:maxOutput,reasoning:{effort:"none"},
-        instructions:salesInstructions(catalog),
+        model,store:false,max_output_tokens:450,reasoning:{effort:"none"},
+        text:{format:crmResponseSchema},
+        instructions:salesInstructions(catalog,{simulated,nowIso:new Date().toISOString()})+"\nDevuelve JSON con reply y followup. Los campos followup se extraen únicamente de mensajes DEL CLIENTE, jamás inventes nombres, teléfonos, fechas ni consentimiento. requested=true solo para seguimiento solicitado; explicit_consent=true solo si el último mensaje incluye autorización para AGENDAR. Si falta dato usa null. Jamás afirmes registro exitoso en reply.",
         input:[...(history.data||[]).reverse().map(t=>({role:t.role,content:t.content})),{role:"user",content:msg}]
       })
     });
@@ -114,8 +115,32 @@ async function handle(req,res){
     }
     completion=await openai.json();
   } finally {clearTimeout(timer);}
-  const answer=answerText(completion);
-  if(!answer)return send(res,502,{error:"El modelo no devolvió texto dentro del límite de salida."});
+  const raw=answerText(completion);
+  if(!raw)return send(res,502,{error:"El modelo no devolvió texto dentro del límite de salida."});
+  let structured;
+  try{structured=JSON.parse(raw);}catch{return send(res,502,{error:"La respuesta del agente no llegó en el formato esperado."});}
+  if(typeof structured?.reply!=="string"||!structured.reply.trim())
+     return send(res,502,{error:"El agente no devolvió una respuesta válida."});
+  let answer=structured.reply.trim(),booking=null;
+  const customerTurns=[...(history.data||[]).filter(t=>t.role==="user").map(t=>t.content),msg];
+  const proposal=validateBookingProposal(structured.followup,customerTurns,msg);
+  if(proposal){
+    const {data:rows,error:bookingError}=await db.rpc("arm_book_agent_followup",{
+      p_workspace_id:workspaceId,p_conversation_id:cid,p_full_name:proposal.name,
+      p_phone:proposal.phone,p_due_at:proposal.dueAt,
+      p_description:("Retomar consulta sobre: "+customerTurns.join(" ").slice(0,300)).slice(0,390),
+      p_consent:true
+    });
+    if(bookingError){
+      console.error("arm_book_agent_followup: rejected",bookingError.code||"unknown");
+      answer+="\n\nNo pude registrar aún el seguimiento en el CRM. Un asesor debe revisarlo; no está confirmado.";
+    }else if(rows?.length){
+      booking={saved:true,followupId:rows[0].followup_id,alreadyScheduled:rows[0].already_scheduled,dueAt:proposal.dueAt};
+      answer+="\n\n✅ Seguimiento "+(rows[0].already_scheduled?"ya registrado":"registrado automáticamente")+" en el CRM para el "+new Date(proposal.dueAt).toLocaleString("es-PE",{timeZone:"America/Lima",dateStyle:"full",timeStyle:"short"})+". No se envió ningún mensaje externo.";
+    }
+  }
+  // Never allow quantity disclosures to be mistaken for stock numbers.
+  answer=answer.replace(/\b\d+\s+(?:unidades|equipos|en stock|disponibles en almac[eé]n)\b/giu,"disponibilidad por confirmar");
   const usage=completion.usage||{},input=usage.input_tokens||0,output=usage.output_tokens||0;
   const cached=Math.min(input,usage.input_tokens_details?.cached_tokens||0);
   const estimate=estimateUsd(input,output,cached);
@@ -134,7 +159,7 @@ async function handle(req,res){
   return send(res,200,{ok:true,conversationId:cid,answer,usage:{
     model:completion.model||model,inputTokens:input,outputTokens:output,cachedTokens:cached,
     estimatedUsd:estimate,usageRecorded:!metricErr
-  }});
+  },booking,simulated});
  }finally{busy.delete(user.id);}
 }
 createServer(async(req,res)=>{
