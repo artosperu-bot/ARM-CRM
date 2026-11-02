@@ -49,7 +49,7 @@ export function createGateway({verifyToken=verification,secret=appSecret,phoneId
         service:"arm-whatsapp-gateway",webhookVerifiedReady:Boolean(secret&&verifyToken),
         phoneConfigured:Boolean(phoneId),testNumbersConfigured:allowlist.length,
         inboundConnected:Boolean(onAuthorizedEvent),automaticReplies:false,
-        signedRequests:metrics.signedRequests,eligibleEvents:metrics.eligibleEvents});
+        signedRequests:metrics.signedRequests,eligibleEvents:metrics.eligibleEvents,acceptedEvents:metrics.acceptedEvents});
     if(url.pathname!=="/webhooks/whatsapp")return send(res,404,{error:"NOT_FOUND"});
     if(req.method==="GET"){
       const mode=url.searchParams.get("hub.mode"),token=url.searchParams.get("hub.verify_token");
