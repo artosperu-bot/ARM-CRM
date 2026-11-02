@@ -1,24 +1,22 @@
-# Integraciones y observabilidad ARM-CRM — 02/11/2026
+# ARM-CRM — limpieza de datos históricos y conexión WhatsApp
 
-## Consumo de IA (datos reales, no demos)
-- Origen histórico: `public.ia_metricas_tokens` del CRM anterior, importado a `public.arm_ai_usage` de STECH.
-- 528 eventos, 90 sesiones, 651832 tokens entrada, 73627 tokens salida y 109056 tokens cacheados. Historial del 24/08/2026 al 01/09/2026.
-- Los tokens cacheados son parte de entrada; NO sumar nuevamente.
-- Se muestran filtros por modelo, conversación, fecha y desglose por nodo.
-- El CRM anterior no conservó costos facturados en estas 528 métricas: se marca `No registrado`, nunca `USD 0`.
-- Los eventos del agente ARM futuro se almacenarán con source=`arm_agent`, modelo, identificador de sesión, costos verificados y proveedor. La pantalla separa métricas reales de estimación.
-- Función Supabase `arm-sync-usage` desplegada con `verify_jwt=true`. Botón `Sincronizar historial` solo ADMIN: consulta lectura de fuente existente, hace UPSERT idempotente en `arm_ai_usage`, jamás modifica tablas antiguas.
-- Prueba negativa sin JWT de la función: HTTP 401 confirmado.
+## Limpieza solicitada el 02/11/2026
+- Se eliminaron **528** filas con `source='legacy_ia_metricas_tokens'` de `public.arm_ai_usage`, limitadas al workspace STECH PERU del administrador.
+- Verificación posterior: `arm_ai_usage=0`, `arm_messages=0`, `arm_inbound_events=0`, `arm_contacts=0`. Se conservaron los **4 productos** verificados como registros reales de catálogo.
+- Los registros de `public.ia_metricas_tokens` del **CRM anterior (528 filas)** permanecen intactos; no se alteran sistemas compartidos ni se eliminan sus historiales.
+- Función remota `arm-sync-usage` reemplazada por respuesta **HTTP 410** y `verify_jwt=true`: ya no importa historiales.
+- Quitado el botón `Sincronizar historial` de la UI y filtrada la consulta de consumo por `source='arm_agent'`: solamente métricas nuevas, sin datasets históricos.
+- Prohibido reimportar eventos de ese origen sin instrucción nueva y explícita.
 
-## Redes / Composio
-- `arm_channel_connections` registra estado (solo lectura para usuarios), proveedor y permiso de escritura bloqueado por defecto.
-- Se iniciaron flujos de autorización para WhatsApp Business, Instagram Business y Facebook Pages. Al 02/11/2026 no hay conexión ACTIVE confirmada.
-- Los enlaces Composio de autorización son efímeros y NO deben persistirse en Git.
-- Luego de autorizar, verificar vía Composio lista de cuentas conectadas, ID de página y scopes; jamás suponer autorización.
-- El conector HERMES existente publica solo con aprobación expresa y control de autorización. NO habilitar envío automático ni doble dueño de webhooks.
-- Estado `not_connected` es correcto hasta validar cuentas. No engañar con estado activo.
+## WhatsApp/Composio
+- Estado confirmado con herramienta Composio: **0** conexiones ACTIVE para WhatsApp, Instagram y Facebook; tres autorizaciones iniciadas que requieren acción del propietario.
+- Captura del usuario: Composio → Auth Configs → WhatsApp → Create Auth Config. Las selecciones OAuth 2.0 y Composio Managed son correctas para iniciar sin credenciales OAuth propias.
+- Crear Auth Config **no** conecta la cuenta ni el CRM automáticamente; después es necesario Connect Account (prueba de Playground) o un Connect Link destinado al usuario de ARM-CRM.
+- Primero confirmar permisos comerciales mínimos y una cuenta **WhatsApp Business** con WABA. Jamás utilizar WhatsApp Personal como API empresarial.
+- No conservar links de autorización ni secretos en Git.
+- Antes de marcar `arm_channel_connections.status='active'`, verificar realmente la conexión por Composio y la autenticación de la cuenta Meta.
+- No habilitar `write_enabled` ni envío/publicaciones mientras no estén probados webhooks, validación de firma, deduplicación y permisos.
 
-## Diseño
-- Paleta #7DDCFF celeste, azul marino profundo, superficies claras, tablero de tokens en contraste alto y vista adaptable.
-- Menú nuevo `Consumo IA`; los KPIs leen datos reales protegidos por RLS.
-- Pendientes: LLM agente en vivo, costos por proveedor, inbox conectada, webhooks oficiales Meta, ERP stock/precios.
+## Métricas futuras
+- `arm_ai_usage` permanece como tabla para **eventos nuevos** generados por el agente ARM-CRM; coste USD = NULL salvo dato medido por proveedor o estimación identificada.
+- El panel Consumo IA empieza en cero hasta que un proveedor LLM real registre llamadas; no generar muestras ficticias para simular uso.
