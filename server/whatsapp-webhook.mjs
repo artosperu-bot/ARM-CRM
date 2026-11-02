@@ -44,3 +44,25 @@ export function selectAuthorizedEvents(events, {phoneNumberId, authorizedNumbers
     e.timestamp * 1000 >= enabledSince
   );
 }
+
+
+/** Aggregate Meta delivery events without exposing phone numbers, message IDs or text. */
+export function summarizeWhatsAppEnvelope(payload) {
+  const summary={statusUpdates:0,receivedMessages:0,
+    deliveryStatuses:{sent:0,delivered:0,read:0,failed:0,other:0}};
+  if(payload?.object!=="whatsapp_business_account"||!Array.isArray(payload.entry))return summary;
+  for(const entry of payload.entry.slice(0,20)){
+    for(const change of (Array.isArray(entry?.changes)?entry.changes:[]).slice(0,20)){
+      if(change?.field!=="messages")continue;
+      const data=change.value||{};
+      summary.receivedMessages+=(Array.isArray(data.messages)?data.messages.slice(0,20).length:0);
+      for(const item of (Array.isArray(data.statuses)?data.statuses:[]).slice(0,20)){
+        summary.statusUpdates++;
+        const status=String(item?.status||"");
+        const key=Object.hasOwn(summary.deliveryStatuses,status)?status:"other";
+        summary.deliveryStatuses[key]++;
+      }
+    }
+  }
+  return summary;
+}
