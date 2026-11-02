@@ -136,7 +136,7 @@ async function handle(req,res){
       answer+="\n\nNo pude registrar aún el seguimiento en el CRM. Un asesor debe revisarlo; no está confirmado.";
     }else if(rows?.length){
       booking={saved:true,followupId:rows[0].followup_id,alreadyScheduled:rows[0].already_scheduled,dueAt:proposal.dueAt};
-      answer+="\n\n✅ Seguimiento "+(rows[0].already_scheduled?"ya registrado":"registrado automáticamente")+" en el CRM para el "+new Date(proposal.dueAt).toLocaleString("es-PE",{timeZone:"America/Lima",dateStyle:"full",timeStyle:"short"})+". No se envió ningún mensaje externo.";
+      answer="✅ "+(rows[0].already_scheduled?"Tu seguimiento ya estaba agendado":"Tu seguimiento quedó registrado automáticamente")+" en STECH para el "+new Date(proposal.dueAt).toLocaleString("es-PE",{timeZone:"America/Lima",dateStyle:"full",timeStyle:"short"})+". El equipo puede verlo en la agenda; aún no se envía ningún mensaje automático.";
     }
   }
   // Never allow quantity disclosures to be mistaken for stock numbers.
