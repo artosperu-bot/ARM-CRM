@@ -43,8 +43,11 @@ const cases=[
  ]}
 ];
 const textFrom =data=>(data.output||[]).filter(x=>x.type==="message").flatMap(x=>x.content||[]).filter(x=>x.type==="output_text").map(x=>x.text).join("\n").trim();
+const requested=args.find(x=>x.startsWith("--case="))?.slice("--case=".length);
+const selectedCases=requested?cases.filter(x=>x.id===requested):cases;
+if(!selectedCases.length){console.error("Unknown case ID");process.exit(2);}
 let calls=0,totalUsd=0,pass=0;
-for(const item of cases){
+for(const item of selectedCases){
  let messages=[],results=[],ok=true;
  for(const userMessage of item.turns){
   const controller=new AbortController(),stop=setTimeout(()=>controller.abort(),32000);
@@ -73,4 +76,4 @@ for(const item of cases){
  if(ok)pass++;
  console.log("FLOW_RESULT "+JSON.stringify({id:item.id,title:item.title,ok,turns:results}));
 }
-console.log("EVAL_SUMMARY "+JSON.stringify({scenarios:cases.length,passing:pass,calls,estimatedUsd:Number(totalUsd.toFixed(6)),origin:"live OpenAI Responses",persistedToCrm:false}));
+console.log("EVAL_SUMMARY "+JSON.stringify({scenarios:selectedCases.length,passing:pass,calls,estimatedUsd:Number(totalUsd.toFixed(6)),origin:"live OpenAI Responses",persistedToCrm:false}));
