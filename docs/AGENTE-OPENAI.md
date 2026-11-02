@@ -11,7 +11,7 @@
 
 ## Límite de gastos y privacidad
 - 20 consultas por usuario y día en el proceso local, y 20 eventos guardados por workspace/día UTC.
-- Pregunta hasta 800 caracteres, contexto últimos 8 turnos, hasta 350 tokens de salida por respuesta (incluye razonamiento).
+- Pregunta hasta 800 caracteres, contexto últimos 8 turnos, hasta 450 tokens de salida por respuesta (incluye razonamiento).
 - El backend usa `store: false`, no requiere almacenamiento de conversación en OpenAI.
 - OpenAI sí puede cobrar tokens de las solicitudes. Estimación de referencia (noviembre 2026): `gpt-5.4-mini` USD $0.75 / millón entrada, $0.075 / millón entrada cacheada y $4.50 / millón salida; tarifa sujeta a cambios. El CRM registra **estimaciones**, nunca las presenta como factura oficial.
 - **Para un límite de gasto real** configurar también presupuestos/controles en la plataforma OpenAI. Los límites de la aplicación no garantizan un máximo de facturación externo.
