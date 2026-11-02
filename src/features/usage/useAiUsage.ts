@@ -16,7 +16,7 @@ export function useAiUsage(workspaceId:string | undefined){
    for(let page=0;page<maxPages;page++){
     const {data,error:readError}=await supabase.from("arm_ai_usage")
      .select("id,session_id,message_id,model,node,input_tokens,output_tokens,cached_input_tokens,cost_usd,cost_source,occurred_at,source")
-     .eq("workspace_id",workspaceId).order("id",{ascending:false})
+     .eq("workspace_id",workspaceId).eq("source","arm_agent").order("id",{ascending:false})
      .range(page*pageSize,(page+1)*pageSize-1);
     if(readError)throw readError;
     rows.push(...((data??[]) as UsageEvent[]));
