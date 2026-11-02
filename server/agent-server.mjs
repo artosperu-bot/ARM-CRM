@@ -5,6 +5,7 @@ import { randomUUID } from "node:crypto";
 import { estimateUsd } from "./agent-cost.mjs";
 import { salesInstructions } from "./sales-policy.mjs";
 import { enrichCatalog } from "./product-knowledge.mjs";
+import {buildConversationContext} from "./conversation-context.mjs";
 import { crmResponseSchema,validateBookingProposal } from "./followup-automation.mjs";
 import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
@@ -87,13 +88,16 @@ async function handle(req,res){
     if(createErr)throw new Error("No se pudo abrir la conversación.");
     cid=created.id;
   }
-  const [history,products]=await Promise.all([
-    db.from("arm_agent_turns").select("role,content,created_at").eq("workspace_id",workspaceId)
-      .eq("conversation_id",cid).order("created_at",{ascending:false}).limit(8),
+  const [history,initial,products]=await Promise.all([
+    db.from("arm_agent_turns").select("id,role,content,created_at").eq("workspace_id",workspaceId)
+      .eq("conversation_id",cid).order("created_at",{ascending:false}).limit(10),
+    db.from("arm_agent_turns").select("id,role,content,created_at").eq("workspace_id",workspaceId)
+      .eq("conversation_id",cid).order("created_at",{ascending:true}).limit(2),
     db.from("arm_products").select("title,brand,partnumber,attributes,stock_erp,price_pen,verified_at")
       .eq("workspace_id",workspaceId).limit(25)
   ]);
-  if(history.error||products.error)throw new Error("No fue posible leer el contexto comercial.");
+  if(history.error||initial.error||products.error)throw new Error("No fue posible leer el contexto comercial.");
+  const context=buildConversationContext(initial.data||[],history.data||[]);
   const catalog=enrichCatalog(products.data||[],simulated);
   const abort=new AbortController(),timer=setTimeout(()=>abort.abort(),35000);
   let completion;
@@ -105,7 +109,7 @@ async function handle(req,res){
         model,store:false,max_output_tokens:maxOutput,reasoning:{effort:"none"},
         text:{format:crmResponseSchema},
         instructions:salesInstructions(catalog,{simulated,nowIso:new Date().toISOString()})+"\nDevuelve JSON con reply y followup. Los campos followup se extraen únicamente de mensajes DEL CLIENTE, jamás inventes nombres, teléfonos, fechas ni consentimiento. requested=true solo para seguimiento solicitado; explicit_consent=true solo si el último mensaje incluye autorización para AGENDAR. Si falta dato usa null. Jamás afirmes registro exitoso en reply.",
-        input:[...(history.data||[]).reverse().map(t=>({role:t.role,content:t.content})),{role:"user",content:msg}]
+        input:[...context,{role:"user",content:msg}]
       })
     });
     if(!openai.ok){
@@ -122,7 +126,7 @@ async function handle(req,res){
   if(typeof structured?.reply!=="string"||!structured.reply.trim())
      return send(res,502,{error:"El agente no devolvió una respuesta válida."});
   let answer=structured.reply.trim(),booking=null;
-  const customerTurns=[...(history.data||[]).filter(t=>t.role==="user").map(t=>t.content),msg];
+  const customerTurns=[...context.filter(t=>t.role==="user").map(t=>t.content),msg];
   const proposal=simulated?null:validateBookingProposal(structured.followup,customerTurns,msg);
   if(proposal){
     const {data:rows,error:bookingError}=await db.rpc("arm_book_agent_followup",{
@@ -162,7 +166,7 @@ async function handle(req,res){
   },booking,simulated});
  }finally{busy.delete(user.id);}
 }
-createServer(async(req,res)=>{
+const service=createServer(async(req,res)=>{
  try {
   if((req.headers.origin&&req.headers.origin!==origin) || !["127.0.0.1:8789","localhost:8789"].includes(req.headers.host||""))
     return send(res,403,{error:"Origen no permitido."});
@@ -172,7 +176,14 @@ createServer(async(req,res)=>{
   console.error("STECH agent:",err instanceof Error?err.name:"unknown");
   return send(res,err?.status||500,{error:err?.status?err.message:"Error interno del agente."});
  }
-}).listen(port,"127.0.0.1",()=>{
+});
+service.on("error",error=>{
+ if(error.code==="EADDRINUSE"){
+  console.error("STECH_AGENT_ALREADY_RUNNING: puerto "+port+" ocupado. Comprueba /health; no abras dos agentes simultáneos.");
+  process.exitCode=1;
+ }else throw error;
+});
+service.listen(port,"127.0.0.1",()=>{
  console.log("STECH_AGENT_LOCAL_READY port="+port+" provider=OpenAI model="+model+
  " configured="+Boolean(apiKey&&supabaseUrl&&publishableKey)+" maxDaily="+maxDaily);
 });
