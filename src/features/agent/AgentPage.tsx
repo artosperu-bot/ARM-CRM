@@ -1,12 +1,18 @@
 import {useCallback,useEffect,useState} from "react";
-import {Bot,CheckCircle2,Coins,MessageCircle,Plus,Send,ShieldCheck,RefreshCw,Zap} from "lucide-react";
+import {Bot,CheckCircle2,Coins,MessageCircle,Plus,Send,ShieldCheck,RefreshCw,Zap,CalendarClock,UserRoundCheck} from "lucide-react";
+import type {Contact,Section} from "../../types";
+import {detectCommercialSignal} from "./salesSignals";
 import {supabase} from "../../lib/supabase";
 import "./agent.css";
 
 type Conversation={id:string;title:string;created_at:string};
 type Turn={id:string;role:"user"|"assistant";content:string;created_at:string};
 type Usage={model:string;inputTokens:number;outputTokens:number;cachedTokens:number;estimatedUsd:number;usageRecorded:boolean};
-export default function AgentPage({workspaceId}:{workspaceId:string}){
+export default function AgentPage({workspaceId,contacts,onNavigate,onCreateFollowup,onCreateDeal}:{
+ workspaceId:string;contacts:Contact[];onNavigate:(section:Section)=>void;
+ onCreateFollowup:(contactId:string,description:string,dueAt:string)=>Promise<void>;
+ onCreateDeal:(contactId:string,title:string)=>Promise<void>;
+}){
  const [conversations,setConversations]=useState<Conversation[]>([]);
  const [selected,setSelected]=useState<string|null>(null);
  const [turns,setTurns]=useState<Turn[]>([]);
@@ -17,6 +23,39 @@ export default function AgentPage({workspaceId}:{workspaceId:string}){
  const [usage,setUsage]=useState<Usage|null>(null);
  const [ready,setReady]=useState(false);
  const [loading,setLoading]=useState(true);
+ const [actionOpen,setActionOpen]=useState(false);
+ const [linkedContact,setLinkedContact]=useState("");
+ const [dueAt,setDueAt]=useState("");
+ const [task,setTask]=useState("");
+ const [approved,setApproved]=useState(false);
+ const [savingAction,setSavingAction]=useState(false);
+ const customers=turns.filter(t=>t.role==="user").map(t=>t.content);
+ const signal=customers.length>0?detectCommercialSignal(customers):null;
+ const lastQuestion=customers.at(-1)||"";
+ async function createTask(e:React.FormEvent){
+  e.preventDefault();setError("");setNotice("");
+  if(!approved){setError("Confirma que existe autorización para el seguimiento.");return;}
+  if(!linkedContact){setError("Selecciona un cliente registrado.");return;}
+  if(!dueAt||Number.isNaN(Date.parse(dueAt))||new Date(dueAt).getTime()<=Date.now()){
+    setError("Elige una fecha y hora futura para el seguimiento.");return;
+  }
+  setSavingAction(true);
+  try{
+   await onCreateFollowup(linkedContact,task.trim(),new Date(dueAt).toISOString());
+   setNotice("Seguimiento guardado en ARM-CRM. No se envió ningún mensaje.");
+   setActionOpen(false);setApproved(false);
+  }catch(cause){setError(cause instanceof Error?cause.message:"No se pudo registrar el seguimiento.");}
+  finally{setSavingAction(false);}
+ }
+ async function createOpportunity(){
+  if(!linkedContact){setError("Selecciona un cliente antes de crear la oportunidad.");return;}
+  setSavingAction(true);setError("");setNotice("");
+  try{
+   await onCreateDeal(linkedContact,("Interés desde agente: "+lastQuestion.slice(0,130)).slice(0,190));
+   setNotice("Oportunidad creada en Pipeline. Revisa y confirma el precio antes de cotizar.");
+  }catch(cause){setError(cause instanceof Error?cause.message:"No se pudo crear la oportunidad.");}
+  finally{setSavingAction(false);}
+ }
 
  const refresh=useCallback(async()=>{
   if(!supabase)return;
@@ -84,6 +123,32 @@ export default function AgentPage({workspaceId}:{workspaceId:string}){
       {turns.map(t=><div key={t.id} className={"agent-bubble "+t.role}><span>{t.role==="assistant"?"Agente STECH":"Tú"}</span><p>{t.content}</p></div>)}
       {sending&&<div className="agent-wait"><RefreshCw size={15}/> Consultando a OpenAI…</div>}
       </div>
+      {signal&&<div className={"agent-commercial-signal "+(signal.priority==="high"?"hot":"")}>
+       <div className="agent-signal-text"><strong>{signal.label}</strong><span>{signal.nextAction}</span>
+        {signal.handoff&&<small><UserRoundCheck size={13}/> Revisión de asesor recomendada; aún no se ha asignado.</small>}</div>
+       {signal.followupSuggested&&<button className="secondary-button" onClick={()=>{
+        setActionOpen(v=>!v);
+        setLinkedContact(contacts[0]?.id||"");
+        setTask(("Retomar solicitud: "+lastQuestion).slice(0,390));
+        setDueAt("");setApproved(false);
+       }}><CalendarClock size={15}/> Gestionar en CRM</button>}
+      </div>}
+      {actionOpen&&<div className="agent-sales-action">
+       <h3>Convertir conversación en acción comercial</h3>
+       {!contacts.length?<div className="agent-action-notice">Todavía no hay clientes en ARM-CRM. Registra primero un contacto real y después vuelve a esta conversación.
+        <button className="secondary-button" onClick={()=>onNavigate("clientes")}>Ir a Clientes</button></div>:
+        <form onSubmit={e=>void createTask(e)}>
+         <label>Cliente del CRM<select required value={linkedContact} onChange={e=>setLinkedContact(e.target.value)}>
+          <option value="">Seleccionar cliente</option>{contacts.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}
+         </select></label>
+         <label>Acción / motivo<textarea minLength={3} maxLength={390} required value={task} onChange={e=>setTask(e.target.value)} rows={2}/></label>
+         <label>Fecha y hora acordada<input required type="datetime-local" value={dueAt} onChange={e=>setDueAt(e.target.value)}/></label>
+         <label className="agent-approval"><input type="checkbox" checked={approved} onChange={e=>setApproved(e.target.checked)}/>
+          Confirmo que el cliente autorizó este seguimiento. No enviar mensajes automáticamente.</label>
+         <div className="agent-sales-buttons"><button disabled={savingAction||!approved||!dueAt} type="submit" className="primary-button"><CalendarClock size={15}/> Registrar seguimiento</button>
+          <button disabled={savingAction||!linkedContact} className="secondary-button" type="button" onClick={()=>void createOpportunity()}>Crear oportunidad</button></div>
+        </form>}
+      </div>}
       {usage&&<div className="agent-usage"><CheckCircle2 size={16}/><span>{usage.model} · {usage.inputTokens} entrada · {usage.outputTokens} salida · {usage.cachedTokens} caché · Est. USD {usage.estimatedUsd.toFixed(5)}{!usage.usageRecorded?" · Métrica no guardada":""}</span></div>}
       {notice&&<div className="agent-notice" role="status">{notice}</div>}
       {error&&<div className="auth-error" role="alert">{error}</div>}
