@@ -78,7 +78,7 @@ export function useCrmWorkspace(enabled: boolean) {
       if (!active) return;
       setWorkspace(selected);
       setContacts(((contactResponse.data || []) as ContactRow[]).map((c) => ({
-        id: c.id, name: c.display_name, phone: c.phone || "Sin teléfono",
+        id: c.id, name: c.display_name, phone: c.phone || "", email: c.email || "",
         source: channel(c.source), interest: c.notes || "Sin observaciones", createdAt: c.created_at,
       })));
       setDeals(((dealResponse.data || []) as DealRow[]).map((d) => ({
@@ -137,11 +137,12 @@ export function useCrmWorkspace(enabled: boolean) {
     if (insertError) throw insertError;
     await refresh(session);
   }
-  async function createContact(name: string, interest: string, source: Channel = "web") {
+  async function createContact(name: string, interest: string, source: Channel = "web", phone = "", email = "") {
     if (!supabase || !workspace || !session) throw new Error("No hay un espacio comercial activo.");
     const { error: insertError } = await supabase.from("arm_contacts").insert({
       workspace_id: workspace.id, display_name: name.trim(),
       notes: interest.trim() || null, source: source === "web" ? "manual" : source,
+      phone: phone.trim() || null, email: email.trim().toLowerCase() || null,
     });
     if (insertError) throw insertError;
     await refresh(session);
