@@ -111,7 +111,7 @@ export default function AgentPage({workspaceId,contacts,onNavigate,onCreateFollo
    <section className="agent-heading"><div className="agent-heading-logo"><Bot size={26}/></div><div><h2>Agente vendedor STECH</h2><p>OpenAI GPT-5.4 Mini · Chat privado · Sin herramientas de pago adicionales</p></div>
      <span className={"agent-state "+(ready?"good":"waiting")}>{ready?"Servicio OpenAI configurado":"Servicio local no disponible"}</span>
    </section>
-   <div className="agent-stat-strip"><span><ShieldCheck size={16}/> Supervisado: no responde en redes</span><span><Zap size={16}/> Máximo 350 tokens de salida</span><span><Coins size={16}/> Hasta 20 consultas/día</span></div>
+   <div className="agent-stat-strip"><span><ShieldCheck size={16}/> Supervisado: no responde en redes</span><span><Zap size={16}/> Máximo 450 tokens de salida</span><span><Coins size={16}/> Hasta 20 consultas/día</span></div>
    <label className={"agent-sandbox-switch "+(simulated?"is-on":"")}>
      <input type="checkbox" checked={simulated} disabled={sending} onChange={e=>{setSimulated(e.target.checked);setSelected(null);setTurns([]);setUsage(null);setError("");setNotice("");}}/>
      <span><strong>Simular precios y disponibilidad</strong><small>Solo laboratorio privado: cifras inventadas, etiquetadas como prueba. No se mezclan con ventas reales ni se agendan tareas.</small></span>
