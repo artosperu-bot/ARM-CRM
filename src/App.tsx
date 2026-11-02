@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Activity,Bot,CalendarClock,ChevronRight,ContactRound,Inbox,Kanban,LayoutDashboard,LogOut,Package,PlugZap,ShieldCheck,Sparkles } from "lucide-react";
+import { Activity,ChartNoAxesCombined,Bot,CalendarClock,ChevronRight,ContactRound,Inbox,Kanban,LayoutDashboard,LogOut,Package,PlugZap,ShieldCheck,Sparkles } from "lucide-react";
 import AuthPanel from "./features/auth/AuthPanel";
 import WorkspaceSetup from "./features/crm/WorkspaceSetup";
 import { CrmDataNotice } from "./features/crm/CrmDataNotice";
@@ -12,6 +12,7 @@ import CatalogPage from "./features/catalog/CatalogPage";
 import InboxPage from "./features/inbox/InboxPage";
 import AgentPage from "./features/agent/AgentPage";
 import IntegrationsPage from "./features/integrations/IntegrationsPage";
+import UsagePage from "./features/usage/UsagePage";
 import { isSupabaseConfigured } from "./lib/supabase";
 import type { Section } from "./types";
 
@@ -23,6 +24,7 @@ const sections=[
 {id:"mensajes",label:"Bandeja de entrada",icon:Inbox},
 {id:"catalogo",label:"Catálogo",icon:Package},
 {id:"agente",label:"Agente comercial",icon:Bot},
+{id:"consumo",label:"Consumo IA",icon:ChartNoAxesCombined},
 {id:"integraciones",label:"Integraciones",icon:PlugZap},
 ] as const;
 
@@ -43,7 +45,8 @@ export default function App(){
   mensajes:<InboxPage/>,
   catalogo:<CatalogPage products={crm.products}/>,
   agente:<AgentPage products={crm.products}/>,
-  integraciones:<IntegrationsPage/>,
+  consumo:<UsagePage workspaceId={crm.workspace!.id}/>,
+  integraciones:<IntegrationsPage workspaceId={crm.workspace!.id}/>,
  }[section];
  return <div className="app-shell"><aside className="sidebar"><div className="brand"><span className="brand-icon">S</span><div><strong>STECH</strong><small>ARM / CRM</small></div></div><div className="nav-label">GESTIÓN COMERCIAL</div><nav className="nav-list">{sections.map(item=>{const Icon=item.icon;return <button key={item.id} className={"nav-link "+(section===item.id?"active":"")} onClick={()=>setSection(item.id)}><Icon size={17}/><span>{item.label}</span>{section===item.id&&<ChevronRight size={15}/>}</button>})}</nav><div className="sidebar-footer"><span className="circle-icon"><ShieldCheck size={16}/></span><div><strong>Sesión autorizada</strong><small>Supabase y permisos RLS</small></div></div></aside><main className="main"><header className="topbar"><div className="breadcrumbs">STECH <ChevronRight size={14}/> {sections.find(x=>x.id===section)?.label}</div><div className="topbar-right"><span className="demo-chip live-chip"><span className="dot"/> CRM ACTIVO</span><span className="tiny-pill">{crm.role}</span><button className="icon-action" title="Cerrar sesión" aria-label="Cerrar sesión" onClick={()=>void crm.signOut()}><LogOut size={17}/></button></div></header><div className="content"><div className="heading"><div><div className="eyebrow"><Sparkles size={15}/> CENTRO COMERCIAL STECH</div><h1>{sections.find(x=>x.id===section)?.label}</h1><p>{crm.workspace?.name} · Información del CRM almacenada en Supabase.</p></div></div><CrmDataNotice workspace={crm.workspace?.name}/>{page}<footer className="footer"><span>STECH PERU · ARM-CRM</span><span><Activity size={14}/> Datos persistentes · Acceso restringido</span></footer></div></main></div>;
 }
