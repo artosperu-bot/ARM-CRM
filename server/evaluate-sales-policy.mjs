@@ -25,8 +25,11 @@ const cases=[
  ]}
 ];
 const textFrom=r=>(r.output||[]).filter(x=>x.type==="message").flatMap(x=>x.content||[]).filter(x=>x.type==="output_text").map(x=>x.text).join("");
+const target=process.argv.find(x=>x.startsWith("--case="))?.split("=")[1];
+const selected=target?cases.filter(x=>x.id===target):cases;
+if(!selected.length){console.error("Invalid flow ID");process.exit(2);}
 let calls=0,totalUsd=0,ok=0;
-for(const flow of cases){
+for(const flow of selected){
  const hist=[];let passed=true;
  for(const utterance of flow.turns){
   const request={model:"gpt-5.4-mini",store:false,reasoning:{effort:"none"},max_output_tokens:450,text:{format:crmResponseSchema},
@@ -56,4 +59,4 @@ for(const flow of cases){
  }
  if(passed)ok++;
 }
-console.log("SUMMARY "+JSON.stringify({flows:cases.length,passing:ok,calls,estimatedUsd:Number(totalUsd.toFixed(7)),writeToCrm:false}));
+console.log("SUMMARY "+JSON.stringify({flows:selected.length,passing:ok,calls,estimatedUsd:Number(totalUsd.toFixed(7)),writeToCrm:false}));
