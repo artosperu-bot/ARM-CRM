@@ -70,7 +70,7 @@ export default function App(){
   seguimientos:<FollowupsPage contacts={crm.contacts} tasks={crm.followups} onCreate={crm.createFollowup} onComplete={crm.completeFollowup}/>,
   mensajes:<InboxPage workspaceId={crm.workspace!.id}/>,
   catalogo:<CatalogPage products={crm.products}/>,
-  agente:<AgentPage products={crm.products}/>,
+  agente:<AgentPage workspaceId={crm.workspace!.id}/>,
   consumo:<UsagePage workspaceId={crm.workspace!.id}/>,
   integraciones:<IntegrationsPage workspaceId={crm.workspace!.id} isAdmin={crm.role==="ADMIN"}/>,
  }[section];
