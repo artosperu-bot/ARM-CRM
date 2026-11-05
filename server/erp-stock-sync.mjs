@@ -15,7 +15,7 @@ function envFile(file){
  return e;
 }
 const root=resolve(import.meta.dirname,"..");
-const env={...envFile("C:\\DESAROLLO\\ARM-CRM\\.env.local"),...process.env};
+const env={...envFile("C:\\DESAROLLO\\n8n\\backend\\.env"),...envFile("C:\\DESAROLLO\\ARM-CRM\\.env.local"),...process.env};
 if(!env.SUPABASE_URL||!env.SUPABASE_SERVICE_ROLE_KEY)throw new Error("PRIVATE_SUPABASE_CREDENTIALS_REQUIRED");
 const cli=createClient(env.SUPABASE_URL,env.SUPABASE_SERVICE_ROLE_KEY,{auth:{persistSession:false,autoRefreshToken:false}});
 const {data:maps,error:mapError}=await cli.from("arm_erp_product_map")
