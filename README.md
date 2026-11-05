@@ -2,16 +2,18 @@
 
 CRM comercial de STECH PERU con **React 19, TypeScript, Vite 8 y Supabase PostgreSQL**. Interfaz de uso interno, sin registro público y sin datos ficticios.
 
-## Estado actual (02-11-2026)
+## Estado actual (05-11-2026)
 - Login exclusivo con Google OAuth y lista interna `crm_usuarios` (rol `ADMIN` o `ASESOR`, activo).
 - Base de datos real para `arm_workspaces`, `arm_contacts`, `arm_deals`, `arm_followups`, `arm_products`, `arm_messages`, `arm_memberships`, `arm_inbound_events`.
 - Protección RLS por espacio de trabajo y verificación de correo autorizado.
 - Panel de indicadores reales, pipeline Kanban interactivo, clientes, agenda con vencimientos, catálogo y herramientas de consulta comercial.
 - Workspace STECH PERU creado para el administrador autorizado.
 - 4 celulares Ulefone importados del catálogo comercial existente; precio y stock sin validar se muestran como **sin verificar**, nunca como cantidades inventadas.
-- No hay datos ni acceso de demostración.
+- No hay acceso de demostración público. Las ofertas de prueba privadas se guardan exclusivamente en `arm_offer_simulations`; nunca se usan como datos comerciales reales.
 - **Agente comercial OpenAI API (solo OpenAI)**: backend local PC020, modelo económico fijo `gpt-5.4-mini`, chat interno supervisado y consumo por conversación. La clave queda únicamente en el servidor. La primera respuesta autenticada completa aún requiere prueba desde la interfaz.
-- **Webhooks Meta**: receptor y bandeja preparados, pero sin entrega real confirmada; no se envían mensajes automáticos ni se simulan conversaciones. Precio/stock ERP aún sin integrar.
+- **WhatsApp Meta probado de extremo a extremo** para los dos celulares sandbox autorizados: recepción en ARM, respuesta ALEX usando OpenAI API, mensaje y coste en Supabase. Los precios simulados permanecen aislados y etiquetados. No habilitado para clientes reales.
+- **Inteligencia comercial inicial**: clasificación de intención, señales de compra, posible B2B, prioridad, filtros de inbox, revisión humana y opt-out persistente en `arm_lead_insights`. Calificaciones heurísticas, no probabilidades. No se crean pedidos, oportunidades ni seguimientos por una puntuación.
+- **Reglas vigentes**: `docs/REGLAS-INTELIGENCIA-COMERCIAL.md`. Seguimientos salientes automáticos aún bloqueados, ERP de precios/stock real pendiente.
 
 ## Autenticación reutilizada
 Para habilitar acceso real inmediatamente sin solicitar credenciales OAuth nuevas, ARM-CRM está configurado en PC020 para usar el **proyecto Supabase anterior** `iipamvqbipbolchlozoj`, que ya tenía Google OAuth funcionando y el usuario administrador de STECH.
@@ -51,6 +53,6 @@ Se probó en PC020 con Playwright en navegador Chrome aislado: el formulario no 
 - `supabase/schema.sql`: esquema base, aplicado a ambos proyectos de forma aislada.
 
 ## Lo siguiente para integrar
-Validar primera conversación de extremo a extremo con OpenAI, mejorar los atributos verificados de celulares, agregar acceso de solo lectura a stock/precios ERP y completar recepción webhooks Meta/Composio. El CRM anterior y HERMES se mantienen sin alteraciones.
+Verificar UX y filtros en sesión Google autenticada, estabilizar autostart PC020, integrar inventario/precios ERP read-only y equivalencias, completar pipeline y seguimientos con consentimiento, y agregar Instagram/Facebook. El CRM anterior y HERMES se mantienen sin alteraciones.
 
 Para costos, límites y configuración del agente: `docs/AGENTE-OPENAI.md`. Para seguridad y configuración: `docs/ACCESO-INTERNO.md`, `docs/ARQUITECTURA.md`, `docs/INTEGRACIONES-SOCIALES.md`.
