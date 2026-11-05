@@ -84,6 +84,7 @@ describe("isolated WhatsApp test reply",()=>{
       }
     });
     expect((await responder(f.event)).status).toBe("sent");
-    expect(writes[0].text.body).toMatch(/^🧪 PRUEBA STECH/);
+    expect(writes[0].text.body).toMatch(/^🧪 \*PRUEBA STECH\*/);
+    expect(writes[0].text.body).toContain("Precio simulado: S/ 999");
   });
 });
