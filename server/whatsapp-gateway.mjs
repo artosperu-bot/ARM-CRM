@@ -5,6 +5,7 @@ import {fileURLToPath} from "node:url";
 import {parseWhatsAppEvents,selectAuthorizedEvents,verifyMetaSignature,summarizeWhatsAppEnvelope} from "./whatsapp-webhook.mjs";
 import {createArmWhatsAppIngest} from "./whatsapp-ingest.mjs";
 import {createWhatsAppTestResponder} from "./whatsapp-test-responder.mjs";
+import {createLeadIntelligenceProcessor} from "./lead-intelligence-processor.mjs";
 
 function loadEnv(path) {
   const result={};
@@ -112,7 +113,10 @@ if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url)) {
   const ingest=appSecret&&authorizedNumbers.length>0?createArmWhatsAppIngest({
     supabaseUrl:get("SUPABASE_URL"),serviceRoleKey:get("SUPABASE_SERVICE_ROLE_KEY")
   }):null;
-  const responder=ingest&&autoReplyEnabled?createWhatsAppTestResponder({
+  const triage=ingest?createLeadIntelligenceProcessor({
+    supabaseUrl:get("SUPABASE_URL"),serviceRoleKey:get("SUPABASE_SERVICE_ROLE_KEY")
+  }):null;
+  const responder=ingest&&triage&&autoReplyEnabled?createWhatsAppTestResponder({
     supabaseUrl:get("SUPABASE_URL"),serviceRoleKey:get("SUPABASE_SERVICE_ROLE_KEY"),
     openaiKey:get("OPENAI_API_KEY")||modelEnv.OPENAI_API_KEY,
     whatsappToken:get("WHATSAPP_ACCESS_TOKEN"),phoneId:expectedPhoneId,
@@ -122,8 +126,16 @@ if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url)) {
   const replyStats={sent:0,failed:0,lastReplyAt:null};
   const receiveEvent=ingest?async e=>{
     const result=await ingest(e);
-    if(result==="stored"&&responder)queueMicrotask(()=>{
-      void responder(e).then(result=>{
+    if(result==="stored"){
+      // Every signed message is durably recorded first. A failed triage does not
+      // trigger speculative AI responses, lead creation or automated followups.
+      let decision={should_reply:false};
+      if(triage){
+        try{decision=await triage(e);}
+        catch{console.error("ARM_LEAD_TRIAGE_FAILED");}
+      }
+      if(responder&&decision.should_reply)queueMicrotask(()=>{
+      void responder(e,decision).then(result=>{
         if(result?.status==="sent"){replyStats.sent++;replyStats.lastReplyAt=new Date().toISOString();}
       }).catch(err=>{
         replyStats.failed++;
@@ -131,6 +143,7 @@ if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url)) {
         console.error("WHATSAPP_TEST_REPLY_FAILED",err instanceof Error?err.message.replace(/\d{8,}/g,"[ID]"):"unknown");
       });
     });
+    }
     return result;
   }:null;
   createGateway({onAuthorizedEvent:receiveEvent,autoReplies:Boolean(responder),getReplyStats:()=>replyStats}).listen(port,"127.0.0.1",()=>{
