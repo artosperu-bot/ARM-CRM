@@ -15,7 +15,7 @@ const RE={
  business:/\b(?:mi empresa|para la empresa|para una empresa|para mi negocio|para mi oficina|para (?:nuestro|nuestra) (?:personal|equipo|empresa)|ruc|corporativ[oa]s?|licitacion|entidad publica|oficina|b2b|compras empresariales|compras del estado)\b/u,
  urgent:/\b(?:lo necesito (?:hoy|manana|urgente)|para hoy|para manana|esta semana|urgente|de inmediato)\b/u,
  budget:/\b(?:mi presupuesto|tengo (?:de )?presupuesto|puedo gastar|hasta s\/?\s*\d|hasta \d{3,}(?:\b|$))\b/u,
- product:/\b(?:armor(?:\s|\-)?(?:22|x13|x12|25t)|ulefone|lenovo|epson|laptop|notebook|computadora|pc|impresora|tablet|celular|telefono|smartphone)\b/u,
+ product:/\b(?:armor[\s-]?(?:22|x13|x12|25t)|ulefone|lenovo|epson|laptop|notebook|computadora|pc|impresora|tablet|celular|telefono|smartphone)\b/u,
  availability:/\b(?:stock|disponib(?:le|ilidad)|tienen|hay unidades|entrega inmediata)\b/u
 };
 const quantity=text=>{
