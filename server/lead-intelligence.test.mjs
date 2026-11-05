@@ -61,6 +61,22 @@ describe("Lead intelligence: sales signals and safe automatic actions",()=>{
    expect(r.quantity_min).toBe(null);
    expect(r.is_b2b).toBe(false);
  });
+ it("does not classify unrelated quantities as hardware B2B",()=>{
+   const r=analyzeSalesConversation([msg("Quiero comprar 2 boletos para un evento")]);
+   expect(r.is_b2b).toBe(false);
+ });
+ it("does not ask a human after an explicit refusal",()=>{
+   const r=analyzeSalesConversation([msg("No quiero hablar con un asesor, dime el precio del Armor 22")]);
+   expect(r.requires_human).toBe(false);
+   expect(immediateStop("No quiero hablar con un asesor")).toBe(false);
+ });
+ it("does not stick a historical human request after advisor releases the thread",()=>{
+   const r=analyzeSalesConversation([
+      msg("Necesito un asesor"),msg("Ya hablé con él; ahora cotiza Armor 22")
+   ],{threadStatus:"pending"});
+   expect(r.requires_human).toBe(false);
+   expect(r.should_reply).toBe(true);
+ });
  it("conservative priority is a rule-based score, not probability",()=>{
    const r=analyzeSalesConversation([msg("Hola")]);
    expect(r.score).toBeGreaterThanOrEqual(0);
