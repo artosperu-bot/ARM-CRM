@@ -62,7 +62,7 @@ export function analyzeSalesConversation(messages,{
  add(optOut,"no_contactar");
  const score=optOut||closed?0:Math.min(100,Math.max(5,
    10+(intendsBuy?38:0)+(askedPrice?17:0)+(isBusiness?15:0)+
-   (comparison?8:0)+(urgency?12:0)+(budget?8:0)+(product?7:0)-
+   (comparison?8:0)+(urgency?12:0)+(budget?8:0)+(product?8:0)-
    (objection&&!intendsBuy?8:0)));
  const intent=optOut?"no_contactar":askedHuman?"atencion_humana":intendsBuy?"compra":
    askedPrice?"cotizacion":comparison?"comparacion":objection?"objecion":
