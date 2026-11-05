@@ -15,7 +15,9 @@ describe("Native WhatsApp message presentation",()=>{
  it("does not create fake benefits or invent options",()=>{
   const body=formatWhatsAppReply("*Armor 22*\n*Precio:* S/ 999");
   expect(body).toBe("*Armor 22*\n*Precio:* S/ 999");
-  expect(body).not.toMatch(/X13|25T|opciones|\\?/);
+  expect(body).not.toContain("X13");
+  expect(body).not.toContain("25T");
+  expect(body).not.toContain("opciones");
  });
  it("does not inject simulation data in real mode",()=>{
   expect(formatWhatsAppReply("Bienvenido.",{simulated:false})).toBe("Bienvenido.");
