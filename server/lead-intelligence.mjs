@@ -35,14 +35,14 @@ export function analyzeSalesConversation(messages,{
  const has=(key)=>includes(body,RE[key]);
  const signals=[];
  const add=(cond,label)=>{if(cond)signals.push(label);};
- const askedHuman=has("human")||has("complaint");
+ const askedHuman=includes(latest,RE.human)||includes(latest,RE.complaint);
  const explicitStop=includes(latest,RE.optout);
  const explicitResume=includes(latest,RE.optin);
  const optOut=explicitStop||(Boolean(previousOptOut)&&!explicitResume);
  const human=threadStatus==="human"||Boolean(assignedTo)||askedHuman;
  const closed=threadStatus==="closed";
  const amount=quantity(body);
- const isBusiness=has("business")||(amount!==null&&amount>=2);
+ const isBusiness=has("business")||(amount!==null&&amount>=2&&has("product"));
  const askedPrice=has("quote");
  const intendsBuy=has("purchase");
  const comparison=has("compare");
