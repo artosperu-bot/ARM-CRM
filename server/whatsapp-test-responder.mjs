@@ -3,6 +3,7 @@ import {salesInstructions} from "./sales-policy.mjs";
 import {enrichCatalog} from "./product-knowledge.mjs";
 import {crmResponseSchema} from "./followup-automation.mjs";
 import {estimateUsd} from "./agent-cost.mjs";
+import {whatsappPresentationInstructions,formatWhatsAppReply} from "./whatsapp-format.mjs";
 
 function textFrom(response){
   return (response.output||[]).filter(o=>o.type==="message"&&o.role==="assistant")
@@ -67,6 +68,7 @@ export function createWhatsAppTestResponder({
         model:"gpt-5.4-mini",store:false,max_output_tokens:450,reasoning:{effort:"none"},
         text:{format:crmResponseSchema},
         instructions:salesInstructions(catalog,{simulated:testOffers,nowIso:new Date().toISOString()})+
+          "\n"+whatsappPresentationInstructions()+
           "\nEres una prueba PRIVADA por WhatsApp para un destinatario autorizado. No inventes que creaste reservas, seguimientos o enviaste archivos. El agendamiento automático por WhatsApp no está habilitado: solicita datos necesarios y explica que la confirmación requiere el backend. Devuelve JSON reply y followup. Evita mencionar cantidades exactas de stock.",
         input:ordered.length?ordered:[{role:"user",content:event.text}]
       })
@@ -77,9 +79,7 @@ export function createWhatsAppTestResponder({
   let answer;
   try{answer=JSON.parse(textFrom(result)).reply?.trim();}catch{throw new Error("OPENAI_INVALID_JSON");}
   if(!answer||typeof answer!=="string")throw new Error("OPENAI_EMPTY_REPLY");
-  if(testOffers)answer="🧪 PRUEBA STECH (precios y disponibilidad simulados)\n\n"+answer;
-  // Backstop: never disclose quantity even if the model disregards the instruction.
-  answer=answer.replace(/\b\d+\s+(?:unidades|equipos|en stock)\b/giu,"disponibilidad por confirmar").slice(0,1300);
+  answer=formatWhatsAppReply(answer,{simulated:testOffers});
   const tokens=result.usage||{};
   const usedInput=tokens.input_tokens||0,usedOutput=tokens.output_tokens||0;
   const cached=tokens.input_tokens_details?.cached_tokens||0;
