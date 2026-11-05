@@ -35,7 +35,8 @@ export function analyzeSalesConversation(messages,{
  const has=(key)=>includes(body,RE[key]);
  const signals=[];
  const add=(cond,label)=>{if(cond)signals.push(label);};
- const askedHuman=includes(latest,RE.human)||includes(latest,RE.complaint);
+ const deniedHuman=/\b(?:no quiero hablar con|no necesito (?:un |una )?asesor)\b/u.test(latest);
+ const askedHuman=(includes(latest,RE.human)&&!deniedHuman)||includes(latest,RE.complaint);
  const explicitStop=includes(latest,RE.optout);
  const explicitResume=includes(latest,RE.optin);
  const optOut=explicitStop||(Boolean(previousOptOut)&&!explicitResume);
@@ -88,5 +89,5 @@ export function analyzeSalesConversation(messages,{
 }
 export function immediateStop(text){
  const normalized=clean(text);
- return RE.optout.test(normalized)||RE.human.test(normalized)||RE.complaint.test(normalized);
+ return RE.optout.test(normalized)||(RE.human.test(normalized)&&!/\b(?:no quiero hablar con|no necesito (?:un |una )?asesor)\b/u.test(normalized))||RE.complaint.test(normalized);
 }
