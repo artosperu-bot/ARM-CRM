@@ -18,7 +18,7 @@ export function createWhatsAppTestResponder({
    return null;
  const client=db||createClient(supabaseUrl,serviceRoleKey,{auth:{persistSession:false,autoRefreshToken:false}});
  const allowed=new Set(allowedNumbers.map(normalizeTestPhone).filter(Boolean));
- return async function replyToTestNumber(event){
+ return async function replyToTestNumber(event,leadProfile=null){
   if(!event||event.phoneNumberId!==phoneId||!allowed.has(event.sender)||!event.text)
     return {status:"blocked"};
   // Never send outside the fresh customer-initiated conversation window.
@@ -69,6 +69,10 @@ export function createWhatsAppTestResponder({
         text:{format:crmResponseSchema},
         instructions:salesInstructions(catalog,{simulated:testOffers,nowIso:new Date().toISOString()})+
           "\n"+whatsappPresentationInstructions()+
+          (leadProfile?("\nCONTEXTO COMERCIAL INTERNO: señal="+String(leadProfile.intent||"consulta_general")+
+           "; B2B="+Boolean(leadProfile.is_b2b)+"; cantidad de equipos confirmada="+
+           (Number.isInteger(leadProfile.quantity_min)?leadProfile.quantity_min:"no confirmada")+
+           ". Utiliza estas señales solamente como hipótesis para orientar la respuesta. NO reveles puntuaciones ni etiquetas internas; confirma antes de tratar al cliente como empresa, ni afirmes cierre o cotización registrada."):"")+
           "\nEres una prueba PRIVADA por WhatsApp para un destinatario autorizado. No inventes que creaste reservas, seguimientos o enviaste archivos. El agendamiento automático por WhatsApp no está habilitado: solicita datos necesarios y explica que la confirmación requiere el backend. Devuelve JSON reply y followup. Evita mencionar cantidades exactas de stock.",
         input:ordered.length?ordered:[{role:"user",content:event.text}]
       })
