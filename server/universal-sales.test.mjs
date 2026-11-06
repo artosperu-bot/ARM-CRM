@@ -100,6 +100,11 @@ describe("sales process is driven by buying stage, not product category",()=>{
   expect(salesMove(buildBuyerContext(["Ya no quiero comprar"]),{catalog}).stage).toBe("desistimiento");
   expect(salesMove(buildBuyerContext(["Gracias por todo"]),{catalog}).questionPolicy).toBe("ninguna");
  });
+ it("does not promise to leave a buying lead registered for an advisor",()=>{
+  const buyer=buildBuyerContext(["Quiero comprar la silla ahora"],{catalog});
+  const r=protectSalesResponse("Puedo dejar tu interés listo para que un asesor te llame.",{catalog,buyer});
+  expect(r).toMatchObject({blocked:true,reason:"unconfirmed_action"});
+ });
  it("does not request name or address before an actual checkout tool exists",()=>{
   const buyer=buildBuyerContext(["Ya elegí la silla, quiero comprarla"],{catalog});
   expect(buyer.current_intent).toBe("comprar");
