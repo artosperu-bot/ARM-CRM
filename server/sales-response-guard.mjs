@@ -43,7 +43,7 @@ export function protectSalesResponse(reply,{catalog=[],buyer=null,simulated=fals
  const budget=Number(buyer?.budget?.pen);
  let moneyViolation=false;
  for(const match of text.matchAll(moneyRe)){
-  const value=number(match[1]);
+  const value=number(match[1].replace(/[.,]+$/u,"")); // sentence-ending punctuation is not part of the amount
   const window=text.slice(Math.max(0,match.index-90),match.index).toLowerCase();
   const isRestatedBudget=Number.isFinite(budget)&&budget===value&&
     /\b(?:tu|su|el|un|de|con|presupuesto|monto|m[aá]ximo|inversi[oó]n)\b.{0,40}\b(?:presupuesto|monto|l[ií]mite|inversi[oó]n)\b|\bpresupuesto.{0,50}$/iu.test(window);
