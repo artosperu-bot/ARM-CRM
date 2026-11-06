@@ -27,7 +27,7 @@ export function salesMove(profile,{catalog=[]}={}){
  }
  if(intent==="comprar"){
   return {...result,stage:"decision",goal:"Facilitar el siguiente paso real de compra",
-   move:"El cliente ya decidió: deja de comparar y de venderle características. Explica únicamente el siguiente paso que el backend puede realizar. En este piloto NO hay herramienta de crear pedidos, pagos ni reservas: no insinúes que los vas a registrar. No pidas nombre, apellido, teléfono, RUC, dirección o tarjeta solo por mostrar intención de compra. Primero aclara producto y condiciones pendientes; consulta a un asesor cuando haga falta.",
+   move:"El cliente ya decidió: deja de comparar y de venderle características. Explica únicamente el siguiente paso que el backend puede realizar. No hay una herramienta habilitada para crear pedidos, pagos ni reservas: no insinúes que los registrarás, ni que derivaste o dejaste listo el interés. Explica el siguiente paso disponible al cliente sin mencionar detalles internos como «piloto», «sandbox» o «backend». No pidas nombre, apellido, teléfono, RUC, dirección o tarjeta solo por mostrar intención de compra. Primero aclara producto y condiciones pendientes; consulta a un asesor cuando haga falta.",
    questionPolicy:"solo_bloqueante",readyForAction:true};
  }
  if(intent==="cotizar"||intent==="consultar_precio"){
