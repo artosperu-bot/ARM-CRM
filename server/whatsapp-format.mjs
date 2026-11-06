@@ -1,3 +1,4 @@
+import {hideExactStockUnits} from "./sales-response-guard.mjs";
 /**
  * WhatsApp Cloud API supports *bold* and _italic_; it does not render
  * Markdown headers or double-asterisk bold. Keep this adapter isolated from
@@ -33,7 +34,7 @@ export function formatWhatsAppReply(raw,{simulated=false,maxChars=1300}={}){
  if(simulated){
    text=text.replace(/^\s*(?:🧪|📌|📝|✏️)?\s*\*?PRUEBA STECH\*?[^\n]*\n*/iu,"").trimStart();
  }
- text=text.replace(/\b\d+\s+(?:unidades|equipos|en stock)\b/giu,"disponibilidad por confirmar");
+ text=hideExactStockUnits(text);
  const header=simulated?"🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\n":"";
  const budget=Math.max(0,maxChars-header.length);
  if(text.length>budget){
