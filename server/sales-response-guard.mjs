@@ -17,7 +17,7 @@ const number=(v)=>{
 };
 const moneyRe=/\bS\/\.?\s*(\d[\d.,]*)/giu;
 const forbiddenActions=[
- /\b(?:ya|te)\s+(?:he\s+)?(?:agend[eé]|reserv[eé]|registr[eé]|envi[eé])\b/iu,
+ /\b(?:ya\s+(?:te\s+|lo\s+|la\s+)?(?:he\s+)?|te\s+(?:he\s+)?)(?:agend[eé]|reserv[eé]|registr[eé]|envi[eé])\b/iu,
  /\b(?:tu|su|el)\s+(?:pedido|cotizaci[oó]n|reserva|compra|cita)\s+(?:ya\s+)?(?:est[aá]|qued[oó])\s+(?:confirmad[ao]|registrad[ao]|reservad[ao]|agendad[ao]|enviad[ao])/iu,
  /\b(?:ya\s+qued[oó]|qued[oó]\s+list[oa])\s+(?:tu|su|el|la)\s+(?:pedido|reserva|cita|cotizaci[oó]n)\b/iu
 ];
