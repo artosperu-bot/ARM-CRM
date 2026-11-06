@@ -103,7 +103,7 @@ async function handle(req,res){
   if(history.error||initial.error||products.error||testOffers.error)throw new Error("No fue posible leer el contexto comercial.");
   const context=buildConversationContext(initial.data||[],history.data||[]);
   const catalog=enrichCatalog(products.data||[],simulated,testOffers.data||[]);
-  const buyer=buildBuyerContext([...context.filter(t=>t.role==="user").map(t=>t.content),msg]);
+  const buyer=buildBuyerContext([...context.filter(t=>t.role==="user").map(t=>t.content),msg],{catalog});
   const abort=new AbortController(),timer=setTimeout(()=>abort.abort(),35000);
   let completion;
   try {
@@ -113,7 +113,7 @@ async function handle(req,res){
       body:JSON.stringify({
         model,store:false,max_output_tokens:maxOutput,reasoning:{effort:"none"},
         text:{format:crmResponseSchema},
-        instructions:salesInstructions(catalog,{simulated,nowIso:new Date().toISOString()})+"\n"+buyerGuidance(buyer)+"\nDevuelve JSON con reply y followup. Los campos followup se extraen únicamente de mensajes DEL CLIENTE, jamás inventes nombres, teléfonos, fechas ni consentimiento. requested=true solo para seguimiento solicitado; explicit_consent=true solo si el último mensaje incluye autorización para AGENDAR. Si falta dato usa null. Jamás afirmes registro exitoso en reply.",
+        instructions:salesInstructions(catalog,{simulated,nowIso:new Date().toISOString()})+"\n"+buyerGuidance(buyer,{catalog})+"\nDevuelve JSON con reply y followup. Los campos followup se extraen únicamente de mensajes DEL CLIENTE, jamás inventes nombres, teléfonos, fechas ni consentimiento. requested=true solo para seguimiento solicitado; explicit_consent=true solo si el último mensaje incluye autorización para AGENDAR. Si falta dato usa null. Jamás afirmes registro exitoso en reply.",
         input:[...context,{role:"user",content:msg}]
       })
     });
