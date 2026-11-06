@@ -25,6 +25,7 @@ const forbiddenActions=[
 const stockUnits=/\b(?:quedan|tenemos|hay|disponibles?|en stock|stock de)\s+\d{1,5}\s+(?:unidades|equipos|laptops?|celulares?|impresoras?|licencias?|monitores?|routers?|productos?|servicios?|accesorios?|sillas?)\b/iu;
 const discount=/\b(?:descuento|rebaja|promoci[oó]n|off)\s+(?:de|del|hasta)?\s*\d{1,3}\s*%|\b\d{1,3}\s*%\s+de\s+(?:descuento|rebaja)/iu;
 const deliveryPromise=/\b(?:te|le)\s+(?:llega|entregamos|enviamos)\s+(?:ma[ñn]ana|hoy)\b/iu;
+const unconfirmedFutureAction=/\b(?:puedo|podr[ií]a|voy a|te puedo)\s+(?:dejar|registrar|derivar|enviar|coordinar|agendar)\b.{0,90}\b(?:inter[eé]s|pedido|cotizaci[oó]n|asesor|reserva|cita|solicitud|list[oa]|registrad[oa])\b/iu;
 const prematureDataRequest=/(?:\b(?:p[aá]same|dame|env[ií]ame|ind[ií]came|necesito|comp[aá]rteme|comparte|compartes|cu[aá]l es)\s+(?:tu|su)\s+(?:nombre|apellido|tel[eé]fono|celular|direcci[oó]n|ruc|dni|correo|tarjeta)\b|\b(?:tu|su)\s+(?:nombre\s+(?:y|completo)|direcci[oó]n|ruc|dni)\s+(?:para\s+(?:hacer|registrar|confirmar)))/iu;
 export function protectSalesResponse(reply,{catalog=[],buyer=null,simulated=false}={}){
  const text=typeof reply==="string"?reply.trim():"";
@@ -51,7 +52,7 @@ export function protectSalesResponse(reply,{catalog=[],buyer=null,simulated=fals
   const approvedPrice=askedCommercialPrice&&priceValues.has(value);
   if(!approvedPrice&&!isRestatedBudget){moneyViolation=true;break;}
  }
- const actionViolation=forbiddenActions.some(x=>x.test(text));
+ const actionViolation=forbiddenActions.some(x=>x.test(text))||unconfirmedFutureAction.test(text);
  const stockViolation=stockUnits.test(text);
  const discountViolation=discount.test(text);
  const deliveryViolation=deliveryPromise.test(text);
