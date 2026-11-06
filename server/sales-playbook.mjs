@@ -45,6 +45,16 @@ export function salesMove(profile,{catalog=[]}={}){
    move:"Comparar pocas opciones relevantes del catálogo y sus diferencias verificadas, con beneficios y limitaciones. Evitar decir que uno es mejor en todo; explicar para quién conviene cada uno.",
    questionPolicy:"opcional"};
  }
+ if(intent==="compatibilidad"){
+  return {...result,stage:"compatibilidad",goal:"Evitar una compra incompatible",
+    move:"Responder la pregunta de compatibilidad: si no hay especificación verificada, indica que aún no se puede confirmar. El cliente ya aportó datos técnicos; pide SOLO el dato restante más decisivo, nunca supongas conexión, potencia o sistema operativo.",
+    questionPolicy:"solo_bloqueante"};
+ }
+ if(intent==="entrega"){
+  return {...result,stage:"logistica",goal:"No prometer una fecha imposible",
+    move:"Responde primero si la entrega solicitada está confirmada o no. Sin comprobación logística y stock vendible, no prometas entrega hoy, mañana ni disponibilidad. No digas que tú lo revisarás después si no existe una acción de verificación conectada.",
+    questionPolicy:"solo_bloqueante"};
+ }
  if(intent==="disponibilidad"){
   return {...result,stage:"verificacion",goal:"Resolver disponibilidad y condiciones",
    move:"Dar solo estado de disponibilidad comercial confirmado. Nunca convertir stock físico en stock vendible o prometer fecha de despacho.",
@@ -66,6 +76,8 @@ export function salesMoveInstructions(profile,opts){
   "BENEFICIOS: relacionar propiedades verificadas con uso declarado, incluir límites o incompatibilidades relevantes; nunca inventar testimonios, escasez, exclusividad, urgencia o descuentos.",
   "CATÁLOGO: "+plan.productEvidence+". Una coincidencia ambigua o inexistente no autoriza inventar un producto. Se puede asesorar en general y ofrecer verificar el modelo solicitado.",
   "NO B2B POR DEFECTO: cualquier cantidad o presupuesto es una necesidad de venta; solo mencionar RUC o empresa si el cliente necesita factura o gestión corporativa.",
+  "PREGUNTA ÚTIL: no cierres automáticamente con «Si quieres, puedo ayudarte». Cuando haya una decisión pendiente y dos opciones plausibles, formula UNA pregunta decisiva sobre el uso, compatibilidad o variante. Si ya respondieron, no repitas. Si no hay dato por verificar, termina sin pregunta.",
+  "COMPROMISOS: distingue orientar al cliente de registrar o verificar realmente. Si solo puedes conversar, habla en presente de los datos conocidos y explica qué falta por comprobar; no prometas consultar precios, notificar asesores, emitir cotizaciones o confirmar pedidos más tarde.",
   "CIERRE NATURAL: si está listo para comprar, explica el siguiente paso realmente disponible sin pedir datos personales prematuramente; si duda, ayuda a decidir; si dice no o gracias, respeta su decisión."
  ].join("\n");
 }
