@@ -72,9 +72,18 @@ export async function retrieveSalesCatalog(client,workspaceId,customerMessages,{
     scored.set(row.partnumber,{product:row,score:weighted});
   }
  }
- const products=[...scored.values()].sort((a,b)=>b.score-a.score||
-  String(a.product.partnumber).localeCompare(String(b.product.partnumber)))
-  .slice(0,cap).map(x=>x.product);
+ const ranked=[...scored.values()].sort((a,b)=>b.score-a.score||
+  String(a.product.partnumber).localeCompare(String(b.product.partnumber)));
+ // When one exact model/SKU is far more relevant than every other candidate,
+ // avoid distracting the sales agent with unrelated alternatives. But preserve
+ // comparable variants when the buyer explicitly asks for alternatives.
+ const current=String(customerMessages.at(-1)||"").normalize("NFD")
+  .replace(/[\u0300-\u036f]/g,"").toLowerCase();
+ const comparing=/\b(?:compara\w*|diferencia\w*|alternativa\w*|opciones|versus|vs|mejor que|otra opcion)\b/u.test(current);
+ const strongest=ranked[0];
+ const exactFocus=!comparing&&strongest?.score>=140&&
+   (!ranked[1]||strongest.score>ranked[1].score*1.7);
+ const products=(exactFocus?[strongest]:ranked.slice(0,cap)).map(x=>x.product);
  if(!products.length)return {products:[],factsByPn:{},searchQueries:queries,limited:true};
  // Only fetch facts for the shortlisted SKUs, and only evidence reviewed
  // for the actual workspace. Never feed pending or expired facts to ALEX.
