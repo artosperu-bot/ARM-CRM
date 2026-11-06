@@ -16,7 +16,7 @@ const number=(v)=>{
  const normalized=/^\d+(?:[.,]\d{2})?$/.test(s)?s.replace(",","."):null;
  return normalized===null?NaN:Number(normalized);
 };
-const moneyRe=/\bS\/\.?\s*(\d[\d.,]*)/giu;
+const moneyRe=/(?:\bS\/\.?\s*(\d[\d.,]*)|\b(?:PEN|SOLES?)\s*(\d[\d.,]*)|\b(\d[\d.,]*)\s*(?:SOLES?|PEN)\b|\b(?:US\$|USD|D[ÓO]LARES?)\s*(\d[\d.,]*)|\$(\d[\d.,]*))/giu;
 const forbiddenActions=[
  /\b(?:ya\s+(?:te\s+|lo\s+|la\s+)?(?:he\s+)?|te\s+(?:he\s+)?)(?:agend[eé]|reserv[eé]|registr[eé]|envi[eé])(?=\s|[.,!?]|$)/iu,
  /\b(?:tu|su|el)\s+(?:pedido|cotizaci[oó]n|reserva|compra|cita)\s+(?:ya\s+)?(?:est[aá]|qued[oó])\s+(?:confirmad[ao]|registrad[ao]|reservad[ao]|agendad[ao]|enviad[ao])/iu,
@@ -27,6 +27,8 @@ const discount=/\b(?:descuento|rebaja|promoci[oó]n|off)\s+(?:de|del|hasta)?\s*\
 const deliveryPromise=/\b(?:te|le)\s+(?:llega|entregamos|enviamos)\s+(?:ma[ñn]ana|hoy)\b/iu;
 const unconfirmedFutureAction=/\b(?:puedo|podr[ií]a|voy a|te puedo)\s+(?:dejar|registrar|derivar|enviar|coordinar|agendar)\b.{0,90}\b(?:inter[eé]s|pedido|cotizaci[oó]n|asesor|reserva|cita|solicitud|list[oa]|registrad[oa])\b/iu;
 const promisedCommercialCheck=/\b(?:puedo|podemos|voy a|te puedo|si quieres puedo)\s+(?:ayudarte\s+a\s+)?(?:verificar|consultar|revisar|confirmar|cotizar|validar)\s+(?:el|la|las|los|un|una|tu|su)?\s*(?:cotizaci[oó]n|precio|compra|pedido|stock|disponibilidad|env[ií]o|entrega|compatibilidad|modelo)\b/iu;
+const unfinishedQuotePromise=/\b(?:puedo|podemos|voy a|te puedo)\s+(?:ayudarte\s+a\s+)?(?:dejar|preparar|tener)\b.{0,60}\b(?:list[ao]|cotizaci[oó]n|reserva|pedido|proforma)\b/iu;
+const redundantIdentifierRequest=/\b(?:si me confirmas|conf[ií]rmame|me puedes confirmar|me podr[ií]as confirmar|ind[ií]came)\s+(?:la|el|tu)?\s*(?:referencia\s+(?:completa|exacta)|modelo\s+exacto|n[uú]mero\s+de\s+modelo)\b/iu;
 const prematureDataRequest=/(?:\b(?:p[aá]same|dame|env[ií]ame|ind[ií]came|necesito|comp[aá]rteme|comparte|compartes|cu[aá]l es)\s+(?:tu|su)\s+(?:nombre|apellido|tel[eé]fono|celular|direcci[oó]n|ruc|dni|correo|tarjeta)\b|\b(?:tu|su)\s+(?:nombre\s+(?:y|completo)|direcci[oó]n|ruc|dni)\s+(?:para\s+(?:hacer|registrar|confirmar)))/iu;
 export function protectSalesResponse(reply,{catalog=[],buyer=null,simulated=false}={}){
  const text=typeof reply==="string"?reply.trim():"";
@@ -50,24 +52,28 @@ export function protectSalesResponse(reply,{catalog=[],buyer=null,simulated=fals
  const budget=Number(buyer?.budget?.pen);
  let moneyViolation=false;
  for(const match of text.matchAll(moneyRe)){
-  const value=number(match[1].replace(/[.,]+$/u,"")); // sentence-ending punctuation is not part of the amount
+  const amount=match.slice(1).find(x=>x!==undefined);
+  const value=number(String(amount||"").replace(/[.,]+$/u,""));
+  const isUsd=Boolean(match[4]||match[5]);
   const window=text.slice(Math.max(0,match.index-90),match.index).toLowerCase();
   const isRestatedBudget=Number.isFinite(budget)&&budget===value&&
     /\b(?:tu|su|el|un|de|con|presupuesto|monto|m[aá]ximo|inversi[oó]n)\b.{0,40}\b(?:presupuesto|monto|l[ií]mite|inversi[oó]n)\b|\bpresupuesto.{0,50}$/iu.test(window);
-  const approvedPrice=askedCommercialPrice&&priceValues.has(value);
-  if(!approvedPrice&&!isRestatedBudget){moneyViolation=true;break;}
+  const approvedPrice=!isUsd&&askedCommercialPrice&&priceValues.has(value);
+  if(!approvedPrice&&!(isRestatedBudget&&!isUsd)){moneyViolation=true;break;}
  }
- const actionViolation=forbiddenActions.some(x=>x.test(text))||unconfirmedFutureAction.test(text)||promisedCommercialCheck.test(text);
+ const actionViolation=forbiddenActions.some(x=>x.test(text))||unconfirmedFutureAction.test(text)||promisedCommercialCheck.test(text)||unfinishedQuotePromise.test(text);
+ const repeatedModelRequest=Boolean((buyer?.customer_reference||buyer?.matched_partnumber)&&redundantIdentifierRequest.test(text));
  const stockViolation=stockUnits.test(text);
  const discountViolation=discount.test(text);
  const deliveryViolation=deliveryPromise.test(text);
  const prematureDataViolation=buyer?.current_intent==="comprar"&&prematureDataRequest.test(text);
- if(!wrongProduct&&!moneyViolation&&!actionViolation&&!stockViolation&&!discountViolation&&!deliveryViolation&&!prematureDataViolation)
+ if(!wrongProduct&&!moneyViolation&&!actionViolation&&!stockViolation&&!discountViolation&&!deliveryViolation&&!prematureDataViolation&&!repeatedModelRequest)
   return {reply:text,blocked:false,reason:null};
- const reason=wrongProduct?"product_mismatch":moneyViolation?"unverified_price":actionViolation?"unconfirmed_action":
+ const reason=wrongProduct?"product_mismatch":repeatedModelRequest?"redundant_model_question":moneyViolation?"unverified_price":actionViolation?"unconfirmed_action":
    stockViolation?"exact_stock":discountViolation?"unapproved_discount":prematureDataViolation?"premature_personal_data":"delivery_promise";
  const fallback={
   product_mismatch:"Necesito verificar el modelo exacto antes de darte un precio; no quiero mezclar productos diferentes.",
+  redundant_model_question:"Ya tengo la referencia que me indicaste. Como todavía no está validada la ficha o el precio en el catálogo, no puedo darte información confirmada.",
   premature_personal_data:"Podemos confirmar el artículo y las condiciones vigentes antes de coordinar la compra. Todavía no puedo registrar pedidos ni cobrar desde este chat.",
   unverified_price:"Para darte un precio correcto necesito verificar la oferta vigente con STECH. Puedo ayudarte a elegir la opción adecuada según lo que necesitas.",
   unconfirmed_action:intent==="comprar"?"Entiendo que quieres comprar. Antes de indicar el pago hay que confirmar el producto exacto, las condiciones y el precio. No hay un pedido ni un pago registrado desde este chat.":intent==="entrega"?"No hay una fecha de entrega confirmada para ofrecerte todavía. La disponibilidad y el despacho requieren verificación.":"La información o la gestión solicitada requiere verificación del equipo comercial. Por ahora no tengo confirmación de que se haya realizado esa acción.",
