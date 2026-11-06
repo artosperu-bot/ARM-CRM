@@ -4,6 +4,8 @@ import {enrichCatalog} from "./product-knowledge.mjs";
 import {crmResponseSchema} from "./followup-automation.mjs";
 import {estimateUsd} from "./agent-cost.mjs";
 import {whatsappPresentationInstructions,formatWhatsAppReply} from "./whatsapp-format.mjs";
+import {buildBuyerContext,buyerGuidance} from "./buyer-reasoning.mjs";
+import {protectSalesResponse} from "./sales-response-guard.mjs";
 
 function textFrom(response){
   return (response.output||[]).filter(o=>o.type==="message"&&o.role==="assistant")
@@ -39,7 +41,7 @@ export function createWhatsAppTestResponder({
   if((count||0)>=maxDaily)return {status:"daily_limit"};
   const [recent,first,products,offers]=await Promise.all([
     client.from("arm_messages").select("id,direction,content,created_at").eq("thread_id",thread.id)
-      .order("created_at",{ascending:false}).limit(8),
+      .order("created_at",{ascending:false}).limit(24),
     client.from("arm_messages").select("id,direction,content,created_at").eq("thread_id",thread.id)
       .order("created_at",{ascending:true}).limit(2),
     client.from("arm_products").select("title,brand,partnumber,attributes,price_pen,stock_erp,verified_at")
@@ -58,6 +60,11 @@ export function createWhatsAppTestResponder({
   const ordered=[...history.values()].sort((a,b)=>String(a.created_at).localeCompare(String(b.created_at)))
     .map(m=>({role:m.direction==="inbound"?"user":"assistant",content:m.content}));
   const catalog=enrichCatalog(products.data||[],testOffers,offers.data||[]);
+  // The latest inbound turn always drives the response. Long-lived facts are
+  // reconstructed from the earliest need and latest 24 messages at no extra AI cost.
+  const buyerTurns=ordered.filter(x=>x.role==="user").map(x=>x.content);
+  if(buyerTurns.at(-1)!==event.text)buyerTurns.push(event.text);
+  const buyer=buildBuyerContext(buyerTurns,{leadProfile});
   const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),30000);
   let result;
   try{
@@ -68,7 +75,7 @@ export function createWhatsAppTestResponder({
         model:"gpt-5.4-mini",store:false,max_output_tokens:450,reasoning:{effort:"none"},
         text:{format:crmResponseSchema},
         instructions:salesInstructions(catalog,{simulated:testOffers,nowIso:new Date().toISOString()})+
-          "\n"+whatsappPresentationInstructions()+
+          "\n"+whatsappPresentationInstructions()+"\n"+buyerGuidance(buyer)+
           (leadProfile?("\nCONTEXTO COMERCIAL INTERNO: señal="+String(leadProfile.intent||"consulta_general")+
            "; B2B="+Boolean(leadProfile.is_b2b)+"; cantidad de equipos confirmada="+
            (Number.isInteger(leadProfile.quantity_min)?leadProfile.quantity_min:"no confirmada")+
@@ -83,7 +90,8 @@ export function createWhatsAppTestResponder({
   let answer;
   try{answer=JSON.parse(textFrom(result)).reply?.trim();}catch{throw new Error("OPENAI_INVALID_JSON");}
   if(!answer||typeof answer!=="string")throw new Error("OPENAI_EMPTY_REPLY");
-  answer=formatWhatsAppReply(answer,{simulated:testOffers});
+  const gate=protectSalesResponse(answer,{catalog,buyer,simulated:testOffers});
+  answer=formatWhatsAppReply(gate.reply,{simulated:testOffers});
   const tokens=result.usage||{};
   const usedInput=tokens.input_tokens||0,usedOutput=tokens.output_tokens||0;
   const cached=tokens.input_tokens_details?.cached_tokens||0;
