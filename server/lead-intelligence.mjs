@@ -1,6 +1,7 @@
 // Deterministic sales triage. This is a conservative, explainable signal filter,
 // not a probability of purchase, nor a replacement for a sales agent's judgment.
 // It never sends messages, schedules follow-ups or creates deals.
+import {buildBuyerContext} from "./buyer-reasoning.mjs";
 const clean=(s)=>String(s||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/\s+/g," ").trim();
 const includes=(text,re)=>re.test(text);
 const RE={
@@ -31,6 +32,9 @@ export function analyzeSalesConversation(messages,{
    .filter(m=>m?.direction==="inbound"&&typeof m.content==="string"&&m.content.trim())
    .slice(-16);
  const latest=clean(inbound.at(-1)?.content);
+ const journey=buildBuyerContext(inbound.map(m=>m.content));
+ const purchaseCancelled=journey.current_intent==="compra_cancelada";
+ const conversationFinished=journey.current_intent==="despedida";
  const body=clean(inbound.map(m=>m.content).join(" "));
  const has=(key)=>includes(body,RE[key]);
  const signals=[];
@@ -45,13 +49,15 @@ export function analyzeSalesConversation(messages,{
  const amount=quantity(body);
  const isBusiness=has("business")||(amount!==null&&amount>=2&&has("product"));
  const askedPrice=has("quote");
- const intendsBuy=has("purchase");
+ const intendsBuy=has("purchase")&&!purchaseCancelled&&!conversationFinished;
  const comparison=has("compare");
  const objection=has("objection");
  const urgency=has("urgent");
  const product=has("product");
  const budget=has("budget");
  add(intendsBuy,"compra_explicita");
+ add(purchaseCancelled,"compra_cancelada");
+ add(conversationFinished,"conversacion_finalizada");
  add(askedPrice,"precio_cotizacion");
  add(isBusiness,"cliente_empresa_o_volumen");
  add(comparison,"comparacion");
@@ -61,16 +67,18 @@ export function analyzeSalesConversation(messages,{
  add(product,"producto_identificado");
  add(askedHuman,"requiere_persona");
  add(optOut,"no_contactar");
- const score=optOut||closed?0:Math.min(100,Math.max(5,
+ const score=optOut||closed?0:purchaseCancelled||conversationFinished?10:Math.min(100,Math.max(5,
    10+(intendsBuy?38:0)+(askedPrice?17:0)+(isBusiness?15:0)+
    (comparison?8:0)+(urgency?12:0)+(budget?8:0)+(product?8:0)-
    (objection&&!intendsBuy?8:0)));
- const intent=optOut?"no_contactar":askedHuman?"atencion_humana":intendsBuy?"compra":
+ const intent=optOut?"no_contactar":askedHuman?"atencion_humana":purchaseCancelled||conversationFinished?"consulta_general":intendsBuy?"compra":
    askedPrice?"cotizacion":comparison?"comparacion":objection?"objecion":
    product?"consulta_producto":"consulta_general";
  const priority=optOut||closed?"sin_contacto":human||score>=65?"alta":score>=35?"media":"baja";
  const suppressionReason=optOut?"opt_out":closed?"conversacion_cerrada":human?"atencion_humana":"sin_consentimiento_de_seguimiento";
  const nextAction=optOut?"No contactar; respetar baja solicitada":
+   purchaseCancelled?"Respetar la decisión de no comprar; no insistir ni crear seguimiento":
+   conversationFinished?"Cerrar cordialmente sin reactivar oferta ni seguimiento":
    closed?"Conversación cerrada; no reabrir automáticamente":
    human?"Revisión por asesor; pausar respuestas automáticas":
    intendsBuy?"Facilitar compra solo con precio, stock y condiciones verificadas":
