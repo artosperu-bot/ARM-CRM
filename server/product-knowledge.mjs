@@ -23,7 +23,7 @@ export const specsByPn = Object.freeze({
  }
 });
 /** Real offers are never filled from laboratory records. For simulations only use saved Supabase test offers. */
-export function enrichCatalog(rows, simulated=false, testOffers=[],{now=Date.now(),maxPriceAgeHours=6}={}) {
+export function enrichCatalog(rows, simulated=false, testOffers=[],{now=Date.now(),maxPriceAgeHours=6,factsByPn={}}={}) {
  const offers = new Map((testOffers||[]).filter(o=>o.is_test_data===true).map(o=>[String(o.partnumber).toLowerCase(),o]));
  return (rows||[]).map(row=>{
   const demo=simulated?offers.get(String(row.partnumber).toLowerCase()):null;
@@ -36,9 +36,14 @@ export function enrichCatalog(rows, simulated=false, testOffers=[],{now=Date.now
   // Physical ERP units never equal available-to-promise inventory.
   // Until reservations/committed orders are integrated, real stock stays unconfirmed.
   const availability=simulated?(demo?.stock_status||"por confirmar"):"por confirmar";
+  const certifiedFacts=factsByPn[row.partnumber]||null;
   return {
    titulo:row.title,marca:row.brand,partnumber:row.partnumber,
-   especificaciones_fabricante:specsByPn[row.partnumber]||null,
+   categoria:Array.isArray(row.category_path)?row.category_path:[],
+   familia:row.family_key||null,
+   variante:row.variant_options&&typeof row.variant_options==="object"?row.variant_options:{},
+   especificaciones_fabricante:certifiedFacts||specsByPn[row.partnumber]||null,
+   nivel_evidencia:certifiedFacts?"hechos_revisados":specsByPn[row.partnumber]?"ficha_fabricante_heredada":"sin_ficha_verificada",
    atributos_ficha:row.attributes||{},
    precio_soles:price,
    disponibilidad:availability,
