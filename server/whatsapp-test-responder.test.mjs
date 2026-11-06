@@ -3,14 +3,23 @@ import {createWhatsAppTestResponder} from "./whatsapp-test-responder.mjs";
 
 function fixture(status="pending",onRequest=()=>{},allowedOffers=[]){
   const writes=[];
-  const db={from(table){
+  const db={
+    async rpc(name,params){
+      if(name!=="arm_search_catalog")return {data:[],error:{code:"unexpected"}};
+      if(!params.p_query||params.p_query.trim().length<2)return {data:[],error:null};
+      return {data:[{id:"qa-product",workspace_id:"ws",title:"Ulefone Armor X13",brand:"ULEFONE",
+        partnumber:"ARMOR-X13",attributes:{},price_pen:null,stock_erp:null,verified_at:null,
+        category_path:["electronica","celulares"],family_key:null,variant_options:{},search_rank:99}],error:null};
+    },
+    from(table){
     const q={
       select(fields,opt){q.count=opt?.count;return q;},
-      eq(){return q;},order(){return q;},
+      eq(){return q;},in(){return q;},order(){return q;},
       gte:async()=>({count:0,error:null}),
       maybeSingle:async()=>({data:{id:"thread",workspace_id:"ws",contact_id:"contact",status,assigned_to:null},error:null}),
       limit:async()=>{
         if(table==="arm_messages")return {data:[],error:null};
+        if(table==="arm_product_facts")return {data:[],error:null};
         if(table==="arm_products")return {data:[{title:"Ulefone Armor X13",brand:"ULEFONE",partnumber:"ARMOR-X13",attributes:{},verified_at:null,price_pen:null,stock_erp:null}],error:null};
         if(table==="arm_offer_simulations")return {data:allowedOffers,error:null};
         return {data:[],error:null};
