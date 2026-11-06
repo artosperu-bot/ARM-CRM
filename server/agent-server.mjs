@@ -99,8 +99,8 @@ async function handle(req,res){
   ]);
   if(history.error||initial.error)throw new Error("No fue posible leer el contexto comercial.");
   const context=buildConversationContext(initial.data||[],history.data||[]);
-  const customerTurns=[...context.filter(t=>t.role==="user").map(t=>t.content),msg];
-  const lookup=await retrieveSalesCatalog(db,workspaceId,customerTurns,{limit:18});
+  const lookupTurns=[...context.filter(t=>t.role==="user").map(t=>t.content),msg];
+  const lookup=await retrieveSalesCatalog(db,workspaceId,lookupTurns,{limit:18});
   const pn=lookup.products.map(x=>x.partnumber);
   const testOffers=simulated&&pn.length?await db.from("arm_offer_simulations")
     .select("partnumber,price_pen,stock_status,is_test_data")
@@ -109,7 +109,7 @@ async function handle(req,res){
   if(testOffers.error)throw new Error("No fue posible verificar las ofertas de prueba.");
   const catalog=enrichCatalog(lookup.products,simulated,testOffers.data||[],
     {factsByPn:lookup.factsByPn});
-  const buyer=buildBuyerContext(customerTurns,{catalog});
+  const buyer=buildBuyerContext(lookupTurns,{catalog});
   const abort=new AbortController(),timer=setTimeout(()=>abort.abort(),35000);
   let completion;
   try {
