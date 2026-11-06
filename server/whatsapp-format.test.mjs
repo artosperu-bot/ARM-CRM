@@ -23,7 +23,9 @@ describe("Native WhatsApp message presentation",()=>{
   expect(formatWhatsAppReply("Bienvenido.",{simulated:false})).toBe("Bienvenido.");
  });
  it("does not expose exact stock unit numbers in final message",()=>{
-  expect(formatWhatsAppReply("Tenemos 12 unidades y 5 equipos",{})).toBe("Tenemos disponibilidad por confirmar y disponibilidad por confirmar");
+  const output=formatWhatsAppReply("Tenemos 12 unidades y 5 equipos",{});
+  expect(output).not.toContain("12 unidades");
+  expect(output).toContain("5 equipos"); // la cantidad solicitada no es stock del almacén
  });
  it("keeps output bounded while preserving a bold pair",()=>{
   const text=formatWhatsAppReply("*Armor 22*\n\n"+"Beneficio confirmado. ".repeat(150),{simulated:true,maxChars:175});
