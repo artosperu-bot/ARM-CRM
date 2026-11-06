@@ -6,6 +6,8 @@ import { estimateUsd } from "./agent-cost.mjs";
 import { salesInstructions } from "./sales-policy.mjs";
 import { enrichCatalog } from "./product-knowledge.mjs";
 import {buildConversationContext} from "./conversation-context.mjs";
+import {buildBuyerContext,buyerGuidance} from "./buyer-reasoning.mjs";
+import {protectSalesResponse,hideExactStockUnits} from "./sales-response-guard.mjs";
 import { crmResponseSchema,validateBookingProposal } from "./followup-automation.mjs";
 import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
@@ -101,6 +103,7 @@ async function handle(req,res){
   if(history.error||initial.error||products.error||testOffers.error)throw new Error("No fue posible leer el contexto comercial.");
   const context=buildConversationContext(initial.data||[],history.data||[]);
   const catalog=enrichCatalog(products.data||[],simulated,testOffers.data||[]);
+  const buyer=buildBuyerContext([...context.filter(t=>t.role==="user").map(t=>t.content),msg]);
   const abort=new AbortController(),timer=setTimeout(()=>abort.abort(),35000);
   let completion;
   try {
@@ -110,7 +113,7 @@ async function handle(req,res){
       body:JSON.stringify({
         model,store:false,max_output_tokens:maxOutput,reasoning:{effort:"none"},
         text:{format:crmResponseSchema},
-        instructions:salesInstructions(catalog,{simulated,nowIso:new Date().toISOString()})+"\nDevuelve JSON con reply y followup. Los campos followup se extraen únicamente de mensajes DEL CLIENTE, jamás inventes nombres, teléfonos, fechas ni consentimiento. requested=true solo para seguimiento solicitado; explicit_consent=true solo si el último mensaje incluye autorización para AGENDAR. Si falta dato usa null. Jamás afirmes registro exitoso en reply.",
+        instructions:salesInstructions(catalog,{simulated,nowIso:new Date().toISOString()})+"\n"+buyerGuidance(buyer)+"\nDevuelve JSON con reply y followup. Los campos followup se extraen únicamente de mensajes DEL CLIENTE, jamás inventes nombres, teléfonos, fechas ni consentimiento. requested=true solo para seguimiento solicitado; explicit_consent=true solo si el último mensaje incluye autorización para AGENDAR. Si falta dato usa null. Jamás afirmes registro exitoso en reply.",
         input:[...context,{role:"user",content:msg}]
       })
     });
@@ -127,7 +130,10 @@ async function handle(req,res){
   try{structured=JSON.parse(raw);}catch{return send(res,502,{error:"La respuesta del agente no llegó en el formato esperado."});}
   if(typeof structured?.reply!=="string"||!structured.reply.trim())
      return send(res,502,{error:"El agente no devolvió una respuesta válida."});
-  let answer=structured.reply.trim(),booking=null;
+  // The AI cannot approve its own commercial claims. Booking may override the
+  // guarded answer only after the RPC has returned confirmed success.
+  const guarded=protectSalesResponse(structured.reply.trim(),{catalog,buyer,simulated});
+  let answer=guarded.reply,booking=null;
   const customerTurns=[...context.filter(t=>t.role==="user").map(t=>t.content),msg];
   const proposal=simulated?null:validateBookingProposal(structured.followup,customerTurns,msg);
   if(proposal){
@@ -146,7 +152,7 @@ async function handle(req,res){
     }
   }
   // Never allow quantity disclosures to be mistaken for stock numbers.
-  answer=answer.replace(/\b\d+\s+(?:unidades|equipos|en stock|disponibles en almac[eé]n)\b/giu,"disponibilidad por confirmar");
+  answer=hideExactStockUnits(answer);
   const usage=completion.usage||{},input=usage.input_tokens||0,output=usage.output_tokens||0;
   const cached=Math.min(input,usage.input_tokens_details?.cached_tokens||0);
   const estimate=estimateUsd(input,output,cached);
