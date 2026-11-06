@@ -17,7 +17,7 @@ describe("ALEX buyer journey: continuity across turns",()=>{
   expect(b.buyer_type).toBe("empresa_indicada");
   expect(b.current_intent).toBe("cotizar");
   expect(b.next_step).toMatch(/cotizacion/);
-  expect(buyerGuidance(b)).toContain("cantidad solicitada: 2 equipos");
+  expect(buyerGuidance(b)).toContain("cantidad solicitada: 2 unidades");
  });
  it("remembers most recent budget and doesn't invent one from a price question",()=>{
   const b=buildBuyerContext(["Tengo presupuesto de S/ 5000","Lo puedo subir hasta S/ 6200","¿Cuánto cuesta una Lenovo?"]);
