@@ -25,6 +25,7 @@ const forbiddenActions=[
 const stockUnits=/\b(?:quedan|tenemos|hay|disponibles?|en stock|stock de)\s+\d{1,5}\s+(?:unidades|equipos|laptops?|celulares?|impresoras?|licencias?|monitores?|routers?|productos?|servicios?|accesorios?|sillas?)\b/iu;
 const discount=/\b(?:descuento|rebaja|promoci[oó]n|off)\s+(?:de|del|hasta)?\s*\d{1,3}\s*%|\b\d{1,3}\s*%\s+de\s+(?:descuento|rebaja)/iu;
 const deliveryPromise=/\b(?:te|le)\s+(?:llega|entregamos|enviamos)\s+(?:ma[ñn]ana|hoy)\b/iu;
+const prematureDataRequest=/(?:\b(?:p[aá]same|dame|env[ií]ame|ind[ií]came|necesito|comp[aá]rteme|comparte|compartes|cu[aá]l es)\s+(?:tu|su)\s+(?:nombre|apellido|tel[eé]fono|celular|direcci[oó]n|ruc|dni|correo|tarjeta)\b|\b(?:tu|su)\s+(?:nombre\s+(?:y|completo)|direcci[oó]n|ruc|dni)\s+(?:para\s+(?:hacer|registrar|confirmar)))/iu;
 export function protectSalesResponse(reply,{catalog=[],buyer=null,simulated=false}={}){
  const text=typeof reply==="string"?reply.trim():"";
  if(!text)return {reply:"Puedo ayudarte con tu consulta. ¿Qué producto necesitas?",blocked:true,reason:"empty"};
@@ -54,12 +55,14 @@ export function protectSalesResponse(reply,{catalog=[],buyer=null,simulated=fals
  const stockViolation=stockUnits.test(text);
  const discountViolation=discount.test(text);
  const deliveryViolation=deliveryPromise.test(text);
- if(!wrongProduct&&!moneyViolation&&!actionViolation&&!stockViolation&&!discountViolation&&!deliveryViolation)
+ const prematureDataViolation=buyer?.current_intent==="comprar"&&prematureDataRequest.test(text);
+ if(!wrongProduct&&!moneyViolation&&!actionViolation&&!stockViolation&&!discountViolation&&!deliveryViolation&&!prematureDataViolation)
   return {reply:text,blocked:false,reason:null};
  const reason=wrongProduct?"product_mismatch":moneyViolation?"unverified_price":actionViolation?"unconfirmed_action":
-   stockViolation?"exact_stock":discountViolation?"unapproved_discount":"delivery_promise";
+   stockViolation?"exact_stock":discountViolation?"unapproved_discount":prematureDataViolation?"premature_personal_data":"delivery_promise";
  const fallback={
   product_mismatch:"Necesito verificar el modelo exacto antes de darte un precio; no quiero mezclar productos diferentes.",
+  premature_personal_data:"Podemos confirmar el artículo y las condiciones vigentes antes de coordinar la compra. Todavía no puedo registrar pedidos ni cobrar desde este chat.",
   unverified_price:"Para darte un precio correcto necesito verificar la oferta vigente con STECH. Puedo ayudarte a elegir la opción adecuada según lo que necesitas.",
   unconfirmed_action:"Puedo ayudarte con el siguiente paso, pero todavía no tengo confirmación de que se haya registrado una cotización, pedido o seguimiento.",
   exact_stock:"La disponibilidad para venta está por confirmar. Puedo ayudarte a revisar qué producto se ajusta mejor a tu necesidad.",
