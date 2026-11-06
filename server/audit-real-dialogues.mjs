@@ -21,7 +21,7 @@ const catalog=[
  {titulo:"Microsoft Office LTSC Standard 2024",marca:"MICROSOFT",partnumber:"OL2024",precio_soles:null,disponibilidad:"por confirmar",especificaciones_fabricante:null,nivel_evidencia:"sin_ficha_verificada"},
  {titulo:"Cargador USB-C",marca:"ANONIMO",partnumber:"CARGADOR-A",precio_soles:null,disponibilidad:"por confirmar",especificaciones_fabricante:null,nivel_evidencia:"sin_ficha_verificada"}
 ];
-const scenarios=[
+const allScenarios=[
  {name:"IMPRESORA_CASA",turns:["Busco impresora para tareas de mis hijos, para la casa","¿Y cuánto cuesta la Epson L1250?","Gracias por todo"]},
  {name:"LAPTOP_AMBIGUA",turns:["Estoy viendo laptops Lenovo ThinkPad T14","¿Cuál de las dos conviene para trabajar con varias aplicaciones?"]},
  {name:"LICENCIA_SOFTWARE",turns:["Necesito Office para Windows 10","¿La licencia es para siempre o se renueva?"]},
@@ -35,6 +35,9 @@ const scenarios=[
  {name:"PIDE_ASESOR",turns:["Quiero hablar con un asesor","¿Ya le avisaste?"]},
  {name:"ENTREGA_URGENTE",turns:["Necesito la impresora Epson L1250 hoy mismo","¿Me confirmas entrega hoy?"]}
 ];
+const requested=(process.env.ALEX_QA_CASES||"").split(",").map(x=>x.trim()).filter(Boolean);
+const scenarios=requested.length?allScenarios.filter(x=>requested.includes(x.name)):allScenarios;
+if(!scenarios.length)throw new Error("UNKNOWN_QA_CASE_SELECTION");
 const prompt=(buyer)=>salesInstructions(catalog,{simulated:false})+"\n"+buyerGuidance(buyer,{catalog})+
  "\nPRUEBA SINTÉTICA PRIVADA. Contesta normalmente al cliente con JSON reply/followup. No existe herramienta de pedidos, cobros ni seguimientos salientes. No inventes datos, cotizaciones, precios, entregas o contactos humanos.";
 let completed=0,valid=0,blocked=0,requests=0,usedInput=0,usedOutput=0;
