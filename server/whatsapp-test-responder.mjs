@@ -1,6 +1,7 @@
 import {createClient} from "@supabase/supabase-js";
 import {salesInstructions} from "./sales-policy.mjs";
 import {enrichCatalog} from "./product-knowledge.mjs";
+import {retrieveSalesCatalog} from "./catalog-retrieval.mjs";
 import {crmResponseSchema} from "./followup-automation.mjs";
 import {estimateUsd} from "./agent-cost.mjs";
 import {whatsappPresentationInstructions,formatWhatsAppReply} from "./whatsapp-format.mjs";
@@ -39,18 +40,13 @@ export function createWhatsAppTestResponder({
     .eq("source","arm_agent").eq("node","whatsapp_test").gte("occurred_at",today);
   if(countError)throw new Error("ARM_USAGE_CHECK_FAILED");
   if((count||0)>=maxDaily)return {status:"daily_limit"};
-  const [recent,first,products,offers]=await Promise.all([
+  const [recent,first]=await Promise.all([
     client.from("arm_messages").select("id,direction,content,created_at").eq("thread_id",thread.id)
       .order("created_at",{ascending:false}).limit(24),
     client.from("arm_messages").select("id,direction,content,created_at").eq("thread_id",thread.id)
-      .order("created_at",{ascending:true}).limit(2),
-    client.from("arm_products").select("title,brand,partnumber,attributes,price_pen,stock_erp,verified_at")
-      .eq("workspace_id",thread.workspace_id).limit(25),
-    testOffers?client.from("arm_offer_simulations").select("partnumber,price_pen,stock_status,is_test_data")
-      .eq("workspace_id",thread.workspace_id).eq("is_test_data",true).limit(25):
-      Promise.resolve({data:[],error:null})
+      .order("created_at",{ascending:true}).limit(2)
   ]);
-  if(recent.error||first.error||products.error||offers.error)throw new Error("ARM_CONTEXT_READ_FAILED");
+  if(recent.error||first.error)throw new Error("ARM_CONTEXT_READ_FAILED");
   // Last 8 turns + original intent, no extra LLM calls.
   const history=new Map();
   for(const m of [...(first.data||[]),...(recent.data||[])]){
@@ -59,11 +55,19 @@ export function createWhatsAppTestResponder({
   }
   const ordered=[...history.values()].sort((a,b)=>String(a.created_at).localeCompare(String(b.created_at)))
     .map(m=>({role:m.direction==="inbound"?"user":"assistant",content:m.content}));
-  const catalog=enrichCatalog(products.data||[],testOffers,offers.data||[]);
-  // The latest inbound turn always drives the response. Long-lived facts are
-  // reconstructed from the earliest need and latest 24 messages at no extra AI cost.
+  // First resolve the SKUs relevant to this request against the entire workspace
+  // catalogue. This search is indexed and bounded, never "first 25 rows".
   const buyerTurns=ordered.filter(x=>x.role==="user").map(x=>x.content);
   if(buyerTurns.at(-1)!==event.text)buyerTurns.push(event.text);
+  const lookup=await retrieveSalesCatalog(client,thread.workspace_id,buyerTurns,{limit:18});
+  const pn=lookup.products.map(x=>x.partnumber);
+  const offers=testOffers&&pn.length?await client.from("arm_offer_simulations")
+    .select("partnumber,price_pen,stock_status,is_test_data")
+    .eq("workspace_id",thread.workspace_id).eq("is_test_data",true)
+    .in("partnumber",pn).limit(24):{data:[],error:null};
+  if(offers.error)throw new Error("ARM_CONTEXT_OFFERS_FAILED");
+  const catalog=enrichCatalog(lookup.products,testOffers,offers.data||[],
+    {factsByPn:lookup.factsByPn});
   const buyer=buildBuyerContext(buyerTurns,{leadProfile,catalog});
   const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),30000);
   let result;
