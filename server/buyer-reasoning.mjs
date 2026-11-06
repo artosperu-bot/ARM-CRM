@@ -8,7 +8,7 @@ import {matchCustomerProduct,quantityForAnyCatalogItem} from "./catalog-matching
 const norm=(v)=>String(v||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/\s+/g," ").trim();
 const RX={
   device:/\b(?:laptops?|notebooks?|computadoras?|pcs?|impresoras?|tablets?|celulares?|telefonos?|smartphones?|equipos?)\b/u,
-  purchase:/\b(?:quiero comprar|voy a comprar|lo compro|la compro|los compro|como pago|donde pago|pasame (?:el|un) (?:link|enlace) de pago|confirmo la compra|procedamos con (?:la )?compra)\b/u,
+  purchase:/\b(?:quiero comprar(?:lo|la|los|las)?|voy a comprar(?:lo|la|los|las)?|lo compro|la compro|los compro|las compro|me lo llevo|me la llevo|como pago|donde pago|pasame (?:el|un) (?:link|enlace) de pago|confirmo la compra|procedamos con (?:la )?compra)\b/u,
   cancelPurchase:/\b(?:ya no (?:quiero|voy a) comprar|no (?:quiero|voy a) comprar|cancele? (?:la )?compra|no me interesa comprar|no comprare|mejor no compro)\b/u,
   quotation:/\b(?:cotizaci[oó]n|cotizar|cotizame|cotiza|proforma|presupuesto para|orden de compra)\b/u,
   price:/\b(?:precio|cuanto cuesta|cuanto sale|cuanto vale|a cuanto|cuanto me sale|valor del (?:producto|equipo))\b/u,
