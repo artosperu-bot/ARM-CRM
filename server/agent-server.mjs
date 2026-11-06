@@ -5,6 +5,7 @@ import { randomUUID } from "node:crypto";
 import { estimateUsd } from "./agent-cost.mjs";
 import { salesInstructions } from "./sales-policy.mjs";
 import { enrichCatalog } from "./product-knowledge.mjs";
+import { retrieveSalesCatalog } from "./catalog-retrieval.mjs";
 import {buildConversationContext} from "./conversation-context.mjs";
 import {buildBuyerContext,buyerGuidance} from "./buyer-reasoning.mjs";
 import {protectSalesResponse,hideExactStockUnits} from "./sales-response-guard.mjs";
@@ -90,20 +91,25 @@ async function handle(req,res){
     if(createErr)throw new Error("No se pudo abrir la conversación.");
     cid=created.id;
   }
-  const [history,initial,products,testOffers]=await Promise.all([
+  const [history,initial]=await Promise.all([
     db.from("arm_agent_turns").select("id,role,content,created_at").eq("workspace_id",workspaceId)
       .eq("conversation_id",cid).order("created_at",{ascending:false}).limit(10),
     db.from("arm_agent_turns").select("id,role,content,created_at").eq("workspace_id",workspaceId)
-      .eq("conversation_id",cid).order("created_at",{ascending:true}).limit(2),
-    db.from("arm_products").select("title,brand,partnumber,attributes,stock_erp,price_pen,verified_at")
-      .eq("workspace_id",workspaceId).limit(25),
-    simulated ? db.from("arm_offer_simulations").select("partnumber,price_pen,stock_status,is_test_data")
-      .eq("workspace_id",workspaceId).eq("is_test_data",true).limit(25) : Promise.resolve({data:[],error:null})
+      .eq("conversation_id",cid).order("created_at",{ascending:true}).limit(2)
   ]);
-  if(history.error||initial.error||products.error||testOffers.error)throw new Error("No fue posible leer el contexto comercial.");
+  if(history.error||initial.error)throw new Error("No fue posible leer el contexto comercial.");
   const context=buildConversationContext(initial.data||[],history.data||[]);
-  const catalog=enrichCatalog(products.data||[],simulated,testOffers.data||[]);
-  const buyer=buildBuyerContext([...context.filter(t=>t.role==="user").map(t=>t.content),msg],{catalog});
+  const customerTurns=[...context.filter(t=>t.role==="user").map(t=>t.content),msg];
+  const lookup=await retrieveSalesCatalog(db,workspaceId,customerTurns,{limit:18});
+  const pn=lookup.products.map(x=>x.partnumber);
+  const testOffers=simulated&&pn.length?await db.from("arm_offer_simulations")
+    .select("partnumber,price_pen,stock_status,is_test_data")
+    .eq("workspace_id",workspaceId).eq("is_test_data",true)
+    .in("partnumber",pn).limit(24):{data:[],error:null};
+  if(testOffers.error)throw new Error("No fue posible verificar las ofertas de prueba.");
+  const catalog=enrichCatalog(lookup.products,simulated,testOffers.data||[],
+    {factsByPn:lookup.factsByPn});
+  const buyer=buildBuyerContext(customerTurns,{catalog});
   const abort=new AbortController(),timer=setTimeout(()=>abort.abort(),35000);
   let completion;
   try {
