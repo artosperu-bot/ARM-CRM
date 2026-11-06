@@ -27,7 +27,7 @@ export function salesMove(profile,{catalog=[]}={}){
  }
  if(intent==="comprar"){
   return {...result,stage:"decision",goal:"Facilitar el siguiente paso real de compra",
-   move:"El cliente ya decidió: no volver a venderle características ni presentar comparaciones. Explicar el paso disponible; comprobar datos comerciales antes de hablar de pago, entrega o pedido.",
+   move:"El cliente ya decidió: deja de comparar y de venderle características. Explica el siguiente paso disponible; comprueba datos comerciales antes de hablar de pago, entrega o pedido.",
    questionPolicy:"solo_bloqueante",readyForAction:true};
  }
  if(intent==="cotizar"||intent==="consultar_precio"){
