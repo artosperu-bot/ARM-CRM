@@ -23,13 +23,19 @@ export const specsByPn = Object.freeze({
  }
 });
 /** Real offers are never filled from laboratory records. For simulations only use saved Supabase test offers. */
-export function enrichCatalog(rows, simulated=false, testOffers=[]) {
+export function enrichCatalog(rows, simulated=false, testOffers=[],{now=Date.now(),maxPriceAgeHours=6}={}) {
  const offers = new Map((testOffers||[]).filter(o=>o.is_test_data===true).map(o=>[String(o.partnumber).toLowerCase(),o]));
  return (rows||[]).map(row=>{
   const demo=simulated?offers.get(String(row.partnumber).toLowerCase()):null;
-  const price=simulated?(demo?Number(demo.price_pen):null):row.verified_at?row.price_pen:null;
-  const availability=simulated?(demo?.stock_status||"por confirmar"):
-    row.verified_at?(row.stock_erp>0?"disponible":"no disponible"):"por confirmar";
+  const checked=Date.parse(String(row.verified_at||""));
+  const priceFresh=Number.isFinite(checked)&&checked<=now+120000&&now-checked<=maxPriceAgeHours*3600000;
+  const validPrice=typeof row.price_pen==="number"||typeof row.price_pen==="string";
+  const trustedPrice=!simulated&&priceFresh&&validPrice&&Number(row.price_pen)>0;
+  const price=simulated?(demo&&Number.isFinite(Number(demo.price_pen))?Number(demo.price_pen):null):
+    trustedPrice?Number(row.price_pen):null;
+  // Physical ERP units never equal available-to-promise inventory.
+  // Until reservations/committed orders are integrated, real stock stays unconfirmed.
+  const availability=simulated?(demo?.stock_status||"por confirmar"):"por confirmar";
   return {
    titulo:row.title,marca:row.brand,partnumber:row.partnumber,
    especificaciones_fabricante:specsByPn[row.partnumber]||null,
@@ -37,7 +43,7 @@ export function enrichCatalog(rows, simulated=false, testOffers=[]) {
    precio_soles:price,
    disponibilidad:availability,
    oferta_simulada:simulated,
-   origen_datos:simulated?"simulacion_solo_pruebas":(row.verified_at?"erp_verificado":"sin_verificar")
+   origen_datos:simulated?"simulacion_solo_pruebas":(trustedPrice?"precio_vigente_verificado":"precio_no_verificado")
   };
  });
 }
