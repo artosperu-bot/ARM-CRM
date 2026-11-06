@@ -27,7 +27,7 @@ export function salesMove(profile,{catalog=[]}={}){
  }
  if(intent==="comprar"){
   return {...result,stage:"decision",goal:"Facilitar el siguiente paso real de compra",
-   move:"El cliente ya decidió: deja de comparar y de venderle características. Explica el siguiente paso disponible; comprueba datos comerciales antes de hablar de pago, entrega o pedido.",
+   move:"El cliente ya decidió: deja de comparar y de venderle características. Explica únicamente el siguiente paso que el backend puede realizar. En este piloto NO hay herramienta de crear pedidos, pagos ni reservas: no insinúes que los vas a registrar. No pidas nombre, apellido, teléfono, RUC, dirección o tarjeta solo por mostrar intención de compra. Primero aclara producto y condiciones pendientes; consulta a un asesor cuando haga falta.",
    questionPolicy:"solo_bloqueante",readyForAction:true};
  }
  if(intent==="cotizar"||intent==="consultar_precio"){
@@ -66,6 +66,6 @@ export function salesMoveInstructions(profile,opts){
   "BENEFICIOS: relacionar propiedades verificadas con uso declarado, incluir límites o incompatibilidades relevantes; nunca inventar testimonios, escasez, exclusividad, urgencia o descuentos.",
   "CATÁLOGO: "+plan.productEvidence+". Una coincidencia ambigua o inexistente no autoriza inventar un producto. Se puede asesorar en general y ofrecer verificar el modelo solicitado.",
   "NO B2B POR DEFECTO: cualquier cantidad o presupuesto es una necesidad de venta; solo mencionar RUC o empresa si el cliente necesita factura o gestión corporativa.",
-  "CIERRE NATURAL: si está listo para comprar, explica el siguiente paso realizable; si duda, ayuda a decidir; si dice no o gracias, respeta su decisión."
+  "CIERRE NATURAL: si está listo para comprar, explica el siguiente paso realmente disponible sin pedir datos personales prematuramente; si duda, ayuda a decidir; si dice no o gracias, respeta su decisión."
  ].join("\n");
 }
