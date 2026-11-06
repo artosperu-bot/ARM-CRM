@@ -1,0 +1,193 @@
+import {useCallback,useEffect,useState} from "react";
+import {Bot,CheckCircle2,Coins,MessageCircle,Plus,Send,ShieldCheck,RefreshCw,Zap,CalendarClock,UserRoundCheck} from "lucide-react";
+import type {Contact,Section} from "../../types";
+import {detectCommercialSignal} from "./salesSignals";
+import {supabase} from "../../lib/supabase";
+import "./agent.css";
+
+type Conversation={id:string;title:string;created_at:string};
+type TestOffer={partnumber:string;price_pen:number;stock_status:string};
+type Turn={id:string;role:"user"|"assistant";content:string;created_at:string};
+type Usage={model:string;inputTokens:number;outputTokens:number;cachedTokens:number;estimatedUsd:number;usageRecorded:boolean};
+export default function AgentPage({workspaceId,contacts,onNavigate,onCreateFollowup,onCreateDeal}:{
+ workspaceId:string;contacts:Contact[];onNavigate:(section:Section)=>void;
+ onCreateFollowup:(contactId:string,description:string,dueAt:string)=>Promise<void>;
+ onCreateDeal:(contactId:string,title:string)=>Promise<void>;
+}){
+ const [conversations,setConversations]=useState<Conversation[]>([]);
+ const [selected,setSelected]=useState<string|null>(null);
+ const [turns,setTurns]=useState<Turn[]>([]);
+ const [question,setQuestion]=useState("");
+ const [sending,setSending]=useState(false);
+ const [simulated,setSimulated]=useState(false);
+ const [testOffers,setTestOffers]=useState<TestOffer[]>([]);
+ const [offersLoading,setOffersLoading]=useState(false);
+ const [offersError,setOffersError]=useState("");
+ const [error,setError]=useState("");
+ const [notice,setNotice]=useState("");
+ const [usage,setUsage]=useState<Usage|null>(null);
+ const [ready,setReady]=useState(false);
+ const [loading,setLoading]=useState(true);
+ const [actionOpen,setActionOpen]=useState(false);
+ const [linkedContact,setLinkedContact]=useState("");
+ const [dueAt,setDueAt]=useState("");
+ const [task,setTask]=useState("");
+ const [approved,setApproved]=useState(false);
+ const [savingAction,setSavingAction]=useState(false);
+ const customers=turns.filter(t=>t.role==="user").map(t=>t.content);
+ const signal=customers.length>0?detectCommercialSignal(customers):null;
+ const lastQuestion=customers.at(-1)||"";
+ async function createTask(e:React.FormEvent){
+  e.preventDefault();setError("");setNotice("");
+  if(!approved){setError("Confirma que existe autorización para el seguimiento.");return;}
+  if(!linkedContact){setError("Selecciona un cliente registrado.");return;}
+  if(!dueAt||Number.isNaN(Date.parse(dueAt))||new Date(dueAt).getTime()<=Date.now()){
+    setError("Elige una fecha y hora futura para el seguimiento.");return;
+  }
+  setSavingAction(true);
+  try{
+   await onCreateFollowup(linkedContact,task.trim(),new Date(dueAt).toISOString());
+   setNotice("Seguimiento guardado en ARM-CRM. No se envió ningún mensaje.");
+   setActionOpen(false);setApproved(false);
+  }catch(cause){setError(cause instanceof Error?cause.message:"No se pudo registrar el seguimiento.");}
+  finally{setSavingAction(false);}
+ }
+ async function createOpportunity(){
+  if(!linkedContact){setError("Selecciona un cliente antes de crear la oportunidad.");return;}
+  setSavingAction(true);setError("");setNotice("");
+  try{
+   await onCreateDeal(linkedContact,("Interés desde agente: "+lastQuestion.slice(0,130)).slice(0,190));
+   setNotice("Oportunidad creada en Pipeline. Revisa y confirma el precio antes de cotizar.");
+  }catch(cause){setError(cause instanceof Error?cause.message:"No se pudo crear la oportunidad.");}
+  finally{setSavingAction(false);}
+ }
+
+ const refresh=useCallback(async()=>{
+  if(!supabase)return;
+  const {data,error:readErr}=await supabase.from("arm_agent_conversations").select("id,title,created_at")
+    .eq("workspace_id",workspaceId).order("created_at",{ascending:false}).limit(50);
+  if(readErr)setError(readErr.message);
+  else setConversations((data||[]) as Conversation[]);
+  setLoading(false);
+ },[workspaceId]);
+ useEffect(()=>{
+  if(!simulated||!supabase){setTestOffers([]);setOffersError("");return;}
+  let active=true;setOffersLoading(true);setOffersError("");
+  void supabase.from("arm_offer_simulations")
+    .select("partnumber,price_pen,stock_status")
+    .eq("workspace_id",workspaceId).eq("is_test_data",true).order("partnumber")
+    .then(({data,error:readError})=>{
+      if(!active)return;
+      if(readError)setOffersError("No se pudieron consultar las ofertas simuladas en Supabase.");
+      else setTestOffers((data||[]) as TestOffer[]);
+      setOffersLoading(false);
+    });
+  return()=>{active=false;};
+ },[workspaceId,simulated]);
+ useEffect(()=>{void refresh();void fetch("http://127.0.0.1:8789/health")
+  .then(r=>r.json()).then(d=>setReady(d.ok===true)).catch(()=>setReady(false));},[refresh]);
+ useEffect(()=>{
+  if(!supabase||!selected){setTurns([]);return;}
+  let active=true;setLoading(true);
+  void supabase.from("arm_agent_turns").select("id,role,content,created_at")
+   .eq("workspace_id",workspaceId).eq("conversation_id",selected)
+   .order("created_at",{ascending:true}).limit(100)
+   .then(({data,error:readErr})=>{
+    if(!active)return;
+    if(readErr)setError(readErr.message);else setTurns((data||[]) as Turn[]);
+    setLoading(false);
+   });
+  return ()=>{active=false;};
+ },[workspaceId,selected]);
+
+ async function submit(e:React.FormEvent){
+  e.preventDefault();
+  const msg=question.trim();
+  if(!supabase||!msg||sending)return;
+  setSending(true);setError("");setNotice("");setUsage(null);
+  try{
+   const {data:{session},error:sessionError}=await supabase.auth.getSession();
+   if(sessionError||!session?.access_token)throw new Error("La sesión expiró. Vuelve a iniciar sesión.");
+   const response=await fetch("http://127.0.0.1:8789/chat",{
+    method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+session.access_token},
+    body:JSON.stringify({workspaceId,conversationId:selected,message:msg,simulated})
+   });
+   const result=await response.json();
+   if(!response.ok||!result.ok)throw new Error(result.error||"No fue posible consultar OpenAI.");
+   setQuestion("");setSelected(result.conversationId);
+   setUsage(result.usage);
+   setNotice(result.booking?.saved?"Seguimiento registrado automáticamente en Supabase.": "Respuesta real de OpenAI · sin envío al cliente.");
+   const {data,error:turnError}=await supabase.from("arm_agent_turns").select("id,role,content,created_at")
+    .eq("workspace_id",workspaceId).eq("conversation_id",result.conversationId)
+    .order("created_at",{ascending:true}).limit(100);
+   if(!turnError)setTurns((data||[]) as Turn[]);
+   await refresh();
+  }catch(cause){setError(cause instanceof Error?cause.message:"Error de conexión.");}
+  finally{setSending(false);}
+ }
+ return <div className="arm-agent">
+   <section className="agent-heading"><div className="agent-heading-logo"><Bot size={26}/></div><div><h2>Agente vendedor STECH</h2><p>OpenAI GPT-5.4 Mini · Chat privado · Sin herramientas de pago adicionales</p></div>
+     <span className={"agent-state "+(ready?"good":"waiting")}>{ready?"Servicio OpenAI configurado":"Servicio local no disponible"}</span>
+   </section>
+   <div className="agent-stat-strip"><span><ShieldCheck size={16}/> Supervisado: no responde en redes</span><span><Zap size={16}/> Máximo 450 tokens de salida</span><span><Coins size={16}/> Hasta 20 consultas/día</span></div>
+   <label className={"agent-sandbox-switch "+(simulated?"is-on":"")}>
+     <input type="checkbox" checked={simulated} disabled={sending} onChange={e=>{setSimulated(e.target.checked);setSelected(null);setTurns([]);setUsage(null);setError("");setNotice("");}}/>
+     <span><strong>Simular precios y disponibilidad</strong><small>Solo laboratorio privado: cifras inventadas, etiquetadas como prueba. No se mezclan con ventas reales ni se agendan tareas.</small></span>
+     {simulated&&<strong className="agent-sandbox-badge">SIMULACIÓN</strong>}
+   </label>
+   {simulated&&<section className="agent-db-test-offers" aria-label="Ofertas ficticias desde Supabase">
+    <strong>Precios de prueba leídos desde Supabase</strong>
+    {offersLoading?<span>Cargando ofertas…</span>:offersError?<span role="alert">{offersError}</span>:
+     testOffers.length===0?<span>No hay ofertas ficticias registradas en este espacio.</span>:
+     <div className="agent-db-test-grid">{testOffers.map(offer=><div key={offer.partnumber}>
+      <strong>{offer.partnumber}</strong><span>S/ {Number(offer.price_pen).toFixed(2)}</span><small>{offer.stock_status}</small>
+     </div>)}</div>}
+    <small>Solo para pruebas internas. El agente nunca debe publicar estas cifras en WhatsApp ni en modo real.</small>
+   </section>}
+   <div className="agent-layout-real">
+    <aside className="agent-sessions"><div className="agent-side-head"><strong>Conversaciones</strong><button aria-label="Nueva conversación" title="Nueva conversación" onClick={()=>{setSelected(null);setTurns([]);setUsage(null);setError("");setNotice("");}}><Plus size={17}/></button></div>
+     {conversations.length===0&&<p className="agent-empty-sessions">Aún no hay conversaciones.</p>}
+     {conversations.map(c=><button key={c.id} className={"agent-session "+(selected===c.id?"selected":"")} onClick={()=>{setSelected(c.id);setError("");setUsage(null);}}><MessageCircle size={16}/><span>{c.title}</span></button>)}
+    </aside>
+    <div className="agent-conversation">
+      <div className="agent-messages">
+      {!turns.length&&!loading&&<div className="agent-welcome"><div><Bot size={32}/></div><h3>Tu asesor comercial inteligente</h3><p>Haz una consulta sobre los celulares registrados en STECH. El agente conoce el catálogo real, pero no inventará precios ni stock sin validar.</p></div>}
+      {loading&&<div className="agent-wait">Cargando conversación…</div>}
+      {turns.map(t=><div key={t.id} className={"agent-bubble "+t.role}><span>{t.role==="assistant"?"Agente STECH":"Tú"}</span><p>{t.content}</p></div>)}
+      {sending&&<div className="agent-wait"><RefreshCw size={15}/> Consultando a OpenAI…</div>}
+      </div>
+      {signal&&<div className={"agent-commercial-signal "+(signal.priority==="high"?"hot":"")}>
+       <div className="agent-signal-text"><strong>{signal.label}</strong><span>{signal.nextAction}</span>
+        {signal.handoff&&<small><UserRoundCheck size={13}/> Revisión de asesor recomendada; aún no se ha asignado.</small>}</div>
+       {signal.followupSuggested&&<button className="secondary-button" onClick={()=>{
+        setActionOpen(v=>!v);
+        setLinkedContact(contacts[0]?.id||"");
+        setTask(("Retomar solicitud: "+lastQuestion).slice(0,390));
+        setDueAt("");setApproved(false);
+       }}><CalendarClock size={15}/> Gestionar en CRM</button>}
+      </div>}
+      {actionOpen&&<div className="agent-sales-action">
+       <h3>Convertir conversación en acción comercial</h3>
+       {!contacts.length?<div className="agent-action-notice">Todavía no hay clientes en ARM-CRM. Registra primero un contacto real y después vuelve a esta conversación.
+        <button className="secondary-button" onClick={()=>onNavigate("clientes")}>Ir a Clientes</button></div>:
+        <form onSubmit={e=>void createTask(e)}>
+         <label>Cliente del CRM<select required value={linkedContact} onChange={e=>setLinkedContact(e.target.value)}>
+          <option value="">Seleccionar cliente</option>{contacts.map(c=><option key={c.id} value={c.id}>{c.name}</option>)}
+         </select></label>
+         <label>Acción / motivo<textarea minLength={3} maxLength={390} required value={task} onChange={e=>setTask(e.target.value)} rows={2}/></label>
+         <label>Fecha y hora acordada<input required type="datetime-local" value={dueAt} onChange={e=>setDueAt(e.target.value)}/></label>
+         <label className="agent-approval"><input type="checkbox" checked={approved} onChange={e=>setApproved(e.target.checked)}/>
+          Confirmo que el cliente autorizó este seguimiento. No enviar mensajes automáticamente.</label>
+         <div className="agent-sales-buttons"><button disabled={savingAction||!approved||!dueAt} type="submit" className="primary-button"><CalendarClock size={15}/> Registrar seguimiento</button>
+          <button disabled={savingAction||!linkedContact} className="secondary-button" type="button" onClick={()=>void createOpportunity()}>Crear oportunidad</button></div>
+        </form>}
+      </div>}
+      {simulated&&<div className="agent-sandbox-banner">Simulación interna activada: los precios y la disponibilidad no representan datos comerciales reales.</div>}
+      {usage&&<div className="agent-usage"><CheckCircle2 size={16}/><span>{usage.model} · {usage.inputTokens} entrada · {usage.outputTokens} salida · {usage.cachedTokens} caché · Est. USD {usage.estimatedUsd.toFixed(5)}{!usage.usageRecorded?" · Métrica no guardada":""}</span></div>}
+      {notice&&<div className="agent-notice" role="status">{notice}</div>}
+      {error&&<div className="auth-error" role="alert">{error}</div>}
+      <form onSubmit={e=>void submit(e)} className="agent-compose"><label htmlFor="agent-question">Escribe la consulta comercial</label><div className="agent-compose-row"><textarea id="agent-question" value={question} onChange={e=>setQuestion(e.target.value)} maxLength={800} rows={2} placeholder="Ej.: Necesito recomendar un Ulefone resistente para construcción. ¿Cuál tenemos registrado?"/><button type="submit" className="primary-button" disabled={sending||!ready||question.trim().length<2}><Send size={17}/>{sending?"Generando…":"Consultar IA"}</button></div><small>El uso de OpenAI API puede generar cargos por tokens. En modo real, un seguimiento solo se agenda tras obtener nombre y apellido, teléfono, fecha/hora y consentimiento. No se envían mensajes automáticos.</small></form>
+     </div>
+   </div>
+ </div>;
+}

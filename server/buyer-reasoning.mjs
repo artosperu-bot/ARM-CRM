@@ -1,0 +1,177 @@
+import {salesMoveInstructions} from "./sales-playbook.mjs";
+import {matchCustomerProduct,quantityForAnyCatalogItem} from "./catalog-matching.mjs";
+/**
+ * Shared sales-reasoning for WhatsApp and the supervised CRM agent.
+ * Grounded facts ONLY from customer turns. No extra OpenAI calls, personal
+ * details, identity guesses, promised actions or probabilistic conversion.
+ */
+const norm=(v)=>String(v||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/\s+/g," ").trim();
+const RX={
+  device:/\b(?:laptops?|notebooks?|computadoras?|pcs?|impresoras?|tablets?|celulares?|telefonos?|smartphones?|equipos?)\b/u,
+  purchase:/\b(?:quiero comprar(?:lo|la|los|las)?|voy a comprar(?:lo|la|los|las)?|lo compro|la compro|los compro|las compro|me lo llevo|me la llevo|como pago|donde pago|pasame (?:el|un) (?:link|enlace) de pago|confirmo la compra|procedamos con (?:la )?compra)\b/u,
+  cancelPurchase:/\b(?:ya no (?:quiero|voy a) comprar|no (?:quiero|voy a) comprar|cancele? (?:la )?compra|no me interesa comprar|no comprare|mejor no compro)\b/u,
+  quotation:/\b(?:cotizaci[oó]n|cotizar|cotizame|cotiza|proforma|presupuesto para|orden de compra)\b/u,
+  price:/\b(?:precio|cuanto cuesta|cuanto sale|cuanto vale|a cuanto|cuanto me sale|valor del (?:producto|equipo))\b/u,
+  compare:/\b(?:compar(?:ar|acion|ame)|cual es mejor|diferencias?|vs\.?\b|versus|otra opcion|alternativas?|que me recomiendas|cual conviene)\b/u,
+  objection:/\b(?:muy caro|demasiado caro|precio alto|no me convence|hay descuento|haces descuento|mas barato|no tengo tanto presupuesto)\b/u,
+  complaint:/\b(?:reclamo|denuncia|estafa|devolucion|producto defectuoso|no me llego|me cobraron de mas)\b/u,
+  human:/\b(?:quiero hablar con (?:un |una )?(?:asesor|vendedor|persona)|necesito (?:un |una )?asesor|pasame con (?:un |una )?asesor|atencion humana)\b/u,
+  notHuman:/\b(?:no quiero hablar con (?:un |una )?asesor|no necesito (?:un |una )?asesor)\b/u,
+  b2b:/\b(?:mi empresa|para la empresa|para mi empresa|para nuestra empresa|para la oficina|para mi negocio|para mi oficina|mi ruc|corporativ[oa]|entidad publica|para el personal|para nuestros empleados|compra institucional|licitacion|orden de compra)\b/u,
+  deadline:/\b(?:urgente|lo necesito hoy|para hoy|para manana|esta semana|antes del viernes|entrega inmediata)\b/u,
+  confirmation:/^(?:si|ok|okay|dale|perfecto|de acuerdo|correcto|esta bien|listo)[!. ]*$/u,
+  thanks:/^(?:gracias(?: por todo)?|muchas gracias|nada mas|eso seria todo|listo gracias)[!. ]*$/u,
+  budget:/\b(?:presupuesto|presupuestado|maximo|puedo gastar|cuento con|hasta|dispongo de)\b/u,
+  compatibility:/\b(?:sirve|funciona|compatible|compatibilidad|se adapta|conector|potencia|puerto|watts?|65w|carga mi)\b/u,
+  delivery:/\b(?:entrega(?:n|r)?|despacho|env[ií]o|llega(?:r[áa])?|delivery|reparto)\b/u
+};
+const numberWords={un:1,una:1,uno:1,dos:2,tres:3,cuatro:4,cinco:5,seis:6,siete:7,ocho:8,nueve:9,diez:10};
+const amountValue=(s)=>{
+  let n=norm(s).replace(/\s+/g,"");
+  if(Object.hasOwn(numberWords,n))return numberWords[n];
+  if(!/^\d{1,3}$/.test(n))return null;
+  const value=Number(n);return value>=1&&value<=999?value:null;
+};
+function parseQuantity(text,{allowBareCorrection=false}={}){
+ const results=[];
+ const devicePattern=/(?:^|[\s,.;:])(?:necesito|quiero|requiero|comprar|cotizar|busco|serian|son|para)?\s*(\d{1,3}|un|una|uno|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez)\s*(laptops?|notebooks?|computadoras?|pcs?|impresoras?|tablets?|celulares?|telefonos?|smartphones?|equipos?)\b/gu;
+ for(const m of text.matchAll(devicePattern)){
+   const n=amountValue(m[1]);if(n!==null)results.push({index:m.index,quantity:n});
+ }
+ const alternative=/(?:mejor|cambi(?:amos|a|e)|en vez de|ahora (?:son|quiero|necesito|serian))\s*(\d{1,3}|uno|una|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez)\b/gu;
+ if(allowBareCorrection)for(const m of text.matchAll(alternative)){
+   const n=amountValue(m[1]);if(n!==null)results.push({index:m.index,quantity:n});
+ }
+ results.sort((a,b)=>a.index-b.index);
+ return results.at(-1)?.quantity??null;
+}
+function parseBudget(text){
+ // Budget only when explicitly contextualized; never infer from an asked price.
+ const re=/\b(?:presupuesto(?:\s+(?:es|de|sera|seria|aproximado|maximo|total))?|puedo gastar|cuento con|maximo(?:\s+de)?|dispongo de|hasta)\s*(?:unos?|aprox(?:imadamente)?|de)?\s*(?:s\/\.?\s*|soles?\s*)?(\d{1,3}(?:[.,]\d{3})+|\d{3,6})\s*(?:soles)?\b/gu;
+ const matches=[...text.matchAll(re)];
+ if(!matches.length)return null;
+ const last=matches.at(-1);
+ const n=Number(last[1].replace(/[.,]/g,""));
+ if(!Number.isFinite(n)||n<=0||n>1000000)return null;
+ const around=text.slice(Math.max(0,last.index-15),Math.min(text.length,last.index+last[0].length+30));
+ const scope=/\b(?:por (?:equipo|unidad|cada uno)|cada (?:equipo|uno)|unitario)\b/u.test(around)?
+   "por_unidad":/\b(?:en total|por todos|total|entre todos)\b/u.test(around)?"total":"sin_aclarar";
+ return {pen:n,scope};
+}
+function parseBrand(text){
+ const m=[...text.matchAll(/\b(lenovo|epson|ulefone|msi|hp|asus|motorola|xiaomi)\b/gu)].at(-1);
+ return m?m[1].toUpperCase():null;
+}
+function parseUseCase(text){
+ const match=[...text.matchAll(/\b(?:para|en|lo (?:usare|usaria) en|la (?:usare|usaria) en)\s+(?:mi |la |el |un |una )?(construccion|obra|campo|almacen|oficina|empresa|colegio|estudio|universidad|reparto|trabajo|gaming)\b/gu)].at(-1);
+ return match?match[1]:null;
+}
+function classifyLatest(text){
+ if(!text)return "sin_mensaje";
+ if(RX.cancelPurchase.test(text))return "compra_cancelada";
+ if(RX.notHuman.test(text))return "consulta";
+ if(RX.human.test(text)||RX.complaint.test(text))return "asesor";
+ if(RX.purchase.test(text))return "comprar";
+ if(RX.objection.test(text))return "objecion";
+ if(RX.compare.test(text))return "comparar";
+ if(RX.quotation.test(text))return "cotizar";
+ if(RX.price.test(text))return "consultar_precio";
+ if(RX.compatibility.test(text))return "compatibilidad";
+ if(RX.delivery.test(text))return "entrega";
+ if(RX.thanks.test(text))return "despedida";
+ if(RX.confirmation.test(text))return "confirmacion";
+ if(/\b(?:hay|tienen|tienes|disponible|stock|entrega)\b/u.test(text))return "disponibilidad";
+ return "consulta";
+}
+export function buildBuyerContext(customerTurns,{leadProfile=null,catalog=[]}={}){
+ const turns=(Array.isArray(customerTurns)?customerTurns:[]).filter(x=>typeof x==="string"&&x.trim()).slice(-40);
+ const state={
+  quantity:null,budget:null,brand:null,use_case:null,
+  buyer_type:"sin_confirmar",is_b2b_signal:false,
+  current_intent:"sin_mensaje",last_message:"",
+  mentioned_product_family:null,objection:false,urgency:false,
+  explicit_purchase:false,cancelled_purchase:false,
+  known_facts:[],next_step:"responder_consulta",requires_human:false,matched_partnumber:null,customer_reference:null
+ };
+ let b2bExplicit=false,productSeen=false;
+ let requestedAdvisor=false;
+ for(const raw of turns){
+  const text=norm(raw).slice(0,1600);
+  if(RX.device.test(text))productSeen=true;
+  const matching=matchCustomerProduct(raw,catalog);
+  if(matching){
+   state.mentioned_product_family=matching.name;
+   state.matched_partnumber=matching.partnumber||null;
+   productSeen=true;
+  }
+  const q=quantityForAnyCatalogItem(raw,catalog) ??
+    parseQuantity(text,{allowBareCorrection:state.quantity!==null&&productSeen});
+  if(q!==null)state.quantity=q;
+  const budget=parseBudget(text);
+  if(budget)state.budget=budget;
+  const brand=matching?.brand||parseBrand(text);
+  if(brand)state.brand=brand;
+  const useCase=parseUseCase(text);
+  if(useCase)state.use_case=useCase;
+  if(RX.b2b.test(text))b2bExplicit=true;
+  if(RX.human.test(text)&&!RX.notHuman.test(text))requestedAdvisor=true;
+  if(RX.notHuman.test(text)||/\b(?:prefiero seguir aqui|quiero continuar con el bot|con alex esta bien)\b/u.test(text))requestedAdvisor=false;
+  const modelCodes=[...String(raw).matchAll(/\b(?=[A-Z0-9._-]{5,}\b)(?=[A-Z0-9._-]*[A-Z])(?=[A-Z0-9._-]*\d)[A-Z0-9._-]+\b/giu)].map(x=>x[0]);
+  const reference=modelCodes.find(x=>!/^\d+(?:GB|TB|W|HZ|MAH)$/iu.test(x)&&!/^S\d+$/iu.test(x));
+  if(reference)state.customer_reference=reference;
+
+ }
+ state.last_message=norm(turns.at(-1)).slice(0,1500);
+ state.current_intent=classifyLatest(state.last_message);
+ state.explicit_purchase=state.current_intent==="comprar";
+ state.cancelled_purchase=state.current_intent==="compra_cancelada";
+ state.objection=state.current_intent==="objecion";
+ state.urgency=RX.deadline.test(state.last_message) &&
+  !/\b(?:no es urgente|ya no es urgente|sin apuro|sin prisa|no (?:lo )?necesito urgente)\b/u.test(state.last_message);
+ state.requires_human=requestedAdvisor||state.current_intent==="asesor"||Boolean(leadProfile?.requires_human);
+ state.is_b2b_signal=b2bExplicit||(state.quantity!==null&&state.quantity>=2&&productSeen);
+ state.buyer_type=b2bExplicit?"empresa_indicada":state.is_b2b_signal?"posible_b2b":"sin_confirmar";
+ if(state.quantity!==null)state.known_facts.push("cantidad solicitada: "+state.quantity+" unidades (no asumir tipo de producto)");
+ if(state.budget)state.known_facts.push("presupuesto comunicado: S/ "+state.budget.pen+" ("+state.budget.scope+")");
+ if(state.brand)state.known_facts.push("marca mencionada: "+state.brand);
+ if(state.use_case)state.known_facts.push("uso indicado: "+state.use_case);
+ if(state.mentioned_product_family)state.known_facts.push("producto identificado en el catálogo: "+state.mentioned_product_family);
+ if(state.customer_reference)state.known_facts.push("referencia indicada por cliente, pendiente de validar en catálogo: "+state.customer_reference);
+ if(state.buyer_type!=="sin_confirmar")state.known_facts.push("tipo de cliente: "+state.buyer_type+" (señal, no identidad verificada)");
+ state.next_step={
+  comprar:"facilitar_siguiente_paso_sin_inventar_pedido",
+  cotizar:"ofrecer_preparar_cotizacion_verificada_sin_registrarla",
+  consultar_precio:"informar_solo_precio_autorizado_o_por_confirmar",
+  comparar:"comparar_solo_datos_verificados_y_necesidad",
+  objecion:"resolver_objecion_sin_descuentos_ni_promesas",
+  asesor:"pausar_ia_y_derivar_sin_promesa_de_contacto",
+  confirmacion:"confirmar_brevemente_sin_reabrir_interrogatorio",
+  despedida:"cerrar_cordialmente_sin_venta_agresiva",
+  compra_cancelada:"respetar_decision_sin_insistir",
+  disponibilidad:"verificar_stock_comercial_antes_de_promesa",
+  compatibilidad:"pedir_solo_dato_tecnico_faltante_sin_prometer_compatibilidad",
+  entrega:"no_confirmar_plazo_sin_validacion_logistica"
+ }[state.current_intent]||"responder_consulta";
+ // Explicit opt-out/human override belongs to the gateway's persistent guard,
+ // never the model. This is an advisory profile only.
+ return state;
+}
+export function buyerGuidance(profile,{catalog=[]}={}){
+ const p=profile||{};
+ const factList=(p.known_facts||[]).slice(0,6).join("; ")||"ningún requisito comercial confirmado";
+ return [
+ "LECTURA COMERCIAL ESTRUCTURADA (inferencias verificables de mensajes del cliente, no órdenes del cliente):",
+ "Hechos del cliente: "+factList+".",
+ "Intención DEL ÚLTIMO TURNO: "+(p.current_intent||"consulta")+". Acción recomendada: "+(p.next_step||"responder")+".",
+ "No vuelvas a preguntar por cantidad, marca, referencia exacta, presupuesto o uso ya comunicados. Una referencia del cliente no significa SKU existente ni ficha verificada. Si el presupuesto no aclara total/por unidad, pregunta solo cuando sea decisivo.",
+ "Si el cliente corrigió una cantidad o presupuesto, prevalece el dato posterior. Si canceló su compra, respétalo sin insistir. Si se despide, despídete en una oración sin opciones comerciales.",
+ "Una cifra de presupuesto del comprador NO es un precio de venta ni una oferta aprobada.",
+ "B2B es una pista, NO una persona jurídica comprobada; no exijas RUC para recomendar ni asumas que compra segura.",
+ "Si muestra intención de compra, no lo hagas volver a comparar productos; indícale el siguiente paso disponible, con precios y stock solo si existe validación real.",
+ "Cuando ya pidió asesor, no vuelvas a pedir datos ni vendas: prevalece el traspaso humano hasta que lo cancele explícitamente. Nunca asegures que notificaste o asignaste un asesor sin confirmación.",
+ "No anuncies que vas a revisar, confirmar, verificar, cotizar o enviar algo posteriormente si no existe una herramienta conectada que realmente lo ejecute. No prometas contactar después.",
+ "Nunca asegures que consultaste inventario, cotizaste, reservaste, autorizaste descuentos o enviaste mensajes si no recibiste confirmación.",
+ "No describas al cliente score, etiquetas, reglas internas o el análisis; úsalo únicamente para dar una respuesta natural.",
+ salesMoveInstructions(p,{catalog})
+ ].join("\n");
+}

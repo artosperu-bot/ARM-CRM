@@ -1,0 +1,12 @@
+.erp-summary{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:13px 0;color:#355e73;font-size:12px}
+.erp-summary span{display:flex;align-items:center;gap:6px;border-radius:9px;background:#edf6fa;padding:9px 11px}
+.erp-disclaimer{padding:10px 13px;background:#fff8ea;border:1px solid #f3e1bc;border-radius:9px;color:#775d2a;font-size:11px;line-height:1.5;margin:12px 0}
+.erp-filter-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.erp-filter-row .search-box{flex:1;min-width:220px}
+.erp-filter-row select{font:inherit;font-size:12px;min-height:37px;padding:7px 9px;border:1px solid #d9e7ed;border-radius:9px;color:#315a71;background:#fff}
+.erp-evidence-state{display:inline-flex;align-items:center;max-width:max-content;font-size:10px!important;padding:4px 7px;border-radius:6px;font-weight:700}
+.erp-evidence-state.fresh{color:#24744d;background:#e9f8ee}
+.erp-evidence-state.pending_mapping{color:#94640b;background:#fff4dd}
+.erp-evidence-state.stale,.erp-evidence-state.anomaly,.erp-evidence-state.missing{color:#89412e;background:#fff0e8}
+.erp-pn-warning{color:#936015}
+.product-meta small{display:block;line-height:1.5;color:#607f90}
