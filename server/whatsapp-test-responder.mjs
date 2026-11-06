@@ -64,7 +64,7 @@ export function createWhatsAppTestResponder({
   // reconstructed from the earliest need and latest 24 messages at no extra AI cost.
   const buyerTurns=ordered.filter(x=>x.role==="user").map(x=>x.content);
   if(buyerTurns.at(-1)!==event.text)buyerTurns.push(event.text);
-  const buyer=buildBuyerContext(buyerTurns,{leadProfile});
+  const buyer=buildBuyerContext(buyerTurns,{leadProfile,catalog});
   const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),30000);
   let result;
   try{
@@ -75,7 +75,7 @@ export function createWhatsAppTestResponder({
         model:"gpt-5.4-mini",store:false,max_output_tokens:450,reasoning:{effort:"none"},
         text:{format:crmResponseSchema},
         instructions:salesInstructions(catalog,{simulated:testOffers,nowIso:new Date().toISOString()})+
-          "\n"+whatsappPresentationInstructions()+"\n"+buyerGuidance(buyer)+
+          "\n"+whatsappPresentationInstructions()+"\n"+buyerGuidance(buyer,{catalog})+
           (leadProfile?("\nCONTEXTO COMERCIAL INTERNO: señal="+String(leadProfile.intent||"consulta_general")+
            "; B2B="+Boolean(leadProfile.is_b2b)+"; cantidad de equipos confirmada="+
            (Number.isInteger(leadProfile.quantity_min)?leadProfile.quantity_min:"no confirmada")+
