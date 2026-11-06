@@ -26,9 +26,9 @@ describe("ALEX buyer journey: continuity across turns",()=>{
   expect(buildBuyerContext(["¿La laptop cuesta S/ 3600?"]).budget).toBe(null);
  });
  it("distinguishes a single buyer and RAM/storage from quantities",()=>{
-  const b=buildBuyerContext(["Quiero un Armor 22 256GB 8GB de RAM"]);
+  const b=buildBuyerContext(["Quiero un Armor 22 256GB 8GB de RAM"],{catalog:simulated});
   expect(b.quantity).toBe(null);
-  expect(b.mentioned_product_family).toBe("ARMOR 22");
+  expect(b.mentioned_product_family).toBe("Ulefone Armor 22");
   expect(b.is_b2b_signal).toBe(false);
  });
  it("qualifies two devices as possible B2B, but not confirmed legal identity",()=>{
