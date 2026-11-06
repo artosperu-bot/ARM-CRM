@@ -1,3 +1,4 @@
+import {matchCustomerProduct,quantityForAnyCatalogItem} from "./catalog-matching.mjs";
 /**
  * Shared sales-reasoning for WhatsApp and the supervised CRM agent.
  * Grounded facts ONLY from customer turns. No extra OpenAI calls, personal
@@ -77,7 +78,7 @@ function classifyLatest(text){
  if(/\b(?:hay|tienen|tienes|disponible|stock|entrega)\b/u.test(text))return "disponibilidad";
  return "consulta";
 }
-export function buildBuyerContext(customerTurns,{leadProfile=null}={}){
+export function buildBuyerContext(customerTurns,{leadProfile=null,catalog=[]}={}){
  const turns=(Array.isArray(customerTurns)?customerTurns:[]).filter(x=>typeof x==="string"&&x.trim()).slice(-40);
  const state={
   quantity:null,budget:null,brand:null,use_case:null,
@@ -85,26 +86,29 @@ export function buildBuyerContext(customerTurns,{leadProfile=null}={}){
   current_intent:"sin_mensaje",last_message:"",
   mentioned_product_family:null,objection:false,urgency:false,
   explicit_purchase:false,cancelled_purchase:false,
-  known_facts:[],next_step:"responder_consulta",requires_human:false
+  known_facts:[],next_step:"responder_consulta",requires_human:false,matched_partnumber:null
  };
  let b2bExplicit=false,productSeen=false;
- const families=[["ARMOR 25T PRO",/\barmor[\s-]?25t[\s-]?pro\b/u],
- ["ARMOR X12 PRO",/\barmor[\s-]?x12[\s-]?pro\b/u],
- ["ARMOR 22",/\barmor[\s-]?22\b/u],["ARMOR X13",/\barmor[\s-]?x13\b/u]];
  for(const raw of turns){
   const text=norm(raw).slice(0,1600);
   if(RX.device.test(text))productSeen=true;
-  const q=parseQuantity(text,{allowBareCorrection:state.quantity!==null&&productSeen});
+  const matching=matchCustomerProduct(raw,catalog);
+  if(matching){
+   state.mentioned_product_family=matching.name;
+   state.matched_partnumber=matching.partnumber||null;
+   productSeen=true;
+  }
+  const q=quantityForAnyCatalogItem(raw,catalog) ??
+    parseQuantity(text,{allowBareCorrection:state.quantity!==null&&productSeen});
   if(q!==null)state.quantity=q;
   const budget=parseBudget(text);
   if(budget)state.budget=budget;
-  const brand=parseBrand(text);
+  const brand=matching?.brand||parseBrand(text);
   if(brand)state.brand=brand;
   const useCase=parseUseCase(text);
   if(useCase)state.use_case=useCase;
   if(RX.b2b.test(text))b2bExplicit=true;
-  const family=families.find(([,pattern])=>pattern.test(text));
-  if(family)state.mentioned_product_family=family[0];
+
  }
  state.last_message=norm(turns.at(-1)).slice(0,1500);
  state.current_intent=classifyLatest(state.last_message);
@@ -120,7 +124,7 @@ export function buildBuyerContext(customerTurns,{leadProfile=null}={}){
  if(state.budget)state.known_facts.push("presupuesto comunicado: S/ "+state.budget.pen+" ("+state.budget.scope+")");
  if(state.brand)state.known_facts.push("marca mencionada: "+state.brand);
  if(state.use_case)state.known_facts.push("uso indicado: "+state.use_case);
- if(state.mentioned_product_family)state.known_facts.push("familia de producto mencionada: "+state.mentioned_product_family);
+ if(state.mentioned_product_family)state.known_facts.push("producto identificado en el catálogo: "+state.mentioned_product_family);
  if(state.buyer_type!=="sin_confirmar")state.known_facts.push("tipo de cliente: "+state.buyer_type+" (señal, no identidad verificada)");
  state.next_step={
   comprar:"facilitar_siguiente_paso_sin_inventar_pedido",
