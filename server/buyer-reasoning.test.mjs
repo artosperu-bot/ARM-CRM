@@ -27,7 +27,7 @@ describe("ALEX buyer journey: continuity across turns",()=>{
  });
  it("distinguishes a single buyer and RAM/storage from quantities",()=>{
   const b=buildBuyerContext(["Quiero un Armor 22 256GB 8GB de RAM"],{catalog:simulated});
-  expect(b.quantity).toBe(null);
+  expect(b.quantity).toBe(1);
   expect(b.mentioned_product_family).toBe("Ulefone Armor 22");
   expect(b.is_b2b_signal).toBe(false);
  });
