@@ -2,6 +2,7 @@ import {describe,it,expect} from "vitest";
 import {matchCustomerProduct,quantityForAnyCatalogItem} from "./catalog-matching.mjs";
 import {buildBuyerContext,buyerGuidance} from "./buyer-reasoning.mjs";
 import {salesMove,salesMoveInstructions} from "./sales-playbook.mjs";
+import {protectSalesResponse} from "./sales-response-guard.mjs";
 
 const catalog=[
  {titulo:"Impresora Epson EcoTank L1250 Wi-Fi",marca:"EPSON",partnumber:"C11CJ71301"},
@@ -49,6 +50,34 @@ describe("universal catalogue product matching",()=>{
   expect(quantityForAnyCatalogItem("Tengo 256 GB y 8 GB RAM",catalog)).toBe(null);
  });
 });
+describe("general catalogue safety with multiple products",()=>{
+ const priced=[
+  {...catalog[0],precio_soles:800},
+  {...catalog[1],precio_soles:1500}
+ ];
+ it("rejects a valid price belonging to the wrong product",()=>{
+  const buyer=buildBuyerContext(["¿Cuánto cuesta la impresora Epson EcoTank L1250?"],{catalog:priced});
+  expect(buyer.matched_partnumber).toBe("C11CJ71301");
+  const r=protectSalesResponse("La Epson EcoTank L1250 cuesta S/ 1500.",{catalog:priced,buyer});
+  expect(r).toMatchObject({blocked:true,reason:"unverified_price"});
+ });
+ it("blocks model switching when other product is named with a price",()=>{
+  const buyer=buildBuyerContext(["¿Cuál es el precio Epson EcoTank L1250?"],{catalog:priced});
+  const r=protectSalesResponse("Microsoft Office LTSC Standard 2024 cuesta S/ 1500.",{catalog:priced,buyer});
+  expect(r).toMatchObject({blocked:true,reason:"product_mismatch"});
+ });
+ it("allows the exact verified price of the right identified model",()=>{
+  const buyer=buildBuyerContext(["Precio Epson EcoTank L1250"],{catalog:priced});
+  const r=protectSalesResponse("La Epson EcoTank L1250 cuesta S/ 800.",{catalog:priced,buyer});
+  expect(r).toMatchObject({blocked:false,reason:null});
+ });
+ it("hides warehouse licence quantities without hiding requested purchase amounts",()=>{
+  const buyer=buildBuyerContext(["Deseo 3 licencias Microsoft Office LTSC Standard 2024"],{catalog});
+  const r=protectSalesResponse("Tenemos 50 licencias en stock.",{catalog,buyer});
+  expect(r).toMatchObject({blocked:true,reason:"exact_stock"});
+ });
+});
+
 describe("sales process is driven by buying stage, not product category",()=>{
  it("asks about needs only when needed and not after customer's explanation",()=>{
   const start=buildBuyerContext(["Hola, busco una impresora"],{catalog});
