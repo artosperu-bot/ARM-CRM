@@ -26,11 +26,16 @@ const stockUnits=/\b(?:quedan|tenemos|hay|disponibles?|en stock|stock de)\s+\d{1
 const discount=/\b(?:descuento|rebaja|promoci[oó]n|off)\s+(?:de|del|hasta)?\s*\d{1,3}\s*%|\b\d{1,3}\s*%\s+de\s+(?:descuento|rebaja)/iu;
 const deliveryPromise=/\b(?:te|le)\s+(?:llega|entregamos|enviamos)\s+(?:ma[ñn]ana|hoy)\b/iu;
 const unconfirmedFutureAction=/\b(?:puedo|podr[ií]a|voy a|te puedo)\s+(?:dejar|registrar|derivar|enviar|coordinar|agendar)\b.{0,90}\b(?:inter[eé]s|pedido|cotizaci[oó]n|asesor|reserva|cita|solicitud|list[oa]|registrad[oa])\b/iu;
+const promisedCommercialCheck=/\b(?:puedo|podemos|voy a|te puedo|si quieres puedo)\s+(?:ayudarte\s+a\s+)?(?:verificar|consultar|revisar|confirmar|cotizar|validar)\s+(?:la?|los?|tu|su)?\s*(?:cotizaci[oó]n|precio|compra|pedido|stock|disponibilidad|env[ií]o|entrega|compatibilidad|modelo)\b/iu;
 const prematureDataRequest=/(?:\b(?:p[aá]same|dame|env[ií]ame|ind[ií]came|necesito|comp[aá]rteme|comparte|compartes|cu[aá]l es)\s+(?:tu|su)\s+(?:nombre|apellido|tel[eé]fono|celular|direcci[oó]n|ruc|dni|correo|tarjeta)\b|\b(?:tu|su)\s+(?:nombre\s+(?:y|completo)|direcci[oó]n|ruc|dni)\s+(?:para\s+(?:hacer|registrar|confirmar)))/iu;
 export function protectSalesResponse(reply,{catalog=[],buyer=null,simulated=false}={}){
  const text=typeof reply==="string"?reply.trim():"";
  if(!text)return {reply:"Puedo ayudarte con tu consulta. ¿Qué producto necesitas?",blocked:true,reason:"empty"};
  const intent=buyer?.current_intent||"consulta";
+ if(buyer?.requires_human)return {reply:"Entiendo que prefieres hablar con un asesor. No tengo confirmación de que se haya asignado o notificado a alguien; la atención humana debe gestionarla el equipo comercial.",blocked:true,reason:"human_requested"};
+ if(/\bno quiero (?:dar|compartir) (?:mi )?(?:dni|ruc|tel[eé]fono|n[uú]mero)\b/iu.test(buyer?.last_message||""))
+   return {reply:"Sí, puedes consultar productos y recibir orientación sin dar tu DNI ni otros datos personales.",blocked:true,reason:"privacy_preference"};
+
  const askedCommercialPrice=["consultar_precio","cotizar","comparar","objecion","comprar"].includes(intent);
  const available=(Array.isArray(catalog)?catalog:[]).filter(p=>p?.precio_soles!==null&&
    p?.precio_soles!==undefined&&Number.isFinite(Number(p.precio_soles))&&Number(p.precio_soles)>0);
@@ -52,7 +57,7 @@ export function protectSalesResponse(reply,{catalog=[],buyer=null,simulated=fals
   const approvedPrice=askedCommercialPrice&&priceValues.has(value);
   if(!approvedPrice&&!isRestatedBudget){moneyViolation=true;break;}
  }
- const actionViolation=forbiddenActions.some(x=>x.test(text))||unconfirmedFutureAction.test(text);
+ const actionViolation=forbiddenActions.some(x=>x.test(text))||unconfirmedFutureAction.test(text)||promisedCommercialCheck.test(text);
  const stockViolation=stockUnits.test(text);
  const discountViolation=discount.test(text);
  const deliveryViolation=deliveryPromise.test(text);
@@ -65,7 +70,7 @@ export function protectSalesResponse(reply,{catalog=[],buyer=null,simulated=fals
   product_mismatch:"Necesito verificar el modelo exacto antes de darte un precio; no quiero mezclar productos diferentes.",
   premature_personal_data:"Podemos confirmar el artículo y las condiciones vigentes antes de coordinar la compra. Todavía no puedo registrar pedidos ni cobrar desde este chat.",
   unverified_price:"Para darte un precio correcto necesito verificar la oferta vigente con STECH. Puedo ayudarte a elegir la opción adecuada según lo que necesitas.",
-  unconfirmed_action:"Puedo ayudarte con el siguiente paso, pero todavía no tengo confirmación de que se haya registrado una cotización, pedido o seguimiento.",
+  unconfirmed_action:intent==="comprar"?"Entiendo que quieres comprar. Antes de indicar el pago hay que confirmar el producto exacto, las condiciones y el precio. No hay un pedido ni un pago registrado desde este chat.":intent==="entrega"?"No hay una fecha de entrega confirmada para ofrecerte todavía. La disponibilidad y el despacho requieren verificación.":"La información o la gestión solicitada requiere verificación del equipo comercial. Por ahora no tengo confirmación de que se haya realizado esa acción.",
   exact_stock:"La disponibilidad para venta está por confirmar. Puedo ayudarte a revisar qué producto se ajusta mejor a tu necesidad.",
   unapproved_discount:"No tengo un descuento aprobado para confirmarte. Puedo ayudarte a comparar opciones y preparar una consulta comercial.",
   delivery_promise:"Para confirmarte una fecha de entrega primero hay que verificar disponibilidad y condiciones de despacho."
