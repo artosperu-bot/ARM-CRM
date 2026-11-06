@@ -59,7 +59,7 @@ describe("ALEX buyer journey: continuity across turns",()=>{
  it("does not extract private phone numbers or identifiers into the sales profile",()=>{
   const b=buildBuyerContext(["Soy Ana, mi número es 987654321. Busco una laptop"]);
   expect(JSON.stringify(b.known_facts)).not.toContain("987654321");
-  expect(b.quantity).toBe(null);
+  expect(b.quantity).toBe(1); // una laptop es una cantidad válida; el teléfono no se almacena.
  });
 });
 describe("ALEX deterministic outgoing checks",()=>{
