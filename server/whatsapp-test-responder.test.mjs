@@ -1,7 +1,7 @@
 import {describe,it,expect} from "vitest";
 import {createWhatsAppTestResponder} from "./whatsapp-test-responder.mjs";
 
-function fixture(status="pending",onRequest=()=>{}){
+function fixture(status="pending",onRequest=()=>{},allowedOffers=[]){
   const writes=[];
   const db={from(table){
     const q={
@@ -12,6 +12,7 @@ function fixture(status="pending",onRequest=()=>{}){
       limit:async()=>{
         if(table==="arm_messages")return {data:[],error:null};
         if(table==="arm_products")return {data:[{title:"Ulefone Armor X13",brand:"ULEFONE",partnumber:"ARMOR-X13",attributes:{},verified_at:null,price_pen:null,stock_erp:null}],error:null};
+        if(table==="arm_offer_simulations")return {data:allowedOffers,error:null};
         return {data:[],error:null};
       },
       insert:async value=>{writes.push({table,value});return {error:null};}
@@ -70,7 +71,8 @@ describe("isolated WhatsApp test reply",()=>{
     expect(f.writes.map(w=>w.table)).toEqual(["arm_ai_usage","arm_messages"]);
   });
   it("in private simulation mode clearly labels simulated pricing",async()=>{
-    const f=fixture();
+    const f=fixture("pending",()=>{},[{partnumber:"ARMOR-X13",price_pen:999,stock_status:"disponible",is_test_data:true}]);
+    f.event.text="¿Cuánto cuesta el Armor X13?";
     const writes=[];
     const responder=createWhatsAppTestResponder({
       db:f.db,openaiKey:"fake",whatsappToken:"fake-token",phoneId:"phone-qa",
