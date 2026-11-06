@@ -77,6 +77,26 @@ describe("Lead intelligence: sales signals and safe automatic actions",()=>{
    expect(r.requires_human).toBe(false);
    expect(r.should_reply).toBe(true);
  });
+ it("lowers high-purchase priority after the customer explicitly cancels",()=>{
+   const r=analyzeSalesConversation([
+    msg("Quiero comprar 3 laptops Lenovo para mi empresa, por favor cotiza"),
+    msg("Ya no quiero comprar")
+   ]);
+   expect(r.priority).toBe("baja");
+   expect(r.intent).toBe("consulta_general");
+   expect(r.signals).toContain("compra_cancelada");
+   expect(r.signals).not.toContain("compra_explicita");
+   expect(r.next_action).toContain("no insistir");
+   expect(r.followup_suppressed).toBe(true);
+   expect(r.should_reply).toBe(true);
+ });
+ it("does not keep a lead at high purchase priority after goodbye",()=>{
+   const r=analyzeSalesConversation([
+     msg("Quiero comprar Armor X13 y saber precio"),msg("Gracias por todo")
+   ]);
+   expect(r.priority).toBe("baja");
+   expect(r.next_action).toContain("Cerrar cordialmente");
+ });
  it("conservative priority is a rule-based score, not probability",()=>{
    const r=analyzeSalesConversation([msg("Hola")]);
    expect(r.score).toBeGreaterThanOrEqual(0);
