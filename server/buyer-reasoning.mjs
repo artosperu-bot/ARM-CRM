@@ -1,3 +1,4 @@
+import {salesMoveInstructions} from "./sales-playbook.mjs";
 import {matchCustomerProduct,quantityForAnyCatalogItem} from "./catalog-matching.mjs";
 /**
  * Shared sales-reasoning for WhatsApp and the supervised CRM agent.
@@ -142,7 +143,7 @@ export function buildBuyerContext(customerTurns,{leadProfile=null,catalog=[]}={}
  // never the model. This is an advisory profile only.
  return state;
 }
-export function buyerGuidance(profile){
+export function buyerGuidance(profile,{catalog=[]}={}){
  const p=profile||{};
  const factList=(p.known_facts||[]).slice(0,6).join("; ")||"ningún requisito comercial confirmado";
  return [
@@ -155,6 +156,7 @@ export function buyerGuidance(profile){
  "B2B es una pista, NO una persona jurídica comprobada; no exijas RUC para recomendar ni asumas que compra segura.",
  "Si muestra intención de compra, no lo hagas volver a comparar productos; indícale el siguiente paso disponible, con precios y stock solo si existe validación real.",
  "Nunca asegures que consultaste inventario, cotizaste, reservaste, autorizaste descuentos o enviaste mensajes si no recibiste una confirmación del backend.",
- "No describas al cliente score, etiquetas, reglas internas o el análisis; úsalo únicamente para dar una respuesta natural."
+ "No describas al cliente score, etiquetas, reglas internas o el análisis; úsalo únicamente para dar una respuesta natural.",
+ salesMoveInstructions(p,{catalog})
  ].join("\n");
 }
