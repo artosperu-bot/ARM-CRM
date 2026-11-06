@@ -76,6 +76,21 @@ describe("ALEX real dialogue review: grounded conversation coherence",()=>{
   const res=protectSalesResponse("Si me confirmas la referencia completa, revisamos el precio.",{catalog,buyer:b});
   expect(res).toMatchObject({blocked:true,reason:"redundant_model_question"});
  });
+ it("rejects conditional assertions that unpriced orders fit the client's budget",()=>{
+  const buyer=buildBuyerContext(["Quiero 3 laptops con presupuesto de S/ 12000 en total"]);
+  const cases=[
+   "Con 3 unidades podrían encajar dentro del presupuesto.",
+   "Estas laptops se ajustan a tu presupuesto.",
+   "El presupuesto alcanza para estos artículos."
+  ];
+  for(const reply of cases)
+    expect(protectSalesResponse(reply,{buyer,catalog}).reason).toBe("unverified_affordability");
+ });
+ it("allows truthful uncertainty about affordability",()=>{
+  const buyer=buildBuyerContext(["Tengo S/ 12000 de presupuesto"]);
+  const r=protectSalesResponse("No puedo confirmar que las laptops entren en ese presupuesto sin precios vigentes.",{buyer,catalog});
+  expect(r.blocked).toBe(false);
+ });
  it("keeps normal helpful answers when no unsafe claim was made",()=>{
   const b=buildBuyerContext(["¿Cuál cargador me conviene?"],{catalog});
   const output=protectSalesResponse("Para saber si es compatible necesito la potencia y el modelo del equipo.",{catalog,buyer:b});
