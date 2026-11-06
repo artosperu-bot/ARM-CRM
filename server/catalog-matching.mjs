@@ -5,7 +5,7 @@
  */
 const clean=s=>String(s||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/([0-9])([a-z])/gu,"$1 $2").replace(/([a-z])([0-9])/gu,"$1 $2").replace(/[^a-z0-9]+/gu," ").replace(/\s+/gu," ").trim();
 const ignore=new Set(["para","con","sin","del","por","una","uno","este","marca","modelo","color","version","pro","kit","producto","gb","ram","de","la","el","las","los","and","the"]);
-const words=s=>clean(s).split(" ").filter(x=>x.length>=3&&!ignore.has(x)&&!/^\d+$/u.test(x));
+const words=s=>clean(s).split(" ").filter(x=>(x.length>=3||/^\d{2,}$/u.test(x))&&!ignore.has(x)&&!/^\d$/u.test(x));
 export function matchCustomerProduct(message,catalog=[]){
  const input=clean(message), tokens=new Set(words(input));
  if(!input||!Array.isArray(catalog)||!catalog.length)return null;
@@ -21,7 +21,7 @@ export function matchCustomerProduct(message,catalog=[]){
   else if(title.length>=6&&input.includes(title))strength=90;
   else{
     const ts=[...new Set(words(name))], shared=ts.filter(x=>tokens.has(x)).length;
-    if(ts.length>=2&&shared>=2&&shared/ts.length>=0.55)strength=shared/ts.length;
+    if(ts.length>=2&&shared>=2&&shared/ts.length>=0.5)strength=shared/ts.length;
   }
   if(strength>0)candidates.push({name,partnumber,brand,strength});
  }
