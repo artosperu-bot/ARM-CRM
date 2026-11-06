@@ -61,6 +61,21 @@ describe("ALEX real dialogue review: grounded conversation coherence",()=>{
   expect(out).toMatchObject({blocked:true,reason:"privacy_preference"});
   expect(out.reply).not.toMatch(/nombre|celular/i);
  });
+ it("rejects invented numeric prices in soles, PEN, US dollars, not just S/",()=>{
+  const b=buildBuyerContext(["¿Cuánto cuesta el cargador USB-C?"],{catalog});
+  for(const offer of ["El cargador cuesta 199 soles.","Precio: PEN 199.","Sale US$ 99.","Cuesta $99."])
+    expect(protectSalesResponse(offer,{catalog,buyer:b}).reason).toBe("unverified_price");
+ });
+ it("rejects phantom unfinished quotations or orders",()=>{
+  const b=buildBuyerContext(["¿Me puedes cotizar 2 impresoras?"],{catalog});
+  const res=protectSalesResponse("Puedo ayudarte a dejar lista tu cotización.",{catalog,buyer:b});
+  expect(res).toMatchObject({blocked:true,reason:"unconfirmed_action"});
+ });
+ it("stops asking for model details already typed even if SKU isn't on file",()=>{
+  const b=buildBuyerContext(["Quiero Brother HL-L2340","¿Cuál es el precio?"],{catalog});
+  const res=protectSalesResponse("Si me confirmas la referencia completa, revisamos el precio.",{catalog,buyer:b});
+  expect(res).toMatchObject({blocked:true,reason:"redundant_model_question"});
+ });
  it("keeps normal helpful answers when no unsafe claim was made",()=>{
   const b=buildBuyerContext(["¿Cuál cargador me conviene?"],{catalog});
   const output=protectSalesResponse("Para saber si es compatible necesito la potencia y el modelo del equipo.",{catalog,buyer:b});
