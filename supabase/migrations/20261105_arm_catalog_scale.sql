@@ -77,7 +77,7 @@ with query_parts as (
  from public.arm_products p cross join search_words q
  where p.workspace_id=p_workspace_id and length(q.q)>=2
  and (
-    lower(p.title) % q.q
+    lower(p.title) OPERATOR(public.%) q.q
     or lower(p.title) like '%'||q.q||'%'
     or lower(p.partnumber) like '%'||q.q||'%'
     or lower(p.brand) like '%'||q.q||'%'
