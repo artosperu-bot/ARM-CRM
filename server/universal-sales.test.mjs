@@ -100,6 +100,13 @@ describe("sales process is driven by buying stage, not product category",()=>{
   expect(salesMove(buildBuyerContext(["Ya no quiero comprar"]),{catalog}).stage).toBe("desistimiento");
   expect(salesMove(buildBuyerContext(["Gracias por todo"]),{catalog}).questionPolicy).toBe("ninguna");
  });
+ it("does not request name or address before an actual checkout tool exists",()=>{
+  const buyer=buildBuyerContext(["Ya elegí la silla, quiero comprarla"],{catalog});
+  expect(buyer.current_intent).toBe("comprar");
+  const r=protectSalesResponse("Si me compartes tu nombre y apellido, registro tu pedido.",{catalog,buyer});
+  expect(r).toMatchObject({blocked:true,reason:"premature_personal_data"});
+  expect(r.reply).not.toContain("apellido");
+ });
  it("doesn't use quantity or B2B status as the selling objective",()=>{
   const b=buildBuyerContext(["Necesito 2 licencias de software"],{catalog});
   expect(salesMove(b,{catalog}).stage).toBe("descubrimiento");
