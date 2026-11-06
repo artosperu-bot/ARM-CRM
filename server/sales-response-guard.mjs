@@ -27,6 +27,8 @@ const discount=/\b(?:descuento|rebaja|promoci[oó]n|off)\s+(?:de|del|hasta)?\s*\
 const deliveryPromise=/\b(?:te|le)\s+(?:llega|entregamos|enviamos)\s+(?:ma[ñn]ana|hoy)\b/iu;
 const unconfirmedFutureAction=/\b(?:puedo|podr[ií]a|voy a|te puedo)\s+(?:dejar|registrar|derivar|enviar|coordinar|agendar)\b.{0,90}\b(?:inter[eé]s|pedido|cotizaci[oó]n|asesor|reserva|cita|solicitud|list[oa]|registrad[oa])\b/iu;
 const promisedCommercialCheck=/\b(?:puedo|podemos|voy a|te puedo|si quieres puedo)\s+(?:ayudarte\s+a\s+)?(?:verificar|consultar|revisar|confirmar|cotizar|validar)\s+(?:el|la|las|los|un|una|tu|su)?\s*(?:cotizaci[oó]n|precio|compra|pedido|stock|disponibilidad|env[ií]o|entrega|compatibilidad|modelo)\b/iu;
+const unprovenAffordability=/\b(?:encaj[a-záéíóú]*|cabe[n]?|entr[a-záéíóú]*|alcanz[a-záéíóú]*|ajust[a-záéíóú]*|est[aá][a-z]* dentro)\b.{0,100}\b(?:presupuesto|monto|inversi[oó]n)\b|\b(?:presupuesto|monto|inversi[oó]n)\b.{0,100}\b(?:encaj[a-záéíóú]*|cabe[n]?|entr[a-záéíóú]*|alcanz[a-záéíóú]*|ajust[a-záéíóú]*)\b/iu;
+const affordabilityCaveat=/\b(?:no puedo|no podemos|no se puede|sin verificar|no est[aá] verificado|falta confirmar|hay que confirmar|no sabemos|no puedo asegurar|no es seguro)\b/iu;
 const unfinishedQuotePromise=/\b(?:puedo|podemos|voy a|te puedo)\s+(?:ayudarte\s+a\s+)?(?:dejar|preparar|tener)\b.{0,60}\b(?:list[ao]|cotizaci[oó]n|reserva|pedido|proforma)\b/iu;
 const redundantIdentifierRequest=/\b(?:si me confirmas|conf[ií]rmame|me puedes confirmar|me podr[ií]as confirmar|ind[ií]came)\s+(?:la|el|tu)?\s*(?:referencia\s+(?:completa|exacta)|modelo\s+exacto|n[uú]mero\s+de\s+modelo)\b/iu;
 const prematureDataRequest=/(?:\b(?:p[aá]same|dame|env[ií]ame|ind[ií]came|necesito|comp[aá]rteme|comparte|compartes|cu[aá]l es)\s+(?:tu|su)\s+(?:nombre|apellido|tel[eé]fono|celular|direcci[oó]n|ruc|dni|correo|tarjeta)\b|\b(?:tu|su)\s+(?:nombre\s+(?:y|completo)|direcci[oó]n|ruc|dni)\s+(?:para\s+(?:hacer|registrar|confirmar)))/iu;
@@ -67,13 +69,15 @@ export function protectSalesResponse(reply,{catalog=[],buyer=null,simulated=fals
  const discountViolation=discount.test(text);
  const deliveryViolation=deliveryPromise.test(text);
  const prematureDataViolation=buyer?.current_intent==="comprar"&&prematureDataRequest.test(text);
- if(!wrongProduct&&!moneyViolation&&!actionViolation&&!stockViolation&&!discountViolation&&!deliveryViolation&&!prematureDataViolation&&!repeatedModelRequest)
+ const affordabilityViolation=unprovenAffordability.test(text)&&!affordabilityCaveat.test(text);
+ if(!wrongProduct&&!moneyViolation&&!actionViolation&&!stockViolation&&!discountViolation&&!deliveryViolation&&!prematureDataViolation&&!repeatedModelRequest&&!affordabilityViolation)
   return {reply:text,blocked:false,reason:null};
- const reason=wrongProduct?"product_mismatch":repeatedModelRequest?"redundant_model_question":moneyViolation?"unverified_price":actionViolation?"unconfirmed_action":
+ const reason=wrongProduct?"product_mismatch":repeatedModelRequest?"redundant_model_question":moneyViolation?"unverified_price":affordabilityViolation?"unverified_affordability":actionViolation?"unconfirmed_action":
    stockViolation?"exact_stock":discountViolation?"unapproved_discount":prematureDataViolation?"premature_personal_data":"delivery_promise";
  const fallback={
   product_mismatch:"Necesito verificar el modelo exacto antes de darte un precio; no quiero mezclar productos diferentes.",
   redundant_model_question:"Ya tengo la referencia que me indicaste. Como todavía no está validada la ficha o el precio en el catálogo, no puedo darte información confirmada.",
+  unverified_affordability:"Con el presupuesto que me indicaste puedo orientarte entre las opciones, pero sin precios confirmados no sería correcto afirmar que la compra entra en ese monto.",
   premature_personal_data:"Podemos confirmar el artículo y las condiciones vigentes antes de coordinar la compra. Todavía no puedo registrar pedidos ni cobrar desde este chat.",
   unverified_price:"Para darte un precio correcto necesito verificar la oferta vigente con STECH. Puedo ayudarte a elegir la opción adecuada según lo que necesitas.",
   unconfirmed_action:intent==="comprar"?"Entiendo que quieres comprar. Antes de indicar el pago hay que confirmar el producto exacto, las condiciones y el precio. No hay un pedido ni un pago registrado desde este chat.":intent==="entrega"?"No hay una fecha de entrega confirmada para ofrecerte todavía. La disponibilidad y el despacho requieren verificación.":"La información o la gestión solicitada requiere verificación del equipo comercial. Por ahora no tengo confirmación de que se haya realizado esa acción.",
