@@ -111,7 +111,8 @@ export function buildBuyerContext(customerTurns,{leadProfile=null}={}){
  state.explicit_purchase=state.current_intent==="comprar";
  state.cancelled_purchase=state.current_intent==="compra_cancelada";
  state.objection=state.current_intent==="objecion";
- state.urgency=RX.deadline.test(state.last_message);
+ state.urgency=RX.deadline.test(state.last_message) &&
+  !/\b(?:no es urgente|ya no es urgente|sin apuro|sin prisa|no (?:lo )?necesito urgente)\b/u.test(state.last_message);
  state.requires_human=state.current_intent==="asesor"||Boolean(leadProfile?.requires_human);
  state.is_b2b_signal=b2bExplicit||(state.quantity!==null&&state.quantity>=2&&productSeen);
  state.buyer_type=b2bExplicit?"empresa_indicada":state.is_b2b_signal?"posible_b2b":"sin_confirmar";
