@@ -20,6 +20,19 @@ describe("ventas y escenarios aislados",()=>{
   expect(enrichCatalog(catalog,true,[record])[0].precio_soles).toBe(null);
   expect(enrichCatalog(catalog,false,[{...record,is_test_data:true}])[0].precio_soles).toBe(null);
  });
+ it("never promotes physical stock to availability for clients",()=>{
+  const v=enrichCatalog([{...catalog[0],stock_erp:12,price_pen:999,verified_at:"2026-11-05T19:00:00Z"}],false,[],
+    {now:Date.parse("2026-11-05T19:10:00Z")})[0];
+  expect(v.precio_soles).toBe(999);
+  expect(v.disponibilidad).toBe("por confirmar");
+ });
+ it("treats an old verified price as expired",()=>{
+  const v=enrichCatalog([{...catalog[0],price_pen:999,stock_erp:12,verified_at:"2026-10-15T19:00:00Z"}],false,[],
+    {now:Date.parse("2026-11-05T19:10:00Z")})[0];
+  expect(v.precio_soles).toBe(null);
+  expect(v.disponibilidad).toBe("por confirmar");
+  expect(v.origen_datos).toBe("precio_no_verificado");
+ });
  it("valida teléfono peruano",()=>{expect(normalizedPhone("+51 987654321")).toBe("987654321");expect(normalizedPhone("12345")).toBe(null);});
  it("no infiere consentimiento desde pedir un horario",()=>{
   expect(consentInLastMessage("Mejor el viernes a las 4, ya me agendaste?")).toBe(false);
