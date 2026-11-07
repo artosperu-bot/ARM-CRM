@@ -1,4 +1,5 @@
 import {matchCustomerProduct} from "./catalog-matching.mjs";
+import {softenUnsolicitedDurabilityCaveats} from "./commercial-voice.mjs";
 /**
  * Final deterministic safety check for AI-generated commercial text.
  * No model is trusted to approve prices, discounts, promises or actions.
@@ -81,7 +82,7 @@ export function protectSalesResponse(reply,{catalog=[],buyer=null,simulated=fals
  const prematureDataViolation=buyer?.current_intent==="comprar"&&prematureDataRequest.test(text);
  const affordabilityViolation=unprovenAffordability.test(text)&&!affordabilityCaveat.test(text);
  if(!wrongProduct&&!moneyViolation&&!actionViolation&&!stockViolation&&!discountViolation&&!deliveryViolation&&!prematureDataViolation&&!repeatedModelRequest&&!affordabilityViolation)
-  return {reply:text,blocked:false,reason:null};
+  return {reply:softenUnsolicitedDurabilityCaveats(text,buyer?.last_message),blocked:false,reason:null};
  const reason=wrongProduct?"product_mismatch":repeatedModelRequest?"redundant_model_question":moneyViolation?"unverified_price":affordabilityViolation?"unverified_affordability":actionViolation?"unconfirmed_action":
    stockViolation?"exact_stock":discountViolation?"unapproved_discount":prematureDataViolation?"premature_personal_data":"delivery_promise";
  const quantity=Number.isInteger(buyer?.quantity)&&buyer.quantity>0?buyer.quantity:null;
