@@ -52,6 +52,26 @@ const allScenarios=[
   "Quiero hablar con un asesor",
   "¿Ya le avisaste?",
   "Quiero que me atienda una persona, por favor"
+ ]},
+ {name:"CLIENTE_DECIDIDO_SIN_COMPARAR",turns:[
+  "Me interesa la Epson L1250 para imprimir documentos en mi tienda, no quiero comparar",
+  "Necesito 2 unidades, ¿cuál es el siguiente paso para comprarlas?"
+ ]},
+ {name:"ATENCION_CON_POCO_TIEMPO",turns:[
+  "Estoy trabajando, tengo un minuto. Busco el Ulefone Armor 22 para reparto. Explícame rápido y sin tanto tecnicismo.",
+  "Me gustó el modelo. No me muestres otros, solo dime qué me aporta."
+ ]},
+ {name:"CLIENTE_SIN_PRESION",turns:[
+  "Estoy viendo una laptop Lenovo para oficina, recién estoy averiguando",
+  "Gracias, por ahora lo voy a pensar"
+ ]},
+ {name:"LICENCIAS_SIN_ASUMIR",turns:[
+  "Busco Microsoft Office Home 2024 para mis documentos personales",
+  "¿Debo pagar cada año o es otra modalidad? Háblame normal."
+ ]},
+ {name:"GARANTIA_SOLO_SI_PREGUNTA",turns:[
+  "¿Recomiendas el Armor 22 para llevar al trabajo?",
+  "Y si se moja, ¿qué significa IP68? ¿La garantía cubre daños por agua?"
  ]}
 ];
 const requested=(process.env.ALEX_QA_CASES||"").split(",").map(x=>x.trim()).filter(Boolean);
