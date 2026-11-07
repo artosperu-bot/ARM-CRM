@@ -30,7 +30,8 @@ const promisedCommercialCheck=/\b(?:puedo|podemos|voy a|te puedo|si quieres pued
 const unprovenAffordability=/\b(?:encaj[a-záéíóú]*|cabe[n]?|entr[a-záéíóú]*|alcanz[a-záéíóú]*|ajust[a-záéíóú]*|est[aá][a-z]* dentro)\b.{0,100}\b(?:presupuesto|monto|inversi[oó]n)\b|\b(?:presupuesto|monto|inversi[oó]n)\b.{0,100}\b(?:encaj[a-záéíóú]*|cabe[n]?|entr[a-záéíóú]*|alcanz[a-záéíóú]*|ajust[a-záéíóú]*)\b/iu;
 const affordabilityCaveat=/\b(?:no puedo|no podemos|no se puede|sin verificar|no est[aá] verificado|falta confirmar|hay que confirmar|no sabemos|no puedo asegurar|no es seguro)\b/iu;
 const unfinishedQuotePromise=/\b(?:puedo|podemos|voy a|te puedo)\s+(?:ayudarte\s+a\s+)?(?:dejar|preparar|tener)\b.{0,60}\b(?:list[ao]|cotizaci[oó]n|reserva|pedido|proforma)\b/iu;
-const redundantIdentifierRequest=/\b(?:si me confirmas|conf[ií]rmame|me puedes confirmar|me podr[ií]as confirmar|ind[ií]came)\s+(?:la|el|tu)?\s*(?:referencia\s+(?:completa|exacta)|modelo\s+exacto|n[uú]mero\s+de\s+modelo)\b/iu;
+const redundantIdentifierRequest=/\b(?:(?:si\s+)?(?:me\s+)?(?:confirmas|confirmes|conf[ií]rmame|ind[ií]came|compartes|compartas|env[ií]as|env[ií]ame|mandas|m[aá]ndame|pasas|p[aá]same)|me\s+puedes\s+(?:confirmar|compartir|enviar)|me\s+podr[ií]as\s+confirmar)\s+(?:(?:la|el|tu|su|un|una)\s+)?(?:referencia\s+(?:completa|exacta)|c[oó]digo\s+(?:completo|exacto)|modelo\s+(?:completo|exacto)|n[uú]mero\s+de\s+modelo)\b/iu;
+const phantomPreparation=/\b(?:puedo|podemos|podr[ií]a|voy\s+a|te\s+puedo)\s+(?:ayudarte\s+a\s+)?(?:preparar|armar|dejar\s+list[ao]|registrar|generar)\s+(?:la|las|el|los|una|un|tu|su)?\s*(?:referencia|detalle|resumen|solicitud|pedido|cotizaci[oó]n|proforma)\b/iu;
 const prematureDataRequest=/(?:\b(?:p[aá]same|dame|env[ií]ame|ind[ií]came|necesito|comp[aá]rteme|comparte|compartes|cu[aá]l es)\s+(?:tu|su)\s+(?:nombre|apellido|tel[eé]fono|celular|direcci[oó]n|ruc|dni|correo|tarjeta)\b|\b(?:tu|su)\s+(?:nombre\s+(?:y|completo)|direcci[oó]n|ruc|dni)\s+(?:para\s+(?:hacer|registrar|confirmar)))/iu;
 export function protectSalesResponse(reply,{catalog=[],buyer=null,simulated=false}={}){
  const text=typeof reply==="string"?reply.trim():"";
@@ -66,7 +67,7 @@ export function protectSalesResponse(reply,{catalog=[],buyer=null,simulated=fals
   const approvedPrice=!isUsd&&askedCommercialPrice&&priceValues.has(value);
   if(!approvedPrice&&!(isRestatedBudget&&!isUsd)){moneyViolation=true;break;}
  }
- const actionViolation=forbiddenActions.some(x=>x.test(text))||unconfirmedFutureAction.test(text)||promisedCommercialCheck.test(text)||unfinishedQuotePromise.test(text);
+ const actionViolation=forbiddenActions.some(x=>x.test(text))||unconfirmedFutureAction.test(text)||promisedCommercialCheck.test(text)||unfinishedQuotePromise.test(text)||phantomPreparation.test(text);
  const repeatedModelRequest=Boolean((buyer?.customer_reference||buyer?.matched_partnumber)&&redundantIdentifierRequest.test(text));
  const stockViolation=stockUnits.test(text);
  const discountViolation=discount.test(text);
@@ -79,7 +80,7 @@ export function protectSalesResponse(reply,{catalog=[],buyer=null,simulated=fals
    stockViolation?"exact_stock":discountViolation?"unapproved_discount":prematureDataViolation?"premature_personal_data":"delivery_promise";
  const fallback={
   product_mismatch:"Necesito verificar el modelo exacto antes de darte un precio; no quiero mezclar productos diferentes.",
-  redundant_model_question:"Ya tengo la referencia que me indicaste. Como todavía no está validada la ficha o el precio en el catálogo, no puedo darte información confirmada.",
+  redundant_model_question:"Ya tengo el modelo que indicaste. No necesitas repetirlo. Aún no dispongo de una ficha o precio vigente verificado de esa referencia.",
   unverified_affordability:buyer?.budget?"Con el presupuesto que me indicaste puedo orientarte entre las opciones, pero sin precios confirmados no sería correcto afirmar que la compra entra en ese monto.":"No sería correcto asegurar que una compra encaja en un presupuesto sin precios y condiciones comerciales confirmados.",
   premature_personal_data:"Podemos confirmar el artículo y las condiciones vigentes antes de coordinar la compra. Todavía no puedo registrar pedidos ni cobrar desde este chat.",
   unverified_price:"Para darte un precio correcto necesito verificar la oferta vigente con STECH. Puedo ayudarte a elegir la opción adecuada según lo que necesitas.",
