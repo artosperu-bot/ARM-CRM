@@ -44,7 +44,10 @@ export function protectSalesResponse(reply,{catalog=[],buyer=null,simulated=fals
  const available=(Array.isArray(catalog)?catalog:[]).filter(p=>p?.precio_soles!==null&&
    p?.precio_soles!==undefined&&Number.isFinite(Number(p.precio_soles))&&Number(p.precio_soles)>0);
  const replyProduct=matchCustomerProduct(text,catalog);
- const intendedPn=buyer?.matched_partnumber||replyProduct?.partnumber||
+ // A new, unverified customer reference outranks an old matched SKU, the AI's
+ // proposed product and any sole priced catalogue item. Never transfer a price.
+ const unverifiedReference=Boolean(buyer?.customer_reference&&!buyer?.matched_partnumber);
+ const intendedPn=unverifiedReference?null:buyer?.matched_partnumber||replyProduct?.partnumber||
    (available.length===1?available[0].partnumber:null);
  const pricedItems=intendedPn?available.filter(p=>p.partnumber===intendedPn):[];
  const priceValues=new Set(pricedItems.map(p=>Number(p.precio_soles)));
