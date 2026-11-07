@@ -121,6 +121,14 @@ export function buildBuyerContext(customerTurns,{leadProfile=null,catalog=[],mem
   const budget=parseBudget(text);
   if(budget)state.budget=budget;
   const brand=matching?.brand||parseBrand(text);
+  // A clear switch to a different manufacturer invalidates the previous SKU,
+  // even before the customer provides the exact new model.
+  if(brand&&state.matched_partnumber&&state.brand&&brand!==state.brand&&
+    /\b(?:mejor|ahora|cambio|prefiero|quiero|en vez de|otro|otra)\b/u.test(text)&&!matching){
+    state.matched_partnumber=null;
+    state.mentioned_product_family=null;
+    state.customer_reference=null;
+  }
   if(brand)state.brand=brand;
   const useCase=parseUseCase(text);
   if(useCase)state.use_case=useCase;
