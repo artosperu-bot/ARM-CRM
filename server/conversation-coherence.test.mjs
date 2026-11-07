@@ -149,6 +149,14 @@ describe("ALEX real dialogue review: grounded conversation coherence",()=>{
   expect(result.reason).toBe("unconfirmed_action");
   expect(result.reply).toMatch(/no hay un pedido ni un pago registrado/i);
  });
+ it("never promises to provide a payment channel or link before checkout exists",()=>{
+  const b=buildBuyerContext(["Listo, lo compro, ¿dónde pago?"],{catalog});
+  for(const answer of [
+   "Para seguir con la compra, te indico el canal de pago.",
+   "Te paso los datos de pago.",
+   "Puedo enviarte un enlace de pago."
+  ])expect(protectSalesResponse(answer,{buyer:b,catalog}).reason).toBe("unconfirmed_action");
+ });
  it("keeps normal helpful answers when no unsafe claim was made",()=>{
   const b=buildBuyerContext(["¿Cuál cargador me conviene?"],{catalog});
   const output=protectSalesResponse("Para saber si es compatible necesito la potencia y el modelo del equipo.",{catalog,buyer:b});
