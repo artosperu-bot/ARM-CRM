@@ -7,7 +7,7 @@ const includes=(text,re)=>re.test(text);
 const RE={
  optout:/\b(?:no me (?:escribas|escriban|contactes|contacten)|no (?:quiero|deseo) (?:mas )?(?:mensajes|contacto|publicidad)|(?:darme|dame) de baja|cancelar suscripcion|deja(?:n)? de escribirme|stop|unsubscribe|bloqueame)\b/u,
  optin:/\b(?:si (?:quiero|pueden|puedes) (?:que me (?:escriban|contacten)|recibir mensajes)|autorizo (?:el contacto|que me contacten)|pueden volver a escribirme|reanudar contacto)\b/u,
- human:/\b(?:quiero (?:hablar|conversar) con (?:un |una )?(?:humano|persona|asesor|vendedor)|pasame con (?:un |una )?(?:asesor|vendedor|persona)|atencion humana|comunicarme con (?:un |una )?(?:asesor|vendedor)|necesito un asesor)\b/u,
+ human:/\b(?:quiero (?:hablar|conversar) con (?:un |una )?(?:humano|persona|asesor|vendedor)|pasame con (?:un |una )?(?:asesor|vendedor|persona)|atencion humana|comunicarme con (?:un |una )?(?:asesor|vendedor)|necesito un asesor|quiero que me atienda (?:un |una )?(?:asesor|vendedor|persona)(?: humano| humana)?|(?:puedes|podrian|podrias) comunicarme con (?:alguien|una persona|un asesor))\b/u,
  complaint:/\b(?:reclamo|denuncia|estafa|producto defectuoso|me llego (?:mal|roto)|no me llego|quiero devol(?:ver|ucion)|me cobraron de mas)\b/u,
  purchase:/\b(?:lo compro|la compro|los compro|quiero comprar|voy a comprar|me lo llevo|donde pago|como (?:realizo|hago) el pago|pasame (?:el|tu) (?:link|enlace) de pago|quiero hacer (?:el )?pedido|procedamos con la compra)\b/u,
  quote:/\b(?:cotiza(?:cion|r|me)|presupuesto|proforma|precio|cuanto (?:cuesta|vale|sale)|a como|valor del (?:equipo|producto)|factura|orden de compra)\b/u,
