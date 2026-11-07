@@ -45,7 +45,7 @@ export function reviewCommercialTurn({reply="",buyer=null,previousReplies=[]}={}
   add("unasked_comparison","commercial","El cliente ya señaló modelo y no pidió alternativas");
  if(buyer?.current_intent==="comprar"&&/\b(?:que uso le das|para que lo necesitas|te muestro otros|te recomiendo otros)\b/u.test(text))
   add("restart_after_purchase","commercial","No reiniciar descubrimiento tras intención de compra");
- if(buyer?.current_intent==="despedida"&&/\b(?:aprovecha|promocion|descuento|cotizaci[oó]n|comprar ahora)\b/u.test(text))
+ if(["despedida","compra_cancelada"].includes(buyer?.current_intent)&&/\b(?:aprovecha|promocion|descuento|cotizaci[oó]n|comprar ahora)\b/u.test(text))
   add("upsell_after_goodbye","commercial","El cliente se despidió");
  if(!/\b(?:garantia|agua|liquidos|sumergir|mojar|inmersion|golpes|caidas|impermeable)\b/u.test(last)&&
   /\b(?:danos por liquidos|resistencia no es permanente|pruebas de laboratorio)\b/u.test(text))
