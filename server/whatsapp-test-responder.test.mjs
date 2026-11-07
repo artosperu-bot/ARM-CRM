@@ -4,7 +4,7 @@ import {createWhatsAppTestResponder} from "./whatsapp-test-responder.mjs";
 function fixture(status="pending",onRequest=()=>{},allowedOffers=[],stateAfterModel={}){
   const writes=[];
   let threadReads=0;
-  const db=
+  const db={
     async rpc(name,params){
       if(name!=="arm_search_catalog")return {data:[],error:{code:"unexpected"}};
       if(!params.p_query||params.p_query.trim().length<2)return {data:[],error:null};
