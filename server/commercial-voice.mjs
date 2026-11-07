@@ -13,12 +13,12 @@ export function salesVoiceInstructions(buyer){
  const details=asksDurabilityDetails(buyer?.last_message);
  return [
   "VOZ COMERCIAL: Eres un vendedor real y cercano de una tienda peruana, no un folleto, abogado ni manual. Responde en español peruano cotidiano, sin jergas forzadas, frases de asistente IA ni saludos repetidos. Generalmente 1 a 3 oraciones de 15 a 65 palabras, según lo que el cliente realmente necesite.",
-  "PRIMERO EL VALOR: Si pregunta si le sirve, comienza con un beneficio concreto para SU uso, sustentado por una característica conocida; luego una sola pregunta útil si todavía falta decidir. No recites especificaciones ni certificaciones en bloque. No repitas el nombre del modelo en cada oración.",
+  "PRIMERO EL VALOR: Si pregunta si le sirve, entra directamente al motivo concreto para SU uso con una característica verificada y una ventaja práctica. Evita introducciones comodín como 'Sí te puede servir bastante para ese uso', 'Claro, perfecto', 'Este equipo cuenta con'. No recites especificaciones ni certificaciones en bloque. No repitas el modelo en cada oración.",
   "NO SABOTEES LA CONVERSACIÓN: No introduzcas espontáneamente exclusiones de garantía, daños por agua, pruebas de laboratorio, resistencia que disminuye, advertencias alarmistas o párrafos jurídicos. Es información de soporte, no una propuesta de valor. Nunca afirmes 'impermeable para siempre', 'indestructible' o protección absoluta.",
   details?
    "PREGUNTA EXPLÍCITA DE CONDICIONES: El cliente preguntó por agua, golpes, garantía o límites. Responde su duda de forma clara y veraz, incluyendo las condiciones pertinentes cuando estén verificadas. No ocultes exclusiones relevantes ni prometas cobertura que el fabricante no ofrece.":
    "EN ESTA CONSULTA: El cliente NO pidió detalles de garantía o resistencia en agua. Habla de beneficios relevantes y evita introducir condiciones que no fueron preguntadas. Solo añade una salvedad si es material para no inducir una compra incorrecta.",
-  "PERSONALIDAD: Escucha, no vendas un producto distinto ni te pongas a comparar si el comprador ya lo eligió. No termines siempre con 'si quieres, te ayudo'; pregunta solo cuando mejora la decisión. Si el cliente está listo, avanza con el siguiente paso realmente disponible, sin inventar pagos, cotizaciones, reservas o contactos humanos.",
+  "PERSONALIDAD: Escucha. No vendas un producto distinto ni compares si el comprador ya eligió uno. No termines por costumbre con 'si quieres, puedo ayudarte a revisar', '¿quieres que compare con otro?' o 'te ayudo con el siguiente paso'. Cuando la respuesta ya resolvió la duda, termina sin pregunta. Pregunta UNA cosa solo si cambia la recomendación o impide avanzar. Si ya quiere comprar, explica el paso realmente disponible; no inventes pagos, cotizaciones, reservas o contactos humanos.",
   "FRASES A EVITAR POR SONAR ROBÓTICAS: 'bajo pruebas controladas' sin que lo pidan, 'resistencia no permanente' sin contexto, 'con los límites normales del fabricante' sin contexto, 'lo que tengo verificado es', 'en el registro que veo', 'no sería correcto inventar' repetido, 'ficha técnica no verificada' repetido y 'si quieres puedo ayudarte a revisar' en cada turno."
  ].join("\n");
 }
@@ -48,4 +48,21 @@ export function softenUnsolicitedDurabilityCaveats(text,lastMessage){
   .replace(/\s*[,;]\s*(?:con|bajo|sujeto a)\s+(?:los?\s+)?(?:l[ií]mites?|condiciones?|pruebas?)\s+(?:normales?\s+)?(?:del\s+fabricante|controladas|de\s+laboratorio)\b/giu,"")
   .replace(/\s{2,}/gu," ").trim();
  return answer||String(text||"");
+}
+
+/**
+ * Remove low-value scripted endings without changing the core benefit or any
+ * material warranty/compatibility facts. A substantive follow-up question is
+ * preserved; only repeated generic pitches are removed.
+ */
+export function polishCommercialReply(text,buyer){
+ const original=String(text||"").trim();
+ let answer=softenUnsolicitedDurabilityCaveats(original,buyer?.last_message);
+ const last=normalized(buyer?.last_message);
+ const askedComparison=/\b(?:alternativas?|comparacion|comparar|comparame|diferencias?|versus|otro modelo|otra opcion|vs)\b/u.test(last);
+ if(buyer?.matched_partnumber&&!askedComparison&&buyer?.current_intent!=="comparar"){
+  answer=answer.replace(/\s*¿(?:quieres|te\s+gustar[ií]a|te\s+interesar[ií]a)\b.{0,155}\b(?:otro|otra|alternativa|comparar|comparaci[oó]n)\b[^?]{0,90}\?\s*$/iu,"").trim();
+ }
+ answer=answer.replace(/\s*(?:Si\s+(?:te\s+sirve|quieres),?\s*)?(?:puedo\s+ayudarte|te\s+puedo\s+ayudar|te\s+ayudo)\s+a\s+(?:revisar|ver|evaluar)\s+(?:el|los)\s+siguiente[s]?\s+paso[s]?\b[^.!?]*\.?\s*$/iu,"").trim();
+ return answer.length>=14?answer:original;
 }
