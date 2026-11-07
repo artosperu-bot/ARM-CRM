@@ -7,6 +7,7 @@ import {estimateUsd} from "./agent-cost.mjs";
 import {whatsappPresentationInstructions,formatWhatsAppReply} from "./whatsapp-format.mjs";
 import {buildBuyerContext,buyerGuidance} from "./buyer-reasoning.mjs";
 import {protectSalesResponse} from "./sales-response-guard.mjs";
+import {normalizeSalesMemory,snapshotSalesMemory} from "./sales-memory.mjs";
 
 function textFrom(response){
   return (response.output||[]).filter(o=>o.type==="message"&&o.role==="assistant")
@@ -59,7 +60,12 @@ export function createWhatsAppTestResponder({
   // catalogue. This search is indexed and bounded, never "first 25 rows".
   const buyerTurns=ordered.filter(x=>x.role==="user").map(x=>x.content);
   if(buyerTurns.at(-1)!==event.text)buyerTurns.push(event.text);
-  const lookup=await retrieveSalesCatalog(client,thread.workspace_id,buyerTurns,{limit:18});
+  // Older commercial facts survive the short WhatsApp window. A remembered
+  // product is only a search hint; retrieved evidence must verify its SKU.
+  const previousMemory=normalizeSalesMemory(leadProfile?.sales_memory);
+  const hint=previousMemory?.customer_reference||previousMemory?.selected_partnumber;
+  const catalogTurns=hint?[...buyerTurns.slice(-14),hint,event.text]:buyerTurns;
+  const lookup=await retrieveSalesCatalog(client,thread.workspace_id,catalogTurns,{limit:18});
   const pn=lookup.products.map(x=>x.partnumber);
   const offers=testOffers&&pn.length?await client.from("arm_offer_simulations")
     .select("partnumber,price_pen,stock_status,is_test_data")
@@ -68,7 +74,11 @@ export function createWhatsAppTestResponder({
   if(offers.error)throw new Error("ARM_CONTEXT_OFFERS_FAILED");
   const catalog=enrichCatalog(lookup.products,testOffers,offers.data||[],
     {factsByPn:lookup.factsByPn});
-  const buyer=buildBuyerContext(buyerTurns,{leadProfile,catalog});
+  // Triage already folded this inbound into the snapshot. Replaying older
+  // truncated messages could undo a later quantity or product correction.
+  const buyer=buildBuyerContext(previousMemory?[event.text]:buyerTurns,{
+    leadProfile,catalog,memory:previousMemory
+  });
   const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),30000);
   let result;
   try{
@@ -138,6 +148,22 @@ export function createWhatsAppTestResponder({
     message_type:"text",content:answer,created_at:new Date().toISOString()
   });
   if(logged.error)throw new Error("ARM_OUTBOUND_LOG_FAILED");
-  return {status:"sent",messageId:outboundId,costUsd:cost};
+  // Retain the verified product reference for later turns even when the model
+  // history no longer includes the original selection. Conditional update
+  // prevents an older in-flight answer from overwriting a newer inbound event.
+  let memorySaved=false;
+  if(previousMemory){
+    const snapshot=snapshotSalesMemory(buyer,{
+      previous:previousMemory,
+      lastMessageAt:previousMemory.last_message_at,
+      lastMessageId:previousMemory.last_message_id
+    });
+    const {error:memoryError}=await client.from("arm_lead_insights")
+      .update({sales_memory:snapshot}).eq("thread_id",thread.id)
+      .eq("workspace_id",thread.workspace_id).eq("last_message_id",event.messageId);
+    if(memoryError)console.error("ARM_SALES_MEMORY_NOT_SAVED",memoryError.code||"unknown");
+    else memorySaved=true;
+  }
+  return {status:"sent",messageId:outboundId,costUsd:cost,memorySaved};
  };
 }
