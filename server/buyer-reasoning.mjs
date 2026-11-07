@@ -15,7 +15,7 @@ const RX={
   compare:/\b(?:compar(?:ar|acion|ame)|cual es mejor|diferencias?|vs\.?\b|versus|otra opcion|alternativas?|que me recomiendas|cual conviene)\b/u,
   objection:/\b(?:muy caro|demasiado caro|precio alto|no me convence|hay descuento|haces descuento|mas barato|no tengo tanto presupuesto)\b/u,
   complaint:/\b(?:reclamo|denuncia|estafa|devolucion|producto defectuoso|no me llego|me cobraron de mas)\b/u,
-  human:/\b(?:quiero hablar con (?:un |una )?(?:asesor|vendedor|persona)|necesito (?:un |una )?asesor|pasame con (?:un |una )?asesor|atencion humana)\b/u,
+  human:/\b(?:quiero hablar con (?:un |una )?(?:asesor|vendedor|persona)|necesito (?:un |una )?asesor|pasame con (?:un |una )?asesor|atencion humana|quiero que me atienda (?:un |una )?(?:asesor|vendedor|persona)(?: humano| humana)?|(?:puedes|podrian|podr[ií]as) comunicarme con (?:alguien|una persona|un asesor)|quiero (?:atencion|asesoria) (?:de )?(?:un )?humana?)\b/u,
   notHuman:/\b(?:no quiero hablar con (?:un |una )?asesor|no necesito (?:un |una )?asesor)\b/u,
   b2b:/\b(?:mi empresa|para la empresa|para mi empresa|para nuestra empresa|para la oficina|para mi negocio|para mi oficina|mi ruc|corporativ[oa]|entidad publica|para el personal|para nuestros empleados|compra institucional|licitacion|orden de compra)\b/u,
   deadline:/\b(?:urgente|lo necesito hoy|para hoy|para manana|esta semana|antes del viernes|entrega inmediata)\b/u,
