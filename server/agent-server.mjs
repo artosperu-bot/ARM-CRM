@@ -101,7 +101,19 @@ async function handle(req,res){
   ]);
   if(history.error||initial.error)throw new Error("No fue posible leer el contexto comercial.");
   const context=buildConversationContext(initial.data||[],history.data||[]);
-  const lookupTurns=[...context.filter(t=>t.role==="user").map(t=>t.content),msg];
+  // Existing private conversations may predate structured memory. Rebuild buyer
+  // facts once from user-only history; never infer facts from the AI's replies.
+  let historicalBuyerTurns=[];
+  if(!priorMemory&&conversationId){
+    const {data:oldTurns,error:oldTurnsError}=await db.from("arm_agent_turns")
+      .select("content").eq("workspace_id",workspaceId)
+      .eq("conversation_id",cid).eq("created_by",user.id)
+      .eq("role","user").order("created_at",{ascending:false}).limit(200);
+    if(oldTurnsError)throw new Error("No fue posible recuperar el historial de compras.");
+    historicalBuyerTurns=[...(oldTurns||[])].reverse().map(x=>x.content).filter(Boolean);
+  }
+  const lookupTurns=[...(historicalBuyerTurns.length?historicalBuyerTurns:
+    context.filter(t=>t.role==="user").map(t=>t.content)),msg];
   const hint=priorMemory?.customer_reference||priorMemory?.selected_partnumber;
   const catalogTurns=hint?[...lookupTurns.slice(-14,-1),hint,msg]:lookupTurns;
   const lookup=await retrieveSalesCatalog(db,workspaceId,catalogTurns,{limit:18});
