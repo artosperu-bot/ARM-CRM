@@ -118,7 +118,24 @@ export function buildBuyerContext(customerTurns,{leadProfile=null,catalog=[]}={}
   if(RX.notHuman.test(text)||/\b(?:prefiero seguir aqui|quiero continuar con el bot|con alex esta bien)\b/u.test(text))requestedAdvisor=false;
   const modelCodes=[...String(raw).matchAll(/\b(?=[A-Z0-9._-]{5,}\b)(?=[A-Z0-9._-]*[A-Z])(?=[A-Z0-9._-]*\d)[A-Z0-9._-]+\b/giu)].map(x=>x[0]);
   const reference=modelCodes.find(x=>!/^\d+(?:GB|TB|W|HZ|MAH)$/iu.test(x)&&!/^S\d+$/iu.test(x));
-  if(reference)state.customer_reference=reference;
+  if(reference){
+   // An explicitly named different model invalidates any SKU kept from an older turn.
+   // Without this, a price from the previous product could be presented as the new one.
+   state.customer_reference=reference;
+   const candidate=String(reference).toUpperCase();
+   const sameMatchedProduct=Boolean(matching&&(
+     String(matching.partnumber||"").toUpperCase()===candidate||
+     String(matching.name||"").toUpperCase().includes(candidate)
+   ));
+   if(!sameMatchedProduct){
+     state.matched_partnumber=null;
+     state.mentioned_product_family=null;
+     state.brand=parseBrand(text);
+   }
+  }else if(matching){
+   // Clear a historical unknown model when the buyer switches back to a known item.
+   state.customer_reference=null;
+  }
 
  }
  state.last_message=norm(turns.at(-1)).slice(0,1500);
