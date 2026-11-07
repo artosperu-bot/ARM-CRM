@@ -115,6 +115,22 @@ describe("ALEX real dialogue review: grounded conversation coherence",()=>{
   const b=buildBuyerContext(["¿Me das precio de Brother HL-L2340?"],{catalog:priced});
   expect(protectSalesResponse("La Brother cuesta S/ 659.",{buyer:b,catalog:priced}).reason).toBe("unverified_price");
  });
+ it("never asks again for a complete model code already supplied",()=>{
+  const b=buildBuyerContext(["Me interesa la Brother HL-L2340","¿Y el precio exacto?"],{catalog});
+  for(const reply of [
+   "Si me compartes el código completo, lo reviso con más precisión.",
+   "Pásame el modelo exacto y te digo.",
+   "Si me envías la referencia completa, podré orientarte."
+  ])expect(protectSalesResponse(reply,{buyer:b,catalog}).reason).toBe("redundant_model_question");
+ });
+ it("does not offer to prepare an uncreated quote or model reference",()=>{
+  const b=buildBuyerContext(["Quiero 2 laptops, ¿puedes cotizar?"],{catalog});
+  for(const reply of [
+   "Si quieres, puedo preparar la referencia de ambas variantes para revisión.",
+   "Puedo armar la solicitud de cotización con tus datos.",
+   "Puedo generar un resumen para revisión del equipo comercial."
+  ])expect(protectSalesResponse(reply,{buyer:b,catalog}).reason).toBe("unconfirmed_action");
+ });
  it("keeps normal helpful answers when no unsafe claim was made",()=>{
   const b=buildBuyerContext(["¿Cuál cargador me conviene?"],{catalog});
   const output=protectSalesResponse("Para saber si es compatible necesito la potencia y el modelo del equipo.",{catalog,buyer:b});
