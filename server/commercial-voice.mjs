@@ -7,7 +7,7 @@
 const normalized=(s)=>String(s||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase();
 export function asksDurabilityDetails(lastMessage){
  const s=normalized(lastMessage);
- return /\b(?:garantia|garantias|cobertura|exclusion|excluye|liquidos?|agua|mojad[oa]s?|mojar|se moja|inmers[ioa]n|sumergible|sumergir|impermeable|lluvia|bajo el agua|condiciones de prueba|laboratorio|ip68 hasta|limites de resistencia|resistencia no permanente|cuanto resiste|caidas?|golpes?)\b/u.test(s);
+ return /\b(?:garantia|garantias|cobertura|exclusion|excluye|liquidos?|agua|mojad[oa]s?|mojar|se moja|inmers[ioa]n|sumergible|sumergir(?:lo|la|los|las|se)?|sumergid[oa]s?|impermeable|lluvia|bajo el agua|condiciones de prueba|laboratorio|ip68 hasta|limites de resistencia|resistencia no permanente|cuanto resiste|caidas?|golpes?)\b/u.test(s);
 }
 export function salesVoiceInstructions(buyer){
  const details=asksDurabilityDetails(buyer?.last_message);
