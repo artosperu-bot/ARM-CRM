@@ -7,6 +7,7 @@ import {readFileSync} from "node:fs";
 import {buildBuyerContext,buyerGuidance} from "./buyer-reasoning.mjs";
 import {snapshotSalesMemory} from "./sales-memory.mjs";
 import {salesInstructions} from "./sales-policy.mjs";
+import {reviewCommercialTurn} from "./commercial-service-standard.mjs";
 import {protectSalesResponse} from "./sales-response-guard.mjs";
 import {formatWhatsAppReply} from "./whatsapp-format.mjs";
 import {crmResponseSchema} from "./followup-automation.mjs";
@@ -94,9 +95,11 @@ async function execute(s){
   if(guard.blocked)blocked++;
   usedInput+=result.usage?.input_tokens||0;usedOutput+=result.usage?.output_tokens||0;
   const nQuestions=(reply.match(/[?¿]/gu)||[]).filter(c=>c==="?").length;
-  const containsQuestion=reply.includes("?");
+  const quality=reviewCommercialTurn({reply,buyer,
+    previousReplies:history.filter(x=>x.role==="assistant").map(x=>x.content)});
   report.push({turn:i+1,q:question,intent:buyer.current_intent,reply,
-    guard:guard.reason,questions:nQuestions,needsHuman:buyer.requires_human,
+    guard:guard.reason,questions:nQuestions,qualityNotes:quality.notes,
+    qualityNeedsReview:quality.needsReview,needsHuman:buyer.requires_human,
     rememberedQuantity:memory.quantity,rememberedBudget:memory.budget?.pen||null,
     rememberedSku:memory.selected_partnumber});
   history.push({role:"user",content:question},{role:"assistant",content:reply});
