@@ -143,6 +143,12 @@ describe("ALEX real dialogue review: grounded conversation coherence",()=>{
   const response=protectSalesResponse("Puedo ayudarte a validar la referencia correcta.",{buyer:b,catalog});
   expect(response.reason).toBe("unconfirmed_action");
  });
+ it("blocks claims to prepare a human contact while buyer is ready to pay",()=>{
+  const b=buildBuyerContext(["Quiero el Armor 22","Lo compro, ¿dónde pago?"],{catalog});
+  const result=protectSalesResponse("Si quieres, te ayudo a dejar listo el contacto para que te orienten.",{buyer:b,catalog});
+  expect(result.reason).toBe("unconfirmed_action");
+  expect(result.reply).toMatch(/no hay un pedido ni un pago registrado/i);
+ });
  it("keeps normal helpful answers when no unsafe claim was made",()=>{
   const b=buildBuyerContext(["¿Cuál cargador me conviene?"],{catalog});
   const output=protectSalesResponse("Para saber si es compatible necesito la potencia y el modelo del equipo.",{catalog,buyer:b});
