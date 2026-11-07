@@ -135,7 +135,7 @@ async function handle(req,res){
       body:JSON.stringify({
         model,store:false,max_output_tokens:maxOutput,reasoning:{effort:"none"},
         text:{format:crmResponseSchema},
-        instructions:salesInstructions(catalog,{simulated,nowIso:new Date().toISOString()})+"\n"+buyerGuidance(buyer,{catalog})+"\nDevuelve JSON con reply y followup. Los campos followup se extraen únicamente de mensajes DEL CLIENTE, jamás inventes nombres, teléfonos, fechas ni consentimiento. requested=true solo para seguimiento solicitado; explicit_consent=true solo si el último mensaje incluye autorización para AGENDAR. Si falta dato usa null. Jamás afirmes registro exitoso en reply.",
+        instructions:salesInstructions(catalog,{simulated,nowIso:new Date().toISOString(),buyer})+"\n"+buyerGuidance(buyer,{catalog})+"\nDevuelve JSON con reply y followup. Los campos followup se extraen únicamente de mensajes DEL CLIENTE, jamás inventes nombres, teléfonos, fechas ni consentimiento. requested=true solo para seguimiento solicitado; explicit_consent=true solo si el último mensaje incluye autorización para AGENDAR. Si falta dato usa null. Jamás afirmes registro exitoso en reply.",
         input:[...context,{role:"user",content:msg}]
       })
     });
