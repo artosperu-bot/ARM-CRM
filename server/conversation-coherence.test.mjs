@@ -131,6 +131,18 @@ describe("ALEX real dialogue review: grounded conversation coherence",()=>{
    "Puedo generar un resumen para revisión del equipo comercial."
   ])expect(protectSalesResponse(reply,{buyer:b,catalog}).reason).toBe("unconfirmed_action");
  });
+ it("drops prior priced SKU when a customer clearly switches to another brand",()=>{
+  const products=[{titulo:"Ulefone Armor X13",marca:"ULEFONE",partnumber:"ARMOR-X13",precio_soles:659}];
+  const b=buildBuyerContext(["¿Precio del Ulefone Armor X13?","Ahora prefiero Epson, ¿cuánto cuesta?"],{catalog:products});
+  expect(b.brand).toBe("EPSON");
+  expect(b.matched_partnumber).toBeNull();
+  expect(protectSalesResponse("La Epson cuesta S/ 659.",{buyer:b,catalog:products}).reason).toBe("unverified_price");
+ });
+ it("blocks unexecutable promise to validate a model reference",()=>{
+  const b=buildBuyerContext(["Me interesa Brother HL-L2340","¿Y su precio?"],{catalog});
+  const response=protectSalesResponse("Puedo ayudarte a validar la referencia correcta.",{buyer:b,catalog});
+  expect(response.reason).toBe("unconfirmed_action");
+ });
  it("keeps normal helpful answers when no unsafe claim was made",()=>{
   const b=buildBuyerContext(["¿Cuál cargador me conviene?"],{catalog});
   const output=protectSalesResponse("Para saber si es compatible necesito la potencia y el modelo del equipo.",{catalog,buyer:b});
