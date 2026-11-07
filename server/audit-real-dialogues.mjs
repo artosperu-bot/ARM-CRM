@@ -5,6 +5,7 @@
  */
 import {readFileSync} from "node:fs";
 import {buildBuyerContext,buyerGuidance} from "./buyer-reasoning.mjs";
+import {snapshotSalesMemory} from "./sales-memory.mjs";
 import {salesInstructions} from "./sales-policy.mjs";
 import {protectSalesResponse} from "./sales-response-guard.mjs";
 import {formatWhatsAppReply} from "./whatsapp-format.mjs";
@@ -33,7 +34,24 @@ const allScenarios=[
  {name:"SEGUIMIENTO_Y_PRIVACIDAD",turns:["Necesito una impresora para mi trabajo","No quiero dar mi DNI, ¿igual puedo consultar?"]},
  {name:"CAMBIO_CANTIDAD",turns:["Quiero 3 laptops para mi oficina con presupuesto de S/ 12000 en total","Mejor 2 laptops","¿Puedes cotizar?"]},
  {name:"PIDE_ASESOR",turns:["Quiero hablar con un asesor","¿Ya le avisaste?"]},
- {name:"ENTREGA_URGENTE",turns:["Necesito la impresora Epson L1250 hoy mismo","¿Me confirmas entrega hoy?"]}
+ {name:"ENTREGA_URGENTE",turns:["Necesito la impresora Epson L1250 hoy mismo","¿Me confirmas entrega hoy?"]},
+ {name:"MEMORIA_COTIZACION",turns:[
+  "Quiero 3 laptops Lenovo con un presupuesto de S/ 12000 en total",
+  "Mejor 2 laptops",
+  "Es para trabajar con varias aplicaciones",
+  "¿Cuál configuración me conviene?",
+  "¿Puedes cotizar las 2?"
+ ]},
+ {name:"CAMBIO_MODELO_DESCONOCIDO",turns:[
+  "¿Cuál es el precio del Armor 22?",
+  "Mejor quiero la Brother HL-L2340",
+  "¿Y su precio exacto?"
+ ]},
+ {name:"ASESOR_PERSISTENTE",turns:[
+  "Quiero hablar con un asesor",
+  "¿Ya le avisaste?",
+  "Quiero que me atienda una persona, por favor"
+ ]}
 ];
 const requested=(process.env.ALEX_QA_CASES||"").split(",").map(x=>x.trim()).filter(Boolean);
 const scenarios=requested.length?allScenarios.filter(x=>requested.includes(x.name)):allScenarios;
@@ -43,10 +61,15 @@ const prompt=(buyer)=>salesInstructions(catalog,{simulated:false})+"\n"+buyerGui
 let completed=0,valid=0,blocked=0,requests=0,usedInput=0,usedOutput=0;
 async function execute(s){
  const history=[],texts=[];
+ let memory=null;
  const report=[];
  for(let i=0;i<s.turns.length;i++){
   const question=s.turns[i];texts.push(question);
-  const buyer=buildBuyerContext(texts,{catalog});
+  const buyer=buildBuyerContext(memory?[question]:texts,{catalog,memory});
+  memory=snapshotSalesMemory(buyer,{
+    previous:memory,lastMessageAt:new Date(Date.UTC(2026,10,7,19,0,i)).toISOString(),
+    lastMessageId:s.name+"-"+i
+  });
   const ctrl=new AbortController();
   const timer=setTimeout(()=>ctrl.abort(),30000);
   let result;
@@ -73,7 +96,9 @@ async function execute(s){
   const nQuestions=(reply.match(/[?¿]/gu)||[]).filter(c=>c==="?").length;
   const containsQuestion=reply.includes("?");
   report.push({turn:i+1,q:question,intent:buyer.current_intent,reply,
-    guard:guard.reason,questions:nQuestions,needsHuman:buyer.requires_human});
+    guard:guard.reason,questions:nQuestions,needsHuman:buyer.requires_human,
+    rememberedQuantity:memory.quantity,rememberedBudget:memory.budget?.pen||null,
+    rememberedSku:memory.selected_partnumber});
   history.push({role:"user",content:question},{role:"assistant",content:reply});
   valid++;
  }
