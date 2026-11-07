@@ -84,7 +84,7 @@ function classifyLatest(text){
  return "consulta";
 }
 export function buildBuyerContext(customerTurns,{leadProfile=null,catalog=[],memory=null}={}){
- const turns=(Array.isArray(customerTurns)?customerTurns:[]).filter(x=>typeof x==="string"&&x.trim()).slice(-40);
+ const turns=(Array.isArray(customerTurns)?customerTurns:[]).filter(x=>typeof x==="string"&&x.trim()).slice(-200);
  const state={
   quantity:Number.isInteger(memory?.quantity)&&memory.quantity>=1&&memory.quantity<=999?memory.quantity:null,
   budget:memory?.budget?.pen>0?memory.budget:null,
