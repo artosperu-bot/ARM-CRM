@@ -7,6 +7,7 @@ import { salesInstructions } from "./sales-policy.mjs";
 import { enrichCatalog } from "./product-knowledge.mjs";
 import { retrieveSalesCatalog } from "./catalog-retrieval.mjs";
 import {buildConversationContext} from "./conversation-context.mjs";
+import {validAgentRequest} from "./request-validation.mjs";
 import {buildBuyerContext,buyerGuidance} from "./buyer-reasoning.mjs";
 import {normalizeSalesMemory,snapshotSalesMemory} from "./sales-memory.mjs";
 import {protectSalesResponse,hideExactStockUnits} from "./sales-response-guard.mjs";
@@ -38,7 +39,6 @@ function send(res,status,value) {
     "Access-Control-Allow-Headers":"Authorization,Content-Type","Vary":"Origin"});
   res.end(JSON.stringify(value));
 }
-function uuid(x){return typeof x==="string"&&/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(x);}
 async function requestJson(req){
   let s="";
   for await(const chunk of req){s+=chunk.toString("utf8");if(s.length>6500)throw Object.assign(new Error("Solicitud muy larga"),{status:413});}
@@ -60,7 +60,7 @@ async function handle(req,res){
  const body=await requestJson(req),msg=typeof body.message==="string"?body.message.trim():"";
  const workspaceId=body.workspaceId,conversationId=body.conversationId??null;
  const simulated=body.simulated===true; // strictly private sandbox; never used by social connectors
- if(!uuid(workspaceId)||(conversationId&&!uuid(conversationId))||msg.length<2||msg.length>800)
+ if(!validAgentRequest({workspaceId,conversationId,message:msg}))
    return send(res,400,{error:"Pregunta entre 2 y 800 caracteres; conversación inválida."});
  const db=clientFor(jwt);
  const {data:{user},error:authErr}=await db.auth.getUser(jwt);
