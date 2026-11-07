@@ -1,4 +1,5 @@
 import {evidenceForSalesTurn,salesVoiceInstructions} from "./commercial-voice.mjs";
+import {commercialServiceInstructions} from "./commercial-service-standard.mjs";
 // Keep catalog evidence valid JSON. Never truncate in the middle of a product
 // or use unreviewed free-form attributes as if they were manufacturer facts.
 function concise(value,max=220){
@@ -51,6 +52,7 @@ export function salesInstructions(catalog,{simulated=false,nowIso=new Date().toI
  "Responde normalmente en 15-65 palabras y 1-3 oraciones como vendedor cercano, con naturalidad, sin tecnicismos innecesarios. Amplía solo cuando la pregunta realmente necesite detalles. Si el cliente solo confirma una cita, no añadas preguntas que ya fueron respondidas.",
  simulated?"MODO SIMULACIÓN: importes y disponibilidad son inventados, no se deben compartir con clientes y no puedes agendar acciones reales.":"MODO REAL: no utilices valores ficticios.",
  salesVoiceInstructions(buyer),
+ commercialServiceInstructions(buyer),
  "RESULTADOS DE BÚSQUEDA (solo SKU pertinentes, NO catálogo completo): "+packSalesCatalog(rows,{lastMessage:buyer?.last_message||""})
  ].join("\n");
 }
