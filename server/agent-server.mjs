@@ -8,6 +8,7 @@ import { enrichCatalog } from "./product-knowledge.mjs";
 import { retrieveSalesCatalog } from "./catalog-retrieval.mjs";
 import {buildConversationContext} from "./conversation-context.mjs";
 import {buildBuyerContext,buyerGuidance} from "./buyer-reasoning.mjs";
+import {normalizeSalesMemory,snapshotSalesMemory} from "./sales-memory.mjs";
 import {protectSalesResponse,hideExactStockUnits} from "./sales-response-guard.mjs";
 import { crmResponseSchema,validateBookingProposal } from "./followup-automation.mjs";
 import { fileURLToPath } from "node:url";
@@ -79,11 +80,12 @@ async function handle(req,res){
  if((count||0)>=maxDaily)return send(res,429,{error:"Límite de uso diario del CRM alcanzado."});
  localCount.set(rateKey,(localCount.get(rateKey)||0)+1);busy.add(user.id);
  try {
-  let cid=conversationId;
+  let cid=conversationId,priorMemory=null;
   if(cid){
-    const {data:owned,error:ownErr}=await db.from("arm_agent_conversations").select("id")
+    const {data:owned,error:ownErr}=await db.from("arm_agent_conversations").select("id,sales_memory")
       .eq("workspace_id",workspaceId).eq("created_by",user.id).eq("id",cid).maybeSingle();
     if(ownErr||!owned)return send(res,403,{error:"No tienes acceso a esa conversación."});
+    priorMemory=normalizeSalesMemory(owned.sales_memory);
   }else{
     const {data:created,error:createErr}=await db.from("arm_agent_conversations").insert({
       workspace_id:workspaceId,created_by:user.id,title:msg.slice(0,100)
@@ -100,7 +102,9 @@ async function handle(req,res){
   if(history.error||initial.error)throw new Error("No fue posible leer el contexto comercial.");
   const context=buildConversationContext(initial.data||[],history.data||[]);
   const lookupTurns=[...context.filter(t=>t.role==="user").map(t=>t.content),msg];
-  const lookup=await retrieveSalesCatalog(db,workspaceId,lookupTurns,{limit:18});
+  const hint=priorMemory?.customer_reference||priorMemory?.selected_partnumber;
+  const catalogTurns=hint?[...lookupTurns.slice(-14,-1),hint,msg]:lookupTurns;
+  const lookup=await retrieveSalesCatalog(db,workspaceId,catalogTurns,{limit:18});
   const pn=lookup.products.map(x=>x.partnumber);
   const testOffers=simulated&&pn.length?await db.from("arm_offer_simulations")
     .select("partnumber,price_pen,stock_status,is_test_data")
@@ -109,7 +113,7 @@ async function handle(req,res){
   if(testOffers.error)throw new Error("No fue posible verificar las ofertas de prueba.");
   const catalog=enrichCatalog(lookup.products,simulated,testOffers.data||[],
     {factsByPn:lookup.factsByPn});
-  const buyer=buildBuyerContext(lookupTurns,{catalog});
+  const buyer=buildBuyerContext(priorMemory?[msg]:lookupTurns,{catalog,memory:priorMemory});
   const abort=new AbortController(),timer=setTimeout(()=>abort.abort(),35000);
   let completion;
   try {
@@ -167,6 +171,13 @@ async function handle(req,res){
     {workspace_id:workspaceId,conversation_id:cid,created_by:user.id,role:"assistant",content:answer.slice(0,8000)}
   ]);
   if(turnErr)return send(res,500,{error:"OpenAI respondió, pero no se pudo guardar el historial. No reintentes automáticamente."});
+  const savedMemory=snapshotSalesMemory(buyer,{
+    previous:priorMemory,lastMessageAt:new Date().toISOString()
+  });
+  const {error:memoryError}=await db.from("arm_agent_conversations")
+    .update({sales_memory:savedMemory}).eq("id",cid)
+    .eq("workspace_id",workspaceId).eq("created_by",user.id);
+  if(memoryError)console.error("ARM_AGENT_SALES_MEMORY_NOT_SAVED",memoryError.code||"unknown");
   const {error:metricErr}=await db.from("arm_ai_usage").insert({
     workspace_id:workspaceId,source:"arm_agent",source_event_id:completion.id||randomUUID(),
     session_id:cid,message_id:null,model:completion.model||model,node:"private_supervised",
@@ -177,7 +188,7 @@ async function handle(req,res){
   return send(res,200,{ok:true,conversationId:cid,answer,usage:{
     model:completion.model||model,inputTokens:input,outputTokens:output,cachedTokens:cached,
     estimatedUsd:estimate,usageRecorded:!metricErr
-  },booking,simulated});
+  },booking,simulated,memorySaved:!memoryError});
  }finally{busy.delete(user.id);}
 }
 const service=createServer(async(req,res)=>{
