@@ -56,7 +56,7 @@ const allScenarios=[
 const requested=(process.env.ALEX_QA_CASES||"").split(",").map(x=>x.trim()).filter(Boolean);
 const scenarios=requested.length?allScenarios.filter(x=>requested.includes(x.name)):allScenarios;
 if(!scenarios.length)throw new Error("UNKNOWN_QA_CASE_SELECTION");
-const prompt=(buyer)=>salesInstructions(catalog,{simulated:false})+"\n"+buyerGuidance(buyer,{catalog})+
+const prompt=(buyer)=>salesInstructions(catalog,{simulated:false,buyer})+"\n"+buyerGuidance(buyer,{catalog})+
  "\nPRUEBA SINTÉTICA PRIVADA. Contesta normalmente al cliente con JSON reply/followup. No existe herramienta de pedidos, cobros ni seguimientos salientes. No inventes datos, cotizaciones, precios, entregas o contactos humanos.";
 let completed=0,valid=0,blocked=0,requests=0,usedInput=0,usedOutput=0;
 async function execute(s){
