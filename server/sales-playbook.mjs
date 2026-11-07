@@ -73,7 +73,7 @@ export function salesMoveInstructions(profile,opts){
   "MOVIMIENTO DE VENTA: "+plan.move,
   "PREGUNTAS: "+plan.questionPolicy+"; nunca encadenar preguntas ni repetir información ya comunicada.",
   "PRINCIPIO UNIVERSAL: vender no es recitar catálogo; identificar necesidad → recomendar ajuste real → resolver dudas → facilitar decisión. No obligar al cliente a pasar por etapas cuando ya sabe lo que quiere.",
-  "BENEFICIOS: relacionar propiedades verificadas con uso declarado, incluir límites o incompatibilidades relevantes; nunca inventar testimonios, escasez, exclusividad, urgencia o descuentos.",
+  "BENEFICIOS: relacionar hechos verificables con el uso del cliente, primero el valor concreto. No abrir espontáneamente con exclusiones de garantía ni avisos jurídicos sobre desgaste o agua. Si pregunta por esas condiciones o hay una incompatibilidad material, responder con precisión. Nunca prometer invulnerabilidad ni inventar testimonios, escasez, urgencia o descuentos.",
   "CATÁLOGO: "+plan.productEvidence+". Una coincidencia ambigua o inexistente no autoriza inventar un producto. Se puede asesorar en general y ofrecer verificar el modelo solicitado.",
   "NO B2B POR DEFECTO: cualquier cantidad o presupuesto es una necesidad de venta; solo mencionar RUC o empresa si el cliente necesita factura o gestión corporativa.",
   "PREGUNTA ÚTIL: no cierres automáticamente con «Si quieres, puedo ayudarte». Cuando haya una decisión pendiente y dos opciones plausibles, formula UNA pregunta decisiva sobre el uso, compatibilidad o variante. Si ya respondieron, no repitas. Si no hay dato por verificar, termina sin pregunta.",
