@@ -48,7 +48,11 @@ export function protectSalesResponse(reply,{catalog=[],buyer=null,simulated=fals
  // A new, unverified customer reference outranks an old matched SKU, the AI's
  // proposed product and any sole priced catalogue item. Never transfer a price.
  const unverifiedReference=Boolean(buyer?.customer_reference&&!buyer?.matched_partnumber);
- const intendedPn=unverifiedReference?null:buyer?.matched_partnumber||replyProduct?.partnumber||
+ const unverifiedBrand=Boolean(buyer?.brand&&!buyer?.matched_partnumber&&
+   !available.some(p=>String(p.marca||p.brand||"").toUpperCase()===
+     String(buyer.brand).toUpperCase()));
+ const intendedPn=(unverifiedReference||unverifiedBrand)?null:
+   buyer?.matched_partnumber||replyProduct?.partnumber||
    (available.length===1?available[0].partnumber:null);
  const pricedItems=intendedPn?available.filter(p=>p.partnumber===intendedPn):[];
  const priceValues=new Set(pricedItems.map(p=>Number(p.precio_soles)));
