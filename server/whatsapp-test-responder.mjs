@@ -88,7 +88,7 @@ export function createWhatsAppTestResponder({
       body:JSON.stringify({
         model:"gpt-5.4-mini",store:false,max_output_tokens:450,reasoning:{effort:"none"},
         text:{format:crmResponseSchema},
-        instructions:salesInstructions(catalog,{simulated:testOffers,nowIso:new Date().toISOString()})+
+        instructions:salesInstructions(catalog,{simulated:testOffers,nowIso:new Date().toISOString(),buyer})+
           "\n"+whatsappPresentationInstructions()+"\n"+buyerGuidance(buyer,{catalog})+
           (leadProfile?("\nCONTEXTO COMERCIAL INTERNO: señal="+String(leadProfile.intent||"consulta_general")+
            "; B2B="+Boolean(leadProfile.is_b2b)+"; cantidad de equipos confirmada="+
