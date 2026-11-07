@@ -1,5 +1,5 @@
 import {describe,it,expect} from "vitest";
-import {asksDurabilityDetails,evidenceForSalesTurn,softenUnsolicitedDurabilityCaveats,salesVoiceInstructions} from "./commercial-voice.mjs";
+import {asksDurabilityDetails,evidenceForSalesTurn,softenUnsolicitedDurabilityCaveats,salesVoiceInstructions,polishCommercialReply} from "./commercial-voice.mjs";
 import {packSalesCatalog,salesInstructions} from "./sales-policy.mjs";
 import {protectSalesResponse} from "./sales-response-guard.mjs";
 import {buildBuyerContext} from "./buyer-reasoning.mjs";
@@ -56,6 +56,28 @@ describe("ALEX conversation-first commercial tone",()=>{
    expect(asksDurabilityDetails(text)).toBe(true);
   for(const text of ["Lo necesito para obra", "Quiero usarlo en campo", "Para la cuadrilla de construcción"])
    expect(asksDurabilityDetails(text)).toBe(false);
+ });
+ it("doesn't push an unwanted comparison after the customer already chose a model",()=>{
+  const buyer=buildBuyerContext(["Quiero el Armor X13 para trabajar en campo"],{catalog});
+  const reply="Para campo, su batería de 6320 mAh es una ventaja útil. ¿Quieres que te cuente si esa capacidad te conviene más que otro Ulefone según las horas que lo usas?";
+  const out=polishCommercialReply(reply,buyer);
+  expect(out).toContain("6320 mAh");
+  expect(out).not.toMatch(/otro Ulefone/i);
+ });
+ it("doesn't finish with empty 'next step' talk if no action is available",()=>{
+  const buyer=buildBuyerContext(["Me gusta el Armor X13, necesito dos"],{catalog});
+  const out=polishCommercialReply("Su batería es de 6320 mAh. Si te sirve, puedo ayudarte a revisar el siguiente paso para esos 2 equipos.",buyer);
+  expect(out).toBe("Su batería es de 6320 mAh.");
+ });
+ it("keeps buyer-requested comparison rather than blindly hiding alternatives",()=>{
+  const buyer=buildBuyerContext(["Compárame el Armor X13 con otras opciones"],{catalog});
+  const message="El X13 tiene batería de 6320 mAh. ¿Quieres que te cuente cómo compara frente a otro Ulefone?";
+  expect(polishCommercialReply(message,buyer)).toBe(message);
+ });
+ it("keeps substantive compatibility question instead of censoring follow-ups",()=>{
+  const buyer=buildBuyerContext(["Quiero una impresora, ¿me servirá?"],{catalog:[]});
+  const message="Lo importante es que funcione con tu equipo. ¿Qué sistema operativo utilizas?";
+  expect(polishCommercialReply(message,buyer)).toBe(message);
  });
  it("does not alter products without durability warnings or pricing evidence",()=>{
   const reply="La Epson L1250 puede ser práctica para impresiones de casa por su sistema de tinta recargable.";
