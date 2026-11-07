@@ -91,6 +91,30 @@ describe("ALEX real dialogue review: grounded conversation coherence",()=>{
   const r=protectSalesResponse("No puedo confirmar que las laptops entren en ese presupuesto sin precios vigentes.",{buyer,catalog});
   expect(r.blocked).toBe(false);
  });
+ it("invalidates the old SKU when a buyer switches to an unknown exact model",()=>{
+  const priced=[
+   {titulo:"Ulefone Armor X13",marca:"ULEFONE",partnumber:"ARMOR-X13",precio_soles:659},
+   {titulo:"Impresora Epson L1250",marca:"EPSON",partnumber:"L1250",precio_soles:null}
+  ];
+  const b=buildBuyerContext(["¿Precio del Ulefone Armor X13?","Ahora quiero la Brother HL-L2340, ¿cuánto cuesta?"],{catalog:priced});
+  expect(b.customer_reference).toBe("HL-L2340");
+  expect(b.matched_partnumber).toBeNull();
+  expect(b.mentioned_product_family).toBeNull();
+  expect(protectSalesResponse("La Brother cuesta S/ 659.",{buyer:b,catalog:priced}).reason).toBe("unverified_price");
+  expect(protectSalesResponse("El Ulefone Armor X13 cuesta S/ 659.",{buyer:b,catalog:priced}).reason).toBe("unverified_price");
+ });
+ it("restores grounded pricing only after the buyer returns to the known SKU",()=>{
+  const priced=[{titulo:"Ulefone Armor X13",marca:"ULEFONE",partnumber:"ARMOR-X13",precio_soles:659}];
+  const b=buildBuyerContext(["Quiero el Ulefone Armor X13","Mejor la Brother HL-L2340","Al final prefiero el Ulefone Armor X13, ¿cuánto cuesta?"],{catalog:priced});
+  expect(b.matched_partnumber).toBe("ARMOR-X13");
+  expect(b.customer_reference).toBeNull();
+  expect(protectSalesResponse("El Ulefone Armor X13 cuesta S/ 659.",{buyer:b,catalog:priced}).blocked).toBe(false);
+ });
+ it("does not use a sole priced item for an unrelated unknown customer reference",()=>{
+  const priced=[{titulo:"Ulefone Armor X13",marca:"ULEFONE",partnumber:"ARMOR-X13",precio_soles:659}];
+  const b=buildBuyerContext(["¿Me das precio de Brother HL-L2340?"],{catalog:priced});
+  expect(protectSalesResponse("La Brother cuesta S/ 659.",{buyer:b,catalog:priced}).reason).toBe("unverified_price");
+ });
  it("keeps normal helpful answers when no unsafe claim was made",()=>{
   const b=buildBuyerContext(["¿Cuál cargador me conviene?"],{catalog});
   const output=protectSalesResponse("Para saber si es compatible necesito la potencia y el modelo del equipo.",{catalog,buyer:b});
