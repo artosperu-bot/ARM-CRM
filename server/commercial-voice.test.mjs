@@ -22,6 +22,7 @@ describe("ALEX conversation-first commercial tone",()=>{
   const prompt=salesInstructions(catalog,{buyer:b});
   expect(prompt).toContain("PRIMERO EL VALOR");
   expect(prompt).toContain("VOZ COMERCIAL");
+  expect(prompt).toContain("PERSUASIÓN CON PRECISIÓN");
  });
  it("preserves technical and warranty facts when buyer explicitly requests them",()=>{
   const buyer=buildBuyerContext(["¿Cubre la garantía daños por agua en el Armor X13?"],{catalog});
