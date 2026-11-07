@@ -97,6 +97,12 @@ describe("Lead intelligence: sales signals and safe automatic actions",()=>{
    expect(r.priority).toBe("baja");
    expect(r.next_action).toContain("Cerrar cordialmente");
  });
+ it("recognizes buyer who asks to be attended by a human advisor",()=>{
+  const r=analyzeSalesConversation([msg("Quiero que me atienda un asesor humano")]);
+  expect(r.requires_human).toBe(true);
+  expect(r.should_reply).toBe(false);
+  expect(immediateStop("¿Puedes comunicarme con alguien?")).toBe(true);
+ });
  it("conservative priority is a rule-based score, not probability",()=>{
    const r=analyzeSalesConversation([msg("Hola")]);
    expect(r.score).toBeGreaterThanOrEqual(0);
