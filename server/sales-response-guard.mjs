@@ -26,6 +26,7 @@ const stockUnits=/\b(?:quedan|tenemos|hay|disponibles?|en stock|stock de)\s+\d{1
 const discount=/\b(?:descuento|rebaja|promoci[oó]n|off)\s+(?:de|del|hasta)?\s*\d{1,3}\s*%|\b\d{1,3}\s*%\s+de\s+(?:descuento|rebaja)/iu;
 const deliveryPromise=/\b(?:te|le)\s+(?:llega|entregamos|enviamos)\s+(?:ma[ñn]ana|hoy)\b/iu;
 const unconfirmedFutureAction=/\b(?:puedo|podr[ií]a|voy a|te puedo)\s+(?:dejar|registrar|derivar|enviar|coordinar|agendar)\b.{0,90}\b(?:inter[eé]s|pedido|cotizaci[oó]n|asesor|reserva|cita|solicitud|list[oa]|registrad[oa])\b/iu;
+const unconfirmedPaymentDirections=/\b(?:te\s+(?:indico|paso|env[ií]o|comparto|doy)|voy\s+a\s+(?:indicarte|enviarte|pasarte)|puedo\s+(?:enviarte|pasarte|compartirte))\s+(?:(?:el|la|los|las|un|una)\s+)?(?:enlace|link|canal|medio|datos|forma)\s+(?:de\s+)?pago\b/iu;
 const phantomContactHandoff=/\b(?:te\s+(?:ayudo|puedo\s+ayudar)|puedo\s+ayudarte|podemos\s+ayudarte|si\s+quieres\s+te\s+ayudo)\s+a\s+(?:dejar|preparar|generar|enviar|registrar|coordinar)\b.{0,100}\b(?:contacto|inter[eé]s|solicitud|cotizaci[oó]n|pedido|asesor|seguimiento|list[ao])\b/iu;
 const promisedCommercialCheck=/\b(?:puedo|podemos|voy a|te puedo|si quieres puedo)\s+(?:ayudarte\s+a\s+)?(?:verificar|consultar|revisar|confirmar|cotizar|validar)\s+(?:el|la|las|los|un|una|tu|su)?\s*(?:cotizaci[oó]n|precio|compra|pedido|stock|disponibilidad|env[ií]o|entrega|compatibilidad|modelo|referencia|ficha\s+t[eé]cnica|producto)\b/iu;
 const unprovenAffordability=/\b(?:encaj[a-záéíóú]*|cabe[n]?|entr[a-záéíóú]*|alcanz[a-záéíóú]*|ajust[a-záéíóú]*|est[aá][a-z]* dentro)\b.{0,100}\b(?:presupuesto|monto|inversi[oó]n)\b|\b(?:presupuesto|monto|inversi[oó]n)\b.{0,100}\b(?:encaj[a-záéíóú]*|cabe[n]?|entr[a-záéíóú]*|alcanz[a-záéíóú]*|ajust[a-záéíóú]*)\b/iu;
@@ -72,7 +73,7 @@ export function protectSalesResponse(reply,{catalog=[],buyer=null,simulated=fals
   const approvedPrice=!isUsd&&askedCommercialPrice&&priceValues.has(value);
   if(!approvedPrice&&!(isRestatedBudget&&!isUsd)){moneyViolation=true;break;}
  }
- const actionViolation=forbiddenActions.some(x=>x.test(text))||unconfirmedFutureAction.test(text)||promisedCommercialCheck.test(text)||unfinishedQuotePromise.test(text)||phantomPreparation.test(text)||phantomContactHandoff.test(text);
+ const actionViolation=forbiddenActions.some(x=>x.test(text))||unconfirmedFutureAction.test(text)||promisedCommercialCheck.test(text)||unfinishedQuotePromise.test(text)||phantomPreparation.test(text)||phantomContactHandoff.test(text)||unconfirmedPaymentDirections.test(text);
  const repeatedModelRequest=Boolean((buyer?.customer_reference||buyer?.matched_partnumber)&&redundantIdentifierRequest.test(text));
  const stockViolation=stockUnits.test(text);
  const discountViolation=discount.test(text);
