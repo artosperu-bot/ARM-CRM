@@ -157,6 +157,16 @@ describe("ALEX real dialogue review: grounded conversation coherence",()=>{
    "Puedo enviarte un enlace de pago."
   ])expect(protectSalesResponse(answer,{buyer:b,catalog}).reason).toBe("unconfirmed_action");
  });
+ it("recognizes a natural request for advisor without demanding contact details",()=>{
+  const buyer=buildBuyerContext([
+    "Ya elegí los 2 celulares",
+    "Entonces quiero que me atienda un asesor humano. ¿Puedes comunicarme con alguien?"
+  ],{catalog});
+  expect(buyer.requires_human).toBe(true);
+  const guarded=protectSalesResponse("Para pasar a asesor necesito tu nombre y teléfono.",{buyer,catalog});
+  expect(guarded.reason).toBe("human_requested");
+  expect(guarded.reply).not.toMatch(/necesito tu nombre|dame tu celular/i);
+ });
  it("keeps normal helpful answers when no unsafe claim was made",()=>{
   const b=buildBuyerContext(["¿Cuál cargador me conviene?"],{catalog});
   const output=protectSalesResponse("Para saber si es compatible necesito la potencia y el modelo del equipo.",{catalog,buyer:b});
