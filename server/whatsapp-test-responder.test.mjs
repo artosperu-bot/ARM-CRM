@@ -1,9 +1,10 @@
 import {describe,it,expect} from "vitest";
 import {createWhatsAppTestResponder} from "./whatsapp-test-responder.mjs";
 
-function fixture(status="pending",onRequest=()=>{},allowedOffers=[]){
+function fixture(status="pending",onRequest=()=>{},allowedOffers=[],stateAfterModel={}){
   const writes=[];
-  const db={
+  let threadReads=0;
+  const db=
     async rpc(name,params){
       if(name!=="arm_search_catalog")return {data:[],error:{code:"unexpected"}};
       if(!params.p_query||params.p_query.trim().length<2)return {data:[],error:null};
@@ -16,7 +17,18 @@ function fixture(status="pending",onRequest=()=>{},allowedOffers=[]){
       select(fields,opt){q.count=opt?.count;return q;},
       eq(){return q;},in(){return q;},order(){return q;},
       gte:async()=>({count:0,error:null}),
-      maybeSingle:async()=>({data:{id:"thread",workspace_id:"ws",contact_id:"contact",status,assigned_to:null},error:null}),
+      maybeSingle:async()=>{
+        if(table==="arm_lead_insights")return {data:{
+          opt_out:Boolean(stateAfterModel.optOut),
+          requires_human:Boolean(stateAfterModel.requiresHuman)
+        },error:null};
+        if(table==="arm_threads"){
+          threadReads++;
+          return {data:{id:"thread",workspace_id:"ws",contact_id:"contact",
+            status:threadReads>1?(stateAfterModel.status||status):status,assigned_to:null},error:null};
+        }
+        return {data:null,error:null};
+      },
       limit:async()=>{
         if(table==="arm_messages")return {data:[],error:null};
         if(table==="arm_product_facts")return {data:[],error:null};
@@ -63,6 +75,19 @@ describe("isolated WhatsApp test reply",()=>{
     const f=fixture("human");
     expect((await f.respond(f.event)).status).toBe("human_handoff");
     expect(f.requests).toHaveLength(0);
+  });
+  it("aborts an in-flight reply when a human takes the thread during model generation",async()=>{
+    const f=fixture("pending",()=>{},[],{status:"human"});
+    expect((await f.respond(f.event)).status).toBe("human_handoff");
+    expect(f.requests).toHaveLength(1);
+    expect(f.requests[0].url).toContain("api.openai.com");
+    expect(f.writes.map(w=>w.table)).not.toContain("arm_messages");
+  });
+  it("aborts an in-flight reply when an opt-out arrives before send",async()=>{
+    const f=fixture("pending",()=>{},[],{optOut:true});
+    expect((await f.respond(f.event)).status).toBe("human_handoff");
+    expect(f.requests).toHaveLength(1);
+    expect(f.writes.map(w=>w.table)).not.toContain("arm_messages");
   });
   it("calls OpenAI only and sends a single WhatsApp text to the allowlisted sender",async()=>{
     const f=fixture();
