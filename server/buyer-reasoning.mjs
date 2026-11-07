@@ -83,18 +83,29 @@ function classifyLatest(text){
  if(/\b(?:hay|tienen|tienes|disponible|stock|entrega)\b/u.test(text))return "disponibilidad";
  return "consulta";
 }
-export function buildBuyerContext(customerTurns,{leadProfile=null,catalog=[]}={}){
+export function buildBuyerContext(customerTurns,{leadProfile=null,catalog=[],memory=null}={}){
  const turns=(Array.isArray(customerTurns)?customerTurns:[]).filter(x=>typeof x==="string"&&x.trim()).slice(-40);
  const state={
-  quantity:null,budget:null,brand:null,use_case:null,
+  quantity:Number.isInteger(memory?.quantity)&&memory.quantity>=1&&memory.quantity<=999?memory.quantity:null,
+  budget:memory?.budget?.pen>0?memory.budget:null,
+  brand:typeof memory?.brand==="string"?memory.brand:null,
+  use_case:typeof memory?.use_case==="string"?memory.use_case:null,
   buyer_type:"sin_confirmar",is_b2b_signal:false,
   current_intent:"sin_mensaje",last_message:"",
   mentioned_product_family:null,objection:false,urgency:false,
   explicit_purchase:false,cancelled_purchase:false,
   known_facts:[],next_step:"responder_consulta",requires_human:false,matched_partnumber:null,customer_reference:null
  };
- let b2bExplicit=false,productSeen=false;
- let requestedAdvisor=false;
+ // A stored partnumber is a hint, not verified evidence: validate against this
+ // request's freshly retrieved catalogue before using it for price/stock.
+ const remembered=(Array.isArray(catalog)?catalog:[]).find(x=>x?.partnumber===memory?.selected_partnumber);
+ if(remembered){
+  state.matched_partnumber=remembered.partnumber;
+  state.mentioned_product_family=remembered.titulo||remembered.title||null;
+ }
+ if(typeof memory?.customer_reference==="string")state.customer_reference=memory.customer_reference;
+ let b2bExplicit=false,productSeen=Boolean(memory?.selected_partnumber||memory?.customer_reference);
+ let requestedAdvisor=memory?.requires_human===true;
  for(const raw of turns){
   const text=norm(raw).slice(0,1600);
   if(RX.device.test(text))productSeen=true;
