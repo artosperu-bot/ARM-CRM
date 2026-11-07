@@ -6,7 +6,7 @@ import {buildBuyerContext} from "./buyer-reasoning.mjs";
  * stock claims, prices or outbound permissions.
  * Versioned so old/malformed database snapshots fail closed.
  */
-const reference=(v)=>typeof v==="string"&&/^[A-Z0-9][A-Z0-9._-]{3,79}$/iu.test(v)?v:null;
+const reference=(v)=>typeof v==="string"&&/^[A-Z0-9][A-Z0-9._-]{3,79}$/iu.test(v)&&!/^\d+$/u.test(v)?v:null;
 const timestamp=(v)=>typeof v==="string"&&Number.isFinite(Date.parse(v))?new Date(v).toISOString():null;
 const budget=(v)=>v&&Number.isInteger(v.pen)&&v.pen>0&&v.pen<=1000000&&
   ["total","por_unidad","sin_aclarar"].includes(v.scope)?{pen:v.pen,scope:v.scope}:null;
