@@ -108,6 +108,20 @@ export function createWhatsAppTestResponder({
     cached_input_tokens:cached,cost_usd:cost,cost_source:"rate_card_estimate",occurred_at:new Date().toISOString()
   });
   if(metric.error)throw new Error("ARM_USAGE_RECORD_FAILED");
+  // Triage and human assignment can change while OpenAI is answering.
+  // Recheck immediately before Graph API; an in-flight reply must not override
+  // a human takeover or a newly recorded opt-out.
+  const {data:currentThread,error:currentError}=await client.from("arm_threads")
+    .select("status,assigned_to").eq("id",thread.id)
+    .eq("workspace_id",thread.workspace_id).maybeSingle();
+  if(currentError||!currentThread)throw new Error("ARM_THREAD_RECHECK_FAILED");
+  if(currentThread.status!=="pending"||currentThread.assigned_to)
+    return {status:"human_handoff"};
+  const {data:currentInsight,error:insightError}=await client.from("arm_lead_insights")
+    .select("opt_out,requires_human").eq("thread_id",thread.id).maybeSingle();
+  if(insightError)throw new Error("ARM_HANDOFF_STATE_RECHECK_FAILED");
+  if(currentInsight?.opt_out||currentInsight?.requires_human)
+    return {status:"human_handoff"};
   const send=await fetcher("https://graph.facebook.com/"+encodeURIComponent(graphVersion)+"/"+
     encodeURIComponent(phoneId)+"/messages",{
       method:"POST",headers:{"Authorization":"Bearer "+whatsappToken,"Content-Type":"application/json"},
