@@ -1,5 +1,5 @@
 import {describe,it,expect} from "vitest";
-import {classifyCustomerTopic,customerTopicInstructions,isExplicitProductSwitch} from "./customer-topic.mjs";
+import {classifyCustomerTopic,customerTopicInstructions,isExplicitProductSwitch,selectCustomerPromptInput} from "./customer-topic.mjs";
 import {buildBuyerContext,buyerGuidance} from "./buyer-reasoning.mjs";
 import {snapshotSalesMemory} from "./sales-memory.mjs";
 import {salesMove} from "./sales-playbook.mjs";
@@ -36,6 +36,21 @@ describe("ALEX attends unrelated and service topics as a general-purpose seller"
   ["Ahora quiero saber cómo funciona la garantía",false]
  ])("focuses product retrieval only for explicit product transitions: %s",(message,expected)=>{
   expect(isExplicitProductSwitch(message)).toBe(expected);
+ });
+ it("drops obsolete charger dialogue when the buyer asks about a Samsung tablet",()=>{
+  const before=[
+   {role:"user",content:"Busco cargador USB-C para mi laptop Lenovo"},
+   {role:"assistant",content:"Tengo un cargador para tu laptop, dime sus watts"}
+  ];
+  const message="Pero ahora estoy viendo una tablet Samsung, ¿cuál me recomiendas?";
+  expect(selectCustomerPromptInput(before,message)).toEqual([{role:"user",content:message}]);
+ });
+ it("retains a product discussion while answering unrelated billing or warranty questions",()=>{
+  const before=[{role:"user",content:"Busco 2 Ulefone Armor 22"}];
+  const question="¿Emiten factura electrónica y se puede pagar con tarjeta?";
+  expect(selectCustomerPromptInput(before,question)).toEqual([...before,{role:"user",content:question}]);
+  const already=[...before,{role:"user",content:question}];
+  expect(selectCustomerPromptInput(already,question)).toEqual(already);
  });
  it("does not treat an unsent complaint as explicit request for human adviser",()=>{
   const b=buyer(["Compré una Epson L1250 y no imprime negro","¿Ya me abriste un reclamo?"]);
