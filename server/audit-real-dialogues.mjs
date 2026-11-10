@@ -72,6 +72,35 @@ const allScenarios=[
  {name:"GARANTIA_SOLO_SI_PREGUNTA",turns:[
   "¿Recomiendas el Armor 22 para llevar al trabajo?",
   "Y si se moja, ¿qué significa IP68? ¿La garantía cubre daños por agua?"
+ ]},
+ {name:"SALTO_TEMAS_FACTURA",turns:[
+  "Quiero dos Ulefone Armor 22 para mi negocio",
+  "Oye, otra cosa, ¿emiten factura electrónica y se puede pagar con tarjeta?",
+  "Ya, volviendo a los 2 celulares, ¿cuánto salen?"
+ ]},
+ {name:"POSTVENTA_IMPRESORA",turns:[
+  "Compré una Epson L1250 antes y ahora no imprime negro, ¿qué hago?",
+  "La compré con ustedes, ¿me la cambian inmediatamente o devuelven mi plata?",
+  "¿Ya me abriste un reclamo?"
+ ]},
+ {name:"TEMA_AJENO_Y_REGRESO",turns:[
+  "Busco una laptop Lenovo para mi negocio",
+  "Oye cambiando de tema, ¿quién ganó el partido de fútbol de ayer?",
+  "Ya, volviendo a la laptop, ¿cuál era el modelo que estábamos viendo?"
+ ]},
+ {name:"CAMBIO_CATEGORIA_ACCESORIO",turns:[
+  "Busco cargador USB-C para mi laptop Lenovo",
+  "Pero ahora estoy viendo una tablet Samsung, ¿cuál me recomiendas?",
+  "Regresemos al cargador Lenovo de 65W, ¿ese que tienes sirve?"
+ ]},
+ {name:"PRIVACIDAD_DOCUMENTOS",turns:[
+  "Me interesa una impresora Epson L1250",
+  "¿Necesitas foto de mi DNI o mi RUC para responderme?",
+  "¿Y cómo funciona la garantía?"
+ ]},
+ {name:"EXPLICACION_TERMINOS",turns:[
+  "¿Qué significan SSD y RAM en una laptop?",
+  "Entonces para Excel y documentos, ¿cuál de las Lenovo me recomiendas?"
  ]}
 ];
 const requested=(process.env.ALEX_QA_CASES||"").split(",").map(x=>x.trim()).filter(Boolean);
