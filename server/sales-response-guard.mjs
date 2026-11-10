@@ -72,25 +72,6 @@ export function protectSalesResponse(reply,{catalog=[],buyer=null,simulated=fals
  const askedCommercialPrice=["consultar_precio","cotizar","comparar","objecion","comprar"].includes(intent);
  const available=(Array.isArray(catalog)?catalog:[]).filter(p=>p?.precio_soles!==null&&
    p?.precio_soles!==undefined&&Number.isFinite(Number(p.precio_soles))&&Number(p.precio_soles)>0);
- // When a question cannot be resolved from current commercial evidence,
- // use a short factual reply instead of letting the model promise future checks,
- // messages, reservations or quotes that no tool executed.
- const selected=buyer?.matched_partnumber?
-   (Array.isArray(catalog)?catalog:[]).find(p=>p?.partnumber===buyer.matched_partnumber):null;
- const quantityLabel=buyer?.quantity&&Number.isInteger(buyer.quantity)?
-   (buyer.quantity===1?"esa unidad":"las "+buyer.quantity+" unidades"):"ese producto";
- const verifiedForPrice=Boolean(selected&&available.some(p=>p.partnumber===selected.partnumber));
- if((intent==="consultar_precio"||intent==="cotizar")&&!verifiedForPrice){
-  return {reply:intent==="cotizar"?
-   "Para cotizar "+quantityLabel+" todavía falta un precio vigente. No hay una cotización emitida desde este chat.":
-   "El precio de "+quantityLabel+" está por confirmar. Aún no tengo un monto vigente para darte.",
-   blocked:true,reason:"unverified_price"};
- }
- const confirmedStock=selected?.disponibilidad==="disponible";
- if(intent==="disponibilidad"&&!confirmedStock)
-  return {reply:"La disponibilidad de ese modelo está por confirmar. Por ahora no puedo asegurarte stock para entrega.",blocked:true,reason:"unverified_availability"};
- if(intent==="objecion"&&/\b(?:rebaja|descuento|descuentito|promocion)\b/u.test(buyer?.last_message||""))
-  return {reply:"Entiendo que busques un mejor precio por "+quantityLabel+". No tengo un descuento aprobado para confirmarte.",blocked:true,reason:"unapproved_discount"};
  const replyProduct=matchCustomerProduct(text,catalog);
  // A new, unverified customer reference outranks an old matched SKU, the AI's
  // proposed product and any sole priced catalogue item. Never transfer a price.
@@ -137,8 +118,29 @@ export function protectSalesResponse(reply,{catalog=[],buyer=null,simulated=fals
  const deliveryViolation=deliveryPromise.test(text);
  const prematureDataViolation=buyer?.current_intent==="comprar"&&(prematureDataRequest.test(text)||prematureCustomerDetails.test(text));
  const affordabilityViolation=unprovenAffordability.test(text)&&!affordabilityCaveat.test(text);
- if(!wrongProduct&&!moneyViolation&&!actionViolation&&!stockViolation&&!discountViolation&&!deliveryViolation&&!prematureDataViolation&&!repeatedModelRequest&&!affordabilityViolation)
+ if(!wrongProduct&&!moneyViolation&&!actionViolation&&!stockViolation&&!discountViolation&&!deliveryViolation&&!prematureDataViolation&&!repeatedModelRequest&&!affordabilityViolation){
+  // Earlier guards preserve specific denial reasons for invented payments,
+  // quotes, discounts, delivery promises and repeated customer questions.
+  // Otherwise unanswered price/stock queries get a factual direct response.
+  const selected=buyer?.matched_partnumber?
+    (Array.isArray(catalog)?catalog:[]).find(p=>p?.partnumber===buyer.matched_partnumber):null;
+  const qty=buyer?.quantity&&Number.isInteger(buyer.quantity)?
+    (buyer.quantity===1?"esa unidad":"las "+buyer.quantity+" unidades"):"ese producto";
+  const priced=Boolean(selected&&available.some(p=>p.partnumber===selected.partnumber));
+  if((intent==="consultar_precio"||intent==="cotizar")&&!priced)
+   return {reply:intent==="cotizar"?
+    "Para cotizar "+qty+" todavía falta un precio vigente. No hay una cotización emitida desde este chat.":
+    "El precio de "+qty+" está por confirmar. Aún no tengo un monto vigente para darte.",
+    blocked:true,reason:"unverified_price"};
+  if(intent==="disponibilidad"&&selected?.disponibilidad!=="disponible")
+   return {reply:"La disponibilidad de ese modelo está por confirmar. Por ahora no puedo asegurarte stock para entrega.",blocked:true,reason:"unverified_availability"};
+  if(intent==="objecion"&&/\b(?:rebaja|descuento|descuentito|promocion)\b/u.test(buyer?.last_message||""))
+   return {reply:"Entiendo que busques un mejor precio por "+
+    (buyer?.quantity&&Number.isInteger(buyer.quantity)?buyer.quantity+" unidades":"el producto")+
+    ". No tengo un descuento aprobado para confirmarte.",
+    blocked:true,reason:"unapproved_discount"};
   return {reply:polishCommercialReply(text,buyer),blocked:false,reason:null};
+ }
  const reason=wrongProduct?"product_mismatch":repeatedModelRequest?"redundant_model_question":moneyViolation?"unverified_price":affordabilityViolation?"unverified_affordability":actionViolation?"unconfirmed_action":
    stockViolation?"exact_stock":discountViolation?"unapproved_discount":prematureDataViolation?"premature_personal_data":"delivery_promise";
  const quantity=Number.isInteger(buyer?.quantity)&&buyer.quantity>0?buyer.quantity:null;
