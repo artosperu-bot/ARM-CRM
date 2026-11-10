@@ -27,6 +27,8 @@ const forbiddenActions=[
 const stockUnits=/\b(?:quedan|tenemos|hay|disponibles?|en stock|stock de)\s+\d{1,5}\s+(?:unidades|equipos|laptops?|celulares?|impresoras?|licencias?|monitores?|routers?|productos?|servicios?|accesorios?|sillas?)\b/iu;
 const discount=/\b(?:descuento|rebaja|promoci[oó]n|off)\s+(?:de|del|hasta)?\s*\d{1,3}\s*%|\b\d{1,3}\s*%\s+de\s+(?:descuento|rebaja)/iu;
 const deliveryPromise=/\b(?:te|le)\s+(?:llega|entregamos|enviamos)\s+(?:ma[ñn]ana|hoy)\b/iu;
+const unconfirmedFutureReply=/\b(?:te\s+(?:aviso|respondo|confirmo|informo|escribo|digo)|te\s+(?:avisamos|respondemos|confirmamos)|(?:voy|vamos)\s+a\s+(?:avisarte|responderte|confirmarte|informarte))\b.{0,100}\b(?:apenas|en cuanto|cuando|validado|verificado|se confirme|se valide)|\b(?:en cuanto|apenas|cuando)\b.{0,100}\b(?:te\s+(?:aviso|respondo|confirmo|digo|informo)|me\s+comunico|te\s+escribo)\b/iu;
+const unexecutedCheckPromise=/\b(?:lo|la)\s+dejo\s+(?:para\s+)?(?:verificaci[oó]n|revisi[oó]n|cotizaci[oó]n)|\b(?:primero|ahora)\s+(?:confirmamos|verificamos|revisamos)\s+(?:el|la|las|los)\s+(?:precio|stock|descuento|cotizaci[oó]n)\b/iu;
 const fictitiousPendingWork=/\b(?:te\s+(?:lo|la)\s+dejo\s+list[ao]|(?:s[ií]\s+)?te\s+puedo\s+ayudar\s+a\s+dejarlo\s+list[ao]|(?:puedo\s+)?ayudarte\s+a\s+dejar\s+(?:la|una|tu)\s+consulta|(?:te\s+)?dejo\s+(?:el|la)\s+seguimiento)\b/iu;
 const unconfirmedFutureAction=/\b(?:puedo|podr[ií]a|voy a|te puedo)\s+(?:(?:ayudar(?:te)?\s+a)\s+)?(?:dejar(?:te)?|registrar|derivar|enviar|coordinar|agendar)\b.{0,90}\b(?:inter[eé]s|pedido|cotizaci[oó]n|asesor|reserva|cita|solicitud|seguimiento|caso|list[oa]|registrad[oa])\b/iu;
 const unconfirmedPaymentDirections=/\b(?:te\s+(?:indico|paso|env[ií]o|comparto|doy)|voy\s+a\s+(?:indicarte|enviarte|pasarte)|puedo\s+(?:enviarte|pasarte|compartirte))\s+(?:(?:el|la|los|las|un|una)\s+)?(?:enlace|link|canal|medio|datos|forma)\s+(?:de\s+)?pago\b/iu;
@@ -101,7 +103,7 @@ export function protectSalesResponse(reply,{catalog=[],buyer=null,simulated=fals
    (buyer?.current_topic==="facturacion_pago"&&unsupportedBillingClaim.test(text))||
    (buyer?.current_topic==="devolucion_reclamo"&&unsupportedRefundClaim.test(text))||
    (buyer?.current_topic==="garantia"&&unsupportedWarrantyDuration.test(text));
- const actionViolation=fictitiousPendingWork.test(text)||unsupportedPolicyClaim||(buyer?.current_topic==="pedido_existente"&&unsupportedOrderStatusPromise.test(text))||forbiddenActions.some(x=>x.test(text))||unconfirmedFutureAction.test(text)||promisedCommercialCheck.test(text)||unfinishedQuotePromise.test(text)||phantomPreparation.test(text)||phantomContactHandoff.test(text)||unconfirmedPaymentDirections.test(text)||unexecutedHandoff.test(text);
+ const actionViolation=fictitiousPendingWork.test(text)||unconfirmedFutureReply.test(text)||unexecutedCheckPromise.test(text)||unsupportedPolicyClaim||(buyer?.current_topic==="pedido_existente"&&unsupportedOrderStatusPromise.test(text))||forbiddenActions.some(x=>x.test(text))||unconfirmedFutureAction.test(text)||promisedCommercialCheck.test(text)||unfinishedQuotePromise.test(text)||phantomPreparation.test(text)||phantomContactHandoff.test(text)||unconfirmedPaymentDirections.test(text)||unexecutedHandoff.test(text);
  // When selling an accessory, asking for the laptop/tablet/host model is
  // valid compatibility discovery even though the accessory SKU is known.
  const hostRequest=text.match(/\b(?:modelo|referencia)\s+(?:exact[oa]|complet[oa])\s+de\s+(?:tu|su|la|el)\s+(laptop|computadora|celular|tel[eé]fono|tablet|impresora|monitor|router|equipo)\b/iu);
