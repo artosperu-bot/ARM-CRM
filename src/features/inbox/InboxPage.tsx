@@ -1,6 +1,7 @@
 import { useMemo,useState } from "react";
 import { CheckCircle2,Clock3,Inbox,MessageSquare,RefreshCw,Search,ShieldCheck,UserRoundCheck } from "lucide-react";
 import { useInbox,type ThreadStatus } from "./useInbox";
+import {parseAgentPhotoMessage} from "../agent/photoMessage";
 import "./inbox.css";
 
 const channels:Record<string,string>={whatsapp:"WhatsApp",facebook:"Messenger",instagram:"Instagram",web:"Web"};
@@ -92,7 +93,18 @@ export default function InboxPage({workspaceId}:{workspaceId:string}){
          <div className="inbox-timeline">
            {inbox.messageLoading&&<div className="inbox-placeholder">Cargando mensajes…</div>}
            {!inbox.messageLoading&&!inbox.messages.length&&<div className="inbox-placeholder">Sin mensajes registrados en esta conversación.</div>}
-           {inbox.messages.map(m=><div key={m.id} className={"inbox-message "+(m.direction==="outbound"?"out":"in")}><p>{m.content||"Adjunto: "+m.message_type}</p><small>{m.direction==="inbound"?"Cliente":"STECH"} · {dates(m.created_at)}</small></div>)}
+           {inbox.messages.map(m=>{
+             const media=m.message_type==="image"&&m.direction==="outbound"?
+               parseAgentPhotoMessage(m.content||""):null;
+             return <div key={m.id} className={"inbox-message "+(m.direction==="outbound"?"out":"in")}>
+               <p>{media?.body||m.content||"Adjunto: "+m.message_type}</p>
+               {media?.photoUrl&&<figure className="inbox-product-photo">
+                 <img src={media.photoUrl} loading="lazy" alt={"Imagen del producto enviada: "+media.body}/>
+                 <figcaption>Foto referencial oficial enviada por ALEX</figcaption>
+               </figure>}
+               <small>{m.direction==="inbound"?"Cliente":"STECH"} · {dates(m.created_at)}</small>
+             </div>;
+           })}
          </div>
          <div className="inbox-actions"><button className="secondary-button" disabled={busy||selected.status==="human"} onClick={()=>void setStatus("human")}><UserRoundCheck size={16}/> Asignar a humano</button><button className="secondary-button" disabled={busy||selected.status==="closed"} onClick={()=>void setStatus("closed")}><CheckCircle2 size={16}/> Cerrar</button><button className="secondary-button" disabled={busy||selected.status==="pending"} onClick={()=>void setStatus("pending")}><Clock3 size={16}/> Pendiente</button></div>
          <div className="inbox-disabled"><ShieldCheck size={16}/> Respuestas deshabilitadas hasta verificar conexión empresarial, ventana de mensajería y reglas de envío.</div>
