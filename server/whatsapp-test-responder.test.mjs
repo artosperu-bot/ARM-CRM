@@ -164,6 +164,19 @@ describe("WhatsApp product photo requests",()=>{
   expect(payload.type).toBe("text");
   expect(payload.text.body).toMatch(/foto verificada/i);
  });
+ it("never sends an Armor X13 picture if buyer explicitly requested Armor 22",async()=>{
+  const f=fixture("pending",()=>{},[],{},[photoFact()]);
+  await f.respond({...f.event,text:"pásame foto del Armor 22"});
+  expect(f.requests).toHaveLength(1);
+  expect(JSON.parse(f.requests[0].opts.body).type).toBe("text");
+  expect(f.writes[0].value.message_type).toBe("text");
+ });
+ it("does not send any product picture if the buyer says no",async()=>{
+  const f=fixture("pending",()=>{},[],{},[photoFact()]);
+  await f.respond({...f.event,text:"no quiero fotos del Armor X13, dime las características"});
+  expect(f.requests[0].url).toContain("api.openai.com");
+  expect(JSON.parse(f.requests.at(-1).opts.body).type).toBe("text");
+ });
  it("does not use expired manufacturer image facts",async()=>{
   const f=fixture("pending",()=>{},[],{},[photoFact({expires_at:"2020-01-01T00:00:00Z"})]);
   await f.respond({...f.event,text:"manda foto Armor X13"});
