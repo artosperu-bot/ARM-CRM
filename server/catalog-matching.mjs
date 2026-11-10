@@ -6,8 +6,15 @@
 const clean=s=>String(s||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/([0-9])([a-z])/gu,"$1 $2").replace(/([a-z])([0-9])/gu,"$1 $2").replace(/[^a-z0-9]+/gu," ").replace(/\s+/gu," ").trim();
 const ignore=new Set(["para","con","sin","del","por","una","uno","este","marca","modelo","color","version","pro","kit","producto","gb","ram","de","la","el","las","los","and","the"]);
 const words=s=>clean(s).split(" ").filter(x=>(x.length>=3||/^\d{2,}$/u.test(x))&&!ignore.has(x)&&!/^\d$/u.test(x));
+/** A rejected model ("no del X13") is not the item being requested.
+ * Keep all other text so the positive model drives catalog selection.
+ * Covers numerical model identifiers in any future product category.
+ */
+export function affirmativeProductText(message){
+ return String(message||"").replace(/\bno\s+(?:del?|de\s+la|el|la|los?|las?)\s+(?:[a-z][a-z0-9._-]{2,30}\s+)?(?:[a-z]{0,6}\d[a-z0-9._-]*|\d{2,6}[a-z0-9._-]*)(?:\s+pro)?\b/giu," ");
+}
 export function matchCustomerProduct(message,catalog=[]){
- const input=clean(message), tokens=new Set(words(input));
+ const input=clean(affirmativeProductText(message)), tokens=new Set(words(input));
  if(!input||!Array.isArray(catalog)||!catalog.length)return null;
  const candidates=[];
  for(const row of catalog){
