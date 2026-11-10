@@ -25,53 +25,68 @@ export function requestsProductPhoto(message){
     || /\b(?:muestrame|mu[eé]strame|ensename|ens[eé]ñame|me muestras|me ensenas)\s+(?:como (?:es|se ve)|el equipo|la laptop|el celular|el producto|el telefono)\b/u.test(s)
     || /\b(?:como se ve|quiero verlo|quiero verla|muestra el equipo|(?:quiero|quisiera|puedo) ver (?:el|la|un|una) (?:celular|equipo|producto|modelo|telefono|laptop|tablet|impresora))\b/u.test(s);
 }
-const hosts=new Set(["store.ulefone.com","www.s-tech.com.pe","s-tech.com.pe"]);
+/** A public, manually reviewed product fact can originate from ANY official
+ * manufacturer. No hardcoded Ulefone, Epson, Lenovo or other host whitelist.
+ * Only same-origin verified source pages may supply a WhatsApp image link.
+ */
+function publicPhotoHost(raw){
+ const h=String(raw||"").toLowerCase();
+ return h.length<=253&&h.includes(".")&&/^[a-z0-9.-]+$/u.test(h)&&
+   !/^\d{1,3}(?:\.\d{1,3}){3}$/u.test(h)&&
+   !/(?:^|\.)(?:localhost|local|internal|invalid|test|example|onion)$/u.test(h)&&
+   h.split(".").every(x=>x.length>0&&x.length<=63&&!x.startsWith("-")&&!x.endsWith("-"));
+}
 export function safePublicImageUrl(raw,sourceUrl){
  try{
   if(typeof raw!=="string"||typeof sourceUrl!=="string")return null;
   const url=new URL(raw),source=new URL(sourceUrl);
   if(url.protocol!=="https:"||source.protocol!=="https:"||
-     !hosts.has(url.hostname.toLowerCase())||url.hostname.toLowerCase()!==source.hostname.toLowerCase()||
+     !publicPhotoHost(url.hostname)||!publicPhotoHost(source.hostname)||
+     url.hostname.toLowerCase()!==source.hostname.toLowerCase()||
      url.username||url.password||url.port||url.hash||source.username||source.password||
      !/\.(?:jpg|jpeg|png)$/iu.test(url.pathname)||url.href.length>1100)
    return null;
   return url.href;
  }catch{return null;}
 }
-function explicitlyNamedProducts(message,catalog){
- const s=norm(message).replace(/[^a-z0-9]+/g," ").trim();
- const named=new Set();
- for(const p of catalog){
-  const title=norm(p?.titulo||"");
-  const ref=norm(p?.partnumber||"");
-  // Require at least the model identifier in the latest turn. A generic
-  // manufacturer mention must not count as an exact product selection.
-  const candidates=[ref,...(title.match(/\b(?:armor\s+(?:x\d{1,2}\s*pro|x\d{1,2}|25t\s*pro|22|x13))\b/g)||[])];
-  if(candidates.some(token=>{
-   const needle=token.replace(/[^a-z0-9]+/g," ").trim();
-   return needle.length>=5&&s.includes(needle);
-  }))named.add(p.partnumber);
- }
- return named;
+function normalizeWords(value){
+ return norm(value).replace(/[^a-z0-9]+/g," ").trim();
 }
+function modelSignals(value){
+ const text=normalizeWords(value);
+ const terms=new Set();
+ const tokens=text.split(" ").filter(Boolean);
+ for(const token of tokens){
+  if(/^(?=.*[a-z])(?=.*\d)[a-z0-9]{2,30}$/u.test(token)&&
+     !/^\d+(?:gb|tb|mb|mah|w|hz|mp|kg|cm|mm|m|k)$/u.test(token))
+   terms.add(token);
+ }
+ for(let i=1;i<tokens.length;i++){
+  if(/^\d{2,4}$/u.test(tokens[i])&&/^[a-z]{2,18}$/u.test(tokens[i-1])&&
+     !["precio","s","soles","total","para","foto","fotos","equipo","unidad","unidades","modelo"].includes(tokens[i-1]))
+   terms.add(tokens[i-1]+" "+tokens[i]);
+ }
+ return terms;
+}
+const containsTerm=(haystack,term)=>(" "+normalizeWords(haystack)+" ").includes(" "+term+" ");
 export function verifiedProductPhoto({buyer,catalog=[],factsByPn={}}={}){
  if(!Array.isArray(catalog))return null;
  const sku=buyer?.matched_partnumber;
- if(!sku||buyer?.customer_reference&&!buyer?.matched_partnumber)return null;
- const positiveText=affirmativeProductText(buyer?.last_message||"");
- const named=explicitlyNamedProducts(positiveText,catalog);
- const models=[...norm(positiveText).matchAll(/\barmor\s*(x\d{1,2}\s*pro|25t\s*pro|x\d{1,2}|22)\b/g)]
-   .map(m=>m[1].replace(/\s+/g,""));
- if(named.size>1||new Set(models).size>1)return null; // multi-model request needs a gallery, not arbitrary last SKU
+ if(!sku)return null;
  const p=catalog.find(x=>x?.partnumber===sku);
- if(!p||named.size===1&&!named.has(sku))return null;
- const current=norm(positiveText);
- const explicitBrands=[...new Set([...current.matchAll(/\b(ulefone|samsung|epson|lenovo|brother|apple|asus|acer|dell|hp|logitech|xiaomi|motorola|canon|msi|jbl|microsoft|dji)\b/g)].map(x=>x[1]))];
- if(explicitBrands.length && (explicitBrands.length>1||explicitBrands[0]!==norm(p.marca)))return null;
- if(models.length){
-  const title=norm(p.titulo||"");
-  if(!models.every(code=>title.includes("armor "+code)))return null;
- }
+ if(!p)return null;
+ const current=affirmativeProductText(buyer?.last_message||"");
+ const signals=modelSignals(current);
+ const selectedText=[p.titulo||p.title,p.partnumber].filter(Boolean).join(" ");
+ // A new named model may not use the previous model's photo, even when the
+ // catalogue query accidentally returns a single old result.
+ if([...signals].some(signal=>!containsTerm(selectedText,signal)))return null;
+ const brand=norm(p.marca||p.brand);
+ const seenBrands=[...new Set(catalog.map(x=>norm(x.marca||x.brand)).filter(Boolean))];
+ const commonOtherBrands=["ulefone","samsung","epson","lenovo","brother","apple","asus","acer","dell","hp","logitech","xiaomi","motorola","canon","msi","jbl","microsoft","dji"];
+ const possibleBrands=[...new Set([...seenBrands,...commonOtherBrands])];
+ const namedBrands=possibleBrands.filter(x=>containsTerm(current,x));
+ if(namedBrands.length>1||(namedBrands.length===1&&namedBrands[0]!==brand))return null;
  const fact=factsByPn?.[sku]?.product_image;
  if(!fact||!["manufacturer","reviewed_internal"].includes(fact.source_type))return null;
  const value=fact.value;
@@ -80,7 +95,7 @@ export function verifiedProductPhoto({buyer,catalog=[],factsByPn={}}={}){
  if(!url)return null;
  return {
   url,partnumber:sku,
-  caption:("Foto referencial del modelo: "+String(p.titulo||sku)).slice(0,180),
+  caption:("Foto referencial del modelo: "+String(p.titulo||p.title||sku)).slice(0,180),
   sourceUrl:fact.source_url
  };
 }
