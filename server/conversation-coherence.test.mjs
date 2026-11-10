@@ -35,6 +35,24 @@ describe("ALEX real dialogue review: grounded conversation coherence",()=>{
   expect(reply.reply).toMatch(/no puedo crear un pedido ni un enlace de pago/i);
   expect(reply.reply).toMatch(/precio, disponibilidad/i);
  });
+ it("removes unsolicited availability while retaining product benefits",()=>{
+  const p=[{titulo:"Ulefone Armor 22",marca:"ULEFONE",partnumber:"ARMOR-22-256G",
+   precio_soles:null,disponibilidad:"por confirmar"}];
+  const buyer=buildBuyerContext(["Quiero el Armor 22, qué tal es?"],{catalog:p});
+  const result=protectSalesResponse(
+   "Trae batería de 6600 mAh para uso de campo. La disponibilidad está por confirmar; si lo usas en obra, su formato resistente puede servirte.",
+   {buyer,catalog:p});
+  expect(result.blocked).toBe(false);
+  expect(result.reply).toContain("6600 mAh");
+  expect(result.reply).not.toMatch(/disponibilidad|stock/i);
+ });
+ it("retains availability status when buyer explicitly asks",()=>{
+  const p=[{titulo:"Ulefone Armor 22",marca:"ULEFONE",partnumber:"ARMOR-22-256G",
+   precio_soles:null,disponibilidad:"por confirmar"}];
+  const buyer=buildBuyerContext(["Hay stock del Armor 22?"],{catalog:p});
+  const reply=protectSalesResponse("La disponibilidad está por confirmar.",{buyer,catalog:p});
+  expect(reply.reply).toMatch(/disponibilidad/);
+ });
  it("does not invent advisor assignment on first request",()=>{
   const buyer=buildBuyerContext(["Quiero hablar con un asesor"],{catalog});
   const reply=protectSalesResponse("Tu caso ya fue asignado.",{buyer,catalog});
