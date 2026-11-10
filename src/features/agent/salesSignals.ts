@@ -37,7 +37,7 @@ export function detectCommercialSignal(customerMessages:string[]):CommercialSign
  if(/\b(?:agend(?:aste|aron|ame|arme|ar|a|en|o)|programame|recuerdame|avisame|me avisas|escribeme|me escribes|contactame|llamame|solicito seguimiento)\b/u.test(last)&&
    !/\b(?:no (?:me )?(?:agendes|escribas|contactes|llames|avises))\b/u.test(last))
   return {key:"followup",label:"Solicita seguimiento",priority:"medium",handoff:false,followupSuggested:true,
-   nextAction:"Validar consentimiento, contacto y fecha/hora antes de registrar un seguimiento real."};
+   nextAction:"Aún no está agendado. Validar consentimiento, contacto y fecha/hora antes de registrar un seguimiento real."};
  if(/\b(?:iphone|apple|samsung|motorola|xiaomi|redmi)\b/u.test(last)&&!/\b(?:ulefone)\b/u.test(last))
   return {key:"missing",label:"Verificar producto solicitado",priority:"medium",handoff:false,followupSuggested:true,
    nextAction:"Comprobar ese modelo en el catálogo; no asumir que la marca está ausente o que existe stock."};
