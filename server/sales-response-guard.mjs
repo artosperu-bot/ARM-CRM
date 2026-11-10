@@ -57,20 +57,6 @@ export function protectSalesResponse(reply,{catalog=[],buyer=null,simulated=fals
  if(buyer?.requires_human){
   return {reply:humanHandoffUnconfirmedReply(buyer),blocked:true,reason:"human_requested"};
  }
- // No checkout tool is wired into either the private CRM chat or WhatsApp
- // sandbox. A buying signal means the customer wants to proceed, NOT that an
- // order, payment link, reservation or handoff was created.
- if(intent==="comprar"){
-  const chosen=(Array.isArray(catalog)?catalog:[]).find(x=>x?.partnumber===buyer?.matched_partnumber);
-  const product=chosen?.titulo||chosen?.title||buyer?.customer_reference||"ese producto";
-  const qty=Number.isInteger(buyer?.quantity)&&buyer.quantity>1?
-    "las "+buyer.quantity+" unidades de ":"";
-  const label=qty+String(product).slice(0,95);
-  const reply=simulated?
-   "Es una simulación: no se ha registrado ningún pedido ni pago para "+label+".":
-   "Entiendo que quieres comprar "+label+". Todavía no puedo crear un pedido ni un enlace de pago desde este chat. Antes hay que confirmar precio, disponibilidad y condiciones vigentes con STECH.";
-  return {reply,blocked:true,reason:"purchase_not_ready"};
- }
  if(buyer?.current_topic==="plazo_reclamo"&&asksFormalComplaintReplyDeadline(buyer?.last_message))
   return {reply:lawfulComplaintDeadlineReply,blocked:true,reason:"official_complaint_reply_deadline"};
  if(buyer?.current_topic==="libro_reclamaciones")
@@ -154,6 +140,21 @@ export function protectSalesResponse(reply,{catalog=[],buyer=null,simulated=fals
     (buyer?.quantity&&Number.isInteger(buyer.quantity)?buyer.quantity+" unidades":"el producto")+
     ". No tengo un descuento aprobado para confirmarte.",
     blocked:true,reason:"unapproved_discount"};
+ // No checkout tool is wired into either the private CRM chat or WhatsApp
+ // sandbox. A buying signal means the customer wants to proceed, NOT that an
+ // order, payment link, reservation or handoff was created.
+  if(intent==="comprar"){
+   const chosen=(Array.isArray(catalog)?catalog:[]).find(x=>x?.partnumber===buyer?.matched_partnumber);
+   const product=chosen?.titulo||chosen?.title||buyer?.customer_reference||"ese producto";
+   const qty=Number.isInteger(buyer?.quantity)&&buyer.quantity>1?
+    "las "+buyer.quantity+" unidades de ":"";
+   const label=qty+String(product).slice(0,95);
+   const reply=simulated?
+   "Es una simulación: no se ha registrado ningún pedido ni pago para "+label+".":
+   "Entiendo que quieres comprar "+label+". Todavía no puedo crear un pedido ni un enlace de pago desde este chat. Antes hay que confirmar precio, disponibilidad y condiciones vigentes con STECH.";
+   return {reply,blocked:true,reason:"purchase_not_ready"};
+  }
+
   return {reply:polishCommercialReply(text,buyer),blocked:false,reason:null};
  }
  const reason=wrongProduct?"product_mismatch":repeatedModelRequest?"redundant_model_question":moneyViolation?"unverified_price":affordabilityViolation?"unverified_affordability":actionViolation?"unconfirmed_action":
