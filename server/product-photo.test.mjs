@@ -2,6 +2,9 @@ import {describe,it,expect} from "vitest";
 import {requestsProductPhoto,safePublicImageUrl,verifiedProductPhoto,productPhotoUnavailableReply} from "./product-photo.mjs";
 import {enrichCatalog} from "./product-knowledge.mjs";
 import {buildBuyerContext} from "./buyer-reasoning.mjs";
+import {snapshotSalesMemory} from "./sales-memory.mjs";
+import {matchCustomerProduct,affirmativeProductText} from "./catalog-matching.mjs";
+import {isExplicitProductSwitch} from "./customer-topic.mjs";
 import {packSalesCatalog} from "./sales-policy.mjs";
 const row=(sku,title)=>({titulo:title,marca:"ULEFONE",partnumber:sku});
 const products=[
@@ -112,6 +115,31 @@ describe("ALEX verified product photographs (any future category)",()=>{
   expect(a.quantity).toBe(2);
   const c=buildBuyerContext(["armor x13 precio x5"],{catalog:products});
   expect(c.quantity).toBe(5);
+ });
+ it("follows 'Armor 22, no del X13' instead of reusing the previous image",()=>{
+  const previous=buildBuyerContext(["manda foto del Armor X13"],{catalog:products});
+  const message="mejor ahora pasame foto del Armor 22, no del X13";
+  expect(affirmativeProductText(message).toLowerCase()).not.toMatch(/\bx13\b/);
+  expect(isExplicitProductSwitch(message)).toBe(true);
+  const match=matchCustomerProduct(message,products);
+  expect(match?.partnumber).toBe("ARMOR-22-256G");
+  const next=buildBuyerContext([message],{catalog:products,memory:snapshotSalesMemory(previous)});
+  expect(next.matched_partnumber).toBe("ARMOR-22-256G");
+  const both={
+   "ARMOR-22-256G":{product_image:{...fact,
+     value:{verified_sku:"ARMOR-22-256G",url:"https://store.ulefone.com/cdn/shop/files/Rugged_Phone_Armor_22_Night_Vision_Camera.jpg?v=1762843122&width=1024"},
+     source_url:"https://store.ulefone.com/es/products/armor-22"}},
+   ...factsByPn
+  };
+  const img=verifiedProductPhoto({buyer:next,catalog:products,factsByPn:both});
+  expect(img?.partnumber).toBe("ARMOR-22-256G");
+  expect(img.url).toContain("Armor_22_Night");
+  expect(img.url).not.toContain("Armor_X_13");
+ });
+ it("works if rejected model is mentioned before the requested model",()=>{
+  const text="no del X13, mejor ahora mandame foto del Armor 22";
+  const next=buildBuyerContext([text],{catalog:products});
+  expect(next.matched_partnumber).toBe("ARMOR-22-256G");
  });
  it("returns brief natural answers when photo cannot be verified",()=>{
   expect(productPhotoUnavailableReply(buyer("manda foto"))).toMatch(/no tengo una foto verificada/i);
