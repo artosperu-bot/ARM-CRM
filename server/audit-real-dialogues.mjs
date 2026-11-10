@@ -6,7 +6,7 @@
 import {readFileSync} from "node:fs";
 import {buildBuyerContext,buyerGuidance} from "./buyer-reasoning.mjs";
 import {snapshotSalesMemory} from "./sales-memory.mjs";
-import {isExplicitProductSwitch} from "./customer-topic.mjs";
+import {isExplicitProductSwitch,selectCustomerPromptInput} from "./customer-topic.mjs";
 import {matchCustomerProduct} from "./catalog-matching.mjs";
 import {salesInstructions} from "./sales-policy.mjs";
 import {reviewCommercialTurn} from "./commercial-service-standard.mjs";
@@ -135,7 +135,7 @@ async function execute(s){
     headers:{"Authorization":"Bearer "+env.OPENAI_API_KEY,"Content-Type":"application/json"},
     body:JSON.stringify({model:"gpt-5.4-mini",store:false,max_output_tokens:380,reasoning:{effort:"none"},
       text:{format:crmResponseSchema},instructions:prompt(buyer,turnCatalog),
-      input:[...history,{role:"user",content:question}]})
+      input:selectCustomerPromptInput(history,question)})
    });
    requests++;
    if(!api.ok){report.push({turn:i+1,q:question,error:"HTTP_"+api.status});break;}
