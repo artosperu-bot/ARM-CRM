@@ -14,6 +14,7 @@ export function requestsProductPhoto(message){
  if(/\b(?:toma|saca|captura|hace|graba|calidad de)\s+(?:buenas?\s+)?(?:fotos?|imagenes?)\b/u.test(s)
     && !/\b(?:manda|pasa|envia|enviame|muestra|muestrame|ensena|quiero ver|tienes fotos|foto del equipo)\b/u.test(s))
   return false;
+ if(/^(?:fotos?|fotitos?|imagen(?:es)?)(?:\s+(?:del?|de la|para|por favor))?\b/u.test(s))return true;
  return /\b(?:fotos?|fotitos?|fotografias?|imagenes?|imagen|fotito|fotos)\b/u.test(s)&&
     /\b(?:manda(?:me)?|pasame|pasa|envia(?:me)?|mandame|ense[nñ]a(?:me)?|muestra(?:me)?|quiero|puedo ver|tienes|tienen|necesito|ver|env[ií]a|mostra(?:me)?|compart[eí](?:me)?|mostrar)\b/u.test(s)
     || /\b(?:muestrame|mu[eé]strame|ensename|ens[eé]ñame)\s+(?:como (?:es|se ve)|el equipo|la laptop|el celular|el producto|el telefono)\b/u.test(s)
