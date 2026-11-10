@@ -46,6 +46,18 @@ describe("ALEX verified product photographs (any future category)",()=>{
   const x=verifiedProductPhoto({buyer:buyer("manda foto del Armor 22","ARMOR-22-256G"),catalog:products,factsByPn});
   expect(x).toBeNull();
  });
+ it("never sends old Armor X13 photo when buyer explicitly asks Armor 22",()=>{
+  const b=buyer("oye pasame foto del Armor 22","ARMOR-X13");
+  expect(verifiedProductPhoto({buyer:b,catalog:[products[0]],factsByPn})).toBeNull();
+ });
+ it("never sends old Ulefone photo when buyer asks for a Samsung",()=>{
+  const b=buyer("manda foto de la Samsung Tab S10","ARMOR-X13");
+  expect(verifiedProductPhoto({buyer:b,catalog:[products[0]],factsByPn})).toBeNull();
+ });
+ it("never sends a single image when multiple manufacturers are requested",()=>{
+  const b=buyer("fotos de Ulefone y Samsung","ARMOR-X13");
+  expect(verifiedProductPhoto({buyer:b,catalog:[products[0]],factsByPn})).toBeNull();
+ });
  it("does not send images for references unverified in the catalog",()=>{
   const x=verifiedProductPhoto({buyer:{customer_reference:"SAMSUNG-X1",matched_partnumber:null,last_message:"manda foto del Samsung X1"},catalog:products,factsByPn});
   expect(x).toBeNull();
