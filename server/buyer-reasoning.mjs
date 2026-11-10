@@ -8,7 +8,7 @@ import {matchCustomerProduct,quantityForAnyCatalogItem} from "./catalog-matching
 const norm=(v)=>String(v||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/\s+/g," ").trim();
 const RX={
   device:/\b(?:laptops?|notebooks?|computadoras?|pcs?|impresoras?|tablets?|celulares?|telefonos?|smartphones?|equipos?)\b/u,
-  purchase:/\b(?:quiero comprar(?:lo|la|los|las)?|voy a comprar(?:lo|la|los|las)?|lo compro|la compro|los compro|las compro|me lo llevo|me la llevo|como pago|donde pago|pasame (?:el|un) (?:link|enlace) de pago|confirmo la compra|procedamos con (?:la )?compra)\b/u,
+  purchase:/\b(?:quiero comprar(?:lo|la|los|las)?|voy a comprar(?:lo|la|los|las)?|lo compro|la compro|los compro|las compro|me lo llevo|me la llevo|como pago|donde pago|pasame (?:el|un) (?:link|enlace) de pago|confirmo la compra|procedamos con (?:la )?compra|(?:siguiente paso|como hago|que sigue|como procedo)\s+(?:para\s+)?comprar(?:lo|la|los|las)?|(?:siguiente paso|que sigue)\s+para\s+(?:la\s+)?compra)\b/u,
   cancelPurchase:/\b(?:ya no (?:quiero|voy a) comprar|no (?:quiero|voy a) comprar|cancele? (?:la )?compra|no me interesa comprar|no comprare|mejor no compro)\b/u,
   quotation:/\b(?:cotizaci[oó]n|cotizar|cotizame|cotiza|proforma|presupuesto para|orden de compra)\b/u,
   price:/\b(?:precio|cuanto cuesta|cuanto sale|cuanto vale|a cuanto|cuanto me sale|valor del (?:producto|equipo))\b/u,
@@ -23,7 +23,7 @@ const RX={
   thanks:/^(?:gracias(?: por todo)?|muchas gracias|nada mas|eso seria todo|listo gracias)[!. ]*$/u,
   budget:/\b(?:presupuesto|presupuestado|maximo|puedo gastar|cuento con|hasta|dispongo de)\b/u,
   compatibility:/\b(?:sirve|funciona|compatible|compatibilidad|se adapta|conector|potencia|puerto|watts?|65w|carga mi)\b/u,
-  delivery:/\b(?:entrega(?:n|r)?|despacho|env[ií]o|llega(?:r[áa])?|delivery|reparto)\b/u
+  delivery:/\b(?:entrega(?:n|r)?|despacho|env[ií]o|llega(?:r[áa])?|delivery)\b/u
 };
 const numberWords={un:1,una:1,uno:1,dos:2,tres:3,cuatro:4,cinco:5,seis:6,siete:7,ocho:8,nueve:9,diez:10};
 const amountValue=(s)=>{
@@ -73,12 +73,12 @@ function classifyLatest(text){
  if(RX.human.test(text)||RX.complaint.test(text))return "asesor";
  if(RX.purchase.test(text))return "comprar";
  if(RX.objection.test(text))return "objecion";
- if(RX.compare.test(text))return "comparar";
+ if(RX.compare.test(text)&&!/\b(?:no (?:quiero|necesito|me interesa|deseo) (?:comparar|comparaciones?|alternativas?|otras opciones)|sin (?:comparar|comparaciones?))\b/u.test(text))return "comparar";
  if(RX.quotation.test(text))return "cotizar";
  if(RX.price.test(text))return "consultar_precio";
  if(RX.compatibility.test(text))return "compatibilidad";
  if(RX.delivery.test(text))return "entrega";
- if(RX.thanks.test(text))return "despedida";
+ if(RX.thanks.test(text)||/\b(?:gracias,? por ahora (?:lo )?voy a pensar|lo (?:voy a|tengo que) pensar|por ahora (?:solo )?estoy averiguando,? gracias|por el momento nada mas)\b/u.test(text))return "despedida";
  if(RX.confirmation.test(text))return "confirmacion";
  if(/\b(?:hay|tienen|tienes|disponible|stock|entrega)\b/u.test(text))return "disponibilidad";
  return "consulta";
