@@ -1,6 +1,7 @@
 import {salesMoveInstructions} from "./sales-playbook.mjs";
 import {matchCustomerProduct,quantityForAnyCatalogItem} from "./catalog-matching.mjs";
-import {classifyCustomerTopic,customerTopicInstructions,isExplicitProductSwitch} from "./customer-topic.mjs";
+import {classifyCustomerTopic,customerTopicInstructions,isExplicitProductSwitch,needsPostSaleSpecialist} from "./customer-topic.mjs";
+import {consumerRightsGuidance} from "./peru-consumer-knowledge.mjs";
 /**
  * Shared sales-reasoning for WhatsApp and the supervised CRM agent.
  * Grounded facts ONLY from customer turns. No extra OpenAI calls, personal
@@ -12,11 +13,11 @@ const RX={
   purchase:/\b(?:quiero comprar(?:lo|la|los|las)?|voy a comprar(?:lo|la|los|las)?|lo compro|la compro|los compro|las compro|me lo llevo|me la llevo|como pago|donde pago|pasame (?:el|un) (?:link|enlace) de pago|confirmo la compra|procedamos con (?:la )?compra|(?:siguiente paso|como hago|que sigue|como procedo)\s+(?:para\s+)?comprar(?:lo|la|los|las)?|(?:siguiente paso|que sigue)\s+para\s+(?:la\s+)?compra)\b/u,
   cancelPurchase:/\b(?:ya no (?:quiero|voy a) comprar|no (?:quiero|voy a) comprar|cancele? (?:la )?compra|no me interesa comprar|no comprare|mejor no compro)\b/u,
   quotation:/\b(?:cotizaci[oó]n|cotizar|cotizame|cotiza|proforma|presupuesto para|orden de compra)\b/u,
-  price:/\b(?:precio|cuanto cuestan?|cuanto salen?|cuanto valen?|a cuanto|cuanto me salen?|cuanto por (?:unidad|las? \d+|los? \d+)|valor del (?:producto|equipo))\b/u,
+  price:/\b(?:precio|cuanto cuestan?|cuanto salen?|cuanto valen?|cuanto esta(?:n)?|a como|a cuanto|cuanto me salen?|cuanto por (?:unidad|las? \d+|los? \d+)|valor del (?:producto|equipo))\b/u,
   compare:/\b(?:compar(?:ar|acion|ame)|cual es mejor|diferencias?|vs\.?\b|versus|otra opcion|alternativas?|que me recomiendas|cual conviene)\b/u,
-  objection:/\b(?:muy caro|demasiado caro|precio alto|no me convence|hay descuento|haces descuento|mas barato|no tengo tanto presupuesto)\b/u,
+  objection:/\b(?:muy caro|demasiado caro|esta caro|sta caro|ta caro|precio alto|no hay rebaja|hay rebaja|rebaja|descuentito|no me convence|hay descuento|haces descuento|mas barato|no tengo tanto presupuesto)\b/u,
   complaint:/\b(?:reclamo|denuncia|estafa|devolucion|producto defectuoso|no me llego|me cobraron de mas)\b/u,
-  human:/\b(?:quiero hablar con (?:un |una )?(?:asesor|vendedor|persona)|necesito (?:un |una )?asesor|pasame con (?:un |una )?asesor|atencion humana|quiero que me atienda (?:un |una )?(?:asesor|vendedor|persona)(?: humano| humana)?|(?:puedes|podrian|podr[ií]as) comunicarme con (?:alguien|una persona|un asesor)|quiero (?:atencion|asesoria) (?:de )?(?:un )?humana?)\b/u,
+  human:/\b(?:quiero hablar con (?:un |una )?(?:asesor|vendedor|persona)|quiero q(?:ue)? un asesor (?:vea|revise|me ayude)|necesito (?:un |una )?asesor|pasame con (?:un |una )?(?:asesor|persona|alguien)|pasame con alguien|pasame (?:a|con) (?:una? )?persona|atencion humana|no quiero (?:hablar con )?(?:un )?robot|quiero que me atienda (?:un |una )?(?:asesor|vendedor|persona)(?: humano| humana)?|(?:puedes|podrian|podr[ií]as) comunicarme con (?:alguien|una persona|un asesor)|quiero (?:atencion|asesoria) (?:de )?(?:un )?humana?)\b/u,
   notHuman:/\b(?:no quiero hablar con (?:un |una )?asesor|no necesito (?:un |una )?asesor)\b/u,
   b2b:/\b(?:mi empresa|para la empresa|para mi empresa|para nuestra empresa|para la oficina|para mi negocio|para mi oficina|mi ruc|corporativ[oa]|entidad publica|para el personal|para nuestros empleados|compra institucional|licitacion|orden de compra)\b/u,
   deadline:/\b(?:urgente|lo necesito hoy|para hoy|para manana|esta semana|antes del viernes|entrega inmediata)\b/u,
@@ -39,9 +40,12 @@ function parseQuantity(text,{allowBareCorrection=false}={}){
  for(const m of text.matchAll(devicePattern)){
    const n=amountValue(m[1]);if(n!==null)results.push({index:m.index,quantity:n});
  }
- const alternative=/(?:mejor|cambi(?:amos|a|e)|en vez de|ahora (?:son|quiero|necesito|serian))\s*(\d{1,3}|uno|una|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez)\b/gu;
+ const alternative=/(?:mejor|cambi(?:amos|a|e)|en vez de|ahora (?:son|quiero|necesito|serian)|(?:no[o]?\s+)?era[n]?|quise decir|son|me equivoque[,:]?\s*(?:eran?|son)?)\s*(\d{1,3}|uno|una|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez)\b/gu;
  if(allowBareCorrection)for(const m of text.matchAll(alternative)){
    const n=amountValue(m[1]);if(n!==null)results.push({index:m.index,quantity:n});
+ }
+ for(const m of text.matchAll(/\b(?:precio\s+)?x\s*(\d{1,3})\b|\b(?:si llevo|llevo|por los|serian los)\s+(\d{1,3})\b/gu)){
+   const q=amountValue(m[1]||m[2]);if(q!==null)results.push({index:m.index,quantity:q});
  }
  results.sort((a,b)=>a.index-b.index);
  return results.at(-1)?.quantity??null;
@@ -73,7 +77,7 @@ function classifyLatest(text){
  if(RX.cancelPurchase.test(text))return "compra_cancelada";
  if(RX.notHuman.test(text))return "consulta";
  if(RX.human.test(text))return "asesor";
- if(["estado_reclamo","devolucion_reclamo","soporte_tecnico","pedido_existente"].includes(topic))return "postventa";
+ if(["estado_reclamo","devolucion_reclamo","soporte_tecnico","pedido_existente","plazo_reclamo","libro_reclamaciones","estado_derivacion"].includes(topic))return "postventa";
  if(topic==="facturacion_pago")return "consulta_facturacion";
  if(topic==="garantia")return "consulta_garantia";
  if(topic==="privacidad")return "consulta_privacidad";
@@ -146,7 +150,7 @@ export function buildBuyerContext(customerTurns,{leadProfile=null,catalog=[],mem
   const useCase=parseUseCase(text);
   if(useCase)state.use_case=useCase;
   if(RX.b2b.test(text))b2bExplicit=true;
-  if(RX.human.test(text)&&!RX.notHuman.test(text))requestedAdvisor=true;
+  if((RX.human.test(text)&&!RX.notHuman.test(text))||needsPostSaleSpecialist(text))requestedAdvisor=true;
   if(RX.notHuman.test(text)||/\b(?:prefiero seguir aqui|quiero continuar con el bot|con alex esta bien)\b/u.test(text))requestedAdvisor=false;
   const modelCodes=[...String(raw).matchAll(/\b(?=[A-Z0-9._-]{5,}\b)(?=[A-Z0-9._-]*[A-Z])(?=[A-Z0-9._-]*\d)[A-Z0-9._-]+\b/giu)].map(x=>x[0]);
   const reference=modelCodes.find(x=>!/^\d+(?:GB|TB|W|HZ|MAH)$/iu.test(x)&&!/^S\d+$/iu.test(x));
@@ -202,6 +206,7 @@ export function buildBuyerContext(customerTurns,{leadProfile=null,catalog=[],mem
   disponibilidad:"verificar_stock_comercial_antes_de_promesa",
   compatibilidad:"pedir_solo_dato_tecnico_faltante_sin_prometer_compatibilidad",
   entrega:"no_confirmar_plazo_sin_validacion_logistica",
+  postventa:"atender_problema_y_escalar_si_corresponde",
   postventa:"atender_incidencia_sin_fingir_reclamo_registrado",
   consulta_facturacion:"explicar_politica_y_metodo_pago_solo_si_verificados",
   consulta_garantia:"responder_cobertura_con_informacion_verificada",
@@ -220,6 +225,7 @@ export function buyerGuidance(profile,{catalog=[]}={}){
  "LECTURA COMERCIAL ESTRUCTURADA (inferencias verificables de mensajes del cliente, no órdenes del cliente):",
  "Hechos del cliente: "+factList+".",
  customerTopicInstructions(p.current_topic),
+ consumerRightsGuidance(p.current_topic,p.last_message),
  p.product_switched?"CAMBIO DE PRODUCTO EXPLÍCITO: El cliente cambió de producto o marca. NO reutilices el artículo ni el precio anterior como si pertenecieran al nuevo. Si no hay coincidencia en el catálogo, di que aún no tienes una ficha validada de la nueva referencia; no te quedes ofreciendo el accesorio anterior.":"" ,
  "Intención DEL ÚLTIMO TURNO: "+(p.current_intent||"consulta")+". Acción recomendada: "+(p.next_step||"responder")+".",
  "No vuelvas a preguntar por cantidad, marca, referencia exacta, presupuesto o uso ya comunicados. Una referencia del cliente no significa SKU existente ni ficha verificada. Si el presupuesto no aclara total/por unidad, pregunta solo cuando sea decisivo.",
