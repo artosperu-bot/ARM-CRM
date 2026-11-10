@@ -6,6 +6,7 @@ import {crmResponseSchema} from "./followup-automation.mjs";
 import {estimateUsd} from "./agent-cost.mjs";
 import {whatsappPresentationInstructions,formatWhatsAppReply} from "./whatsapp-format.mjs";
 import {buildBuyerContext,buyerGuidance} from "./buyer-reasoning.mjs";
+import {isExplicitProductSwitch} from "./customer-topic.mjs";
 import {protectSalesResponse} from "./sales-response-guard.mjs";
 import {normalizeSalesMemory,snapshotSalesMemory} from "./sales-memory.mjs";
 
@@ -64,7 +65,8 @@ export function createWhatsAppTestResponder({
   // product is only a search hint; retrieved evidence must verify its SKU.
   const previousMemory=normalizeSalesMemory(leadProfile?.sales_memory);
   const hint=previousMemory?.customer_reference||previousMemory?.selected_partnumber;
-  const catalogTurns=hint?[...buyerTurns.slice(-14),hint,event.text]:buyerTurns;
+  const catalogTurns=isExplicitProductSwitch(event.text)?[event.text]:
+    hint?[...buyerTurns.slice(-14),hint,event.text]:buyerTurns;
   const lookup=await retrieveSalesCatalog(client,thread.workspace_id,catalogTurns,{limit:18});
   const pn=lookup.products.map(x=>x.partnumber);
   const offers=testOffers&&pn.length?await client.from("arm_offer_simulations")
