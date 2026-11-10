@@ -13,7 +13,8 @@ describe("ALEX real dialogue review: grounded conversation coherence",()=>{
   expect(buyer.requires_human).toBe(true);
   const reply=protectSalesResponse("Claro, pásame tu nombre completo y celular.",{catalog,buyer});
   expect(reply.reason).toBe("human_requested");
-  expect(reply.reply).toBe("Claro, ahora te paso con un asesor.");
+  expect(reply.reply).toMatch(/no (?:hay|tengo) confirmaci[oó]n|a[uú]n no hay|todav[ií]a no se ha confirmado/i);
+  expect(reply.reply).not.toMatch(/ahora te paso|ya te pas[eé]|un asesor asignado en este chat/i);
   expect(reply.reply).not.toMatch(/nombre|celular|p[aá]same/i);
  });
  it("does not invent advisor assignment on first request",()=>{
