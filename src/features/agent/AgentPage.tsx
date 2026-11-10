@@ -42,7 +42,7 @@ export default function AgentPage({workspaceId,contacts,onNavigate,onCreateFollo
  const lastQuestion=customers.at(-1)||"";
  async function createTask(e:React.FormEvent){
   e.preventDefault();setError("");setNotice("");
-  if(simulated){setError("No se pueden crear seguimientos reales en simulación.");return;}
+  if(simulated||signal?.key==="ended"){setError("No se puede registrar: la conversación es de prueba o el comprador desistió.");return;}
   if(!approved){setError("Confirma que existe autorización para el seguimiento.");return;}
   if(!linkedContact){setError("Selecciona un cliente registrado.");return;}
   if(!dueAt||Number.isNaN(Date.parse(dueAt))||new Date(dueAt).getTime()<=Date.now()){
@@ -57,7 +57,7 @@ export default function AgentPage({workspaceId,contacts,onNavigate,onCreateFollo
   finally{setSavingAction(false);}
  }
  async function createOpportunity(){
-  if(simulated){setError("No se pueden crear oportunidades reales en simulación.");return;}
+  if(simulated||signal?.key==="ended"){setError("No se puede crear una oportunidad: la conversación es de prueba o el comprador desistió.");return;}
   if(!linkedContact){setError("Selecciona un cliente antes de crear la oportunidad.");return;}
   setSavingAction(true);setError("");setNotice("");
   try{
@@ -122,6 +122,7 @@ export default function AgentPage({workspaceId,contacts,onNavigate,onCreateFollo
    setQuestion("");setSelected(result.conversationId);
    setUsage(result.usage);
    setCommercial(result.commercial||null);
+   setActionOpen(false);setLinkedContact("");setApproved(false);setDueAt("");
    setNotice(result.booking?.saved?"Seguimiento registrado automáticamente en Supabase.": "Respuesta real de OpenAI · sin envío al cliente.");
    const {data,error:turnError}=await supabase.from("arm_agent_turns").select("id,role,content,created_at")
     .eq("workspace_id",workspaceId).eq("conversation_id",result.conversationId)
@@ -173,12 +174,12 @@ export default function AgentPage({workspaceId,contacts,onNavigate,onCreateFollo
        }}><CalendarClock size={15}/> Gestionar en CRM</button>}
       </div>}
       {commercial&&<div className="agent-readiness" role="status">
-       <strong>Estado comercial de esta consulta · sin operación registrada</strong>
+       <strong>{signal?.key==="ended"?"El cliente decidió no continuar · ninguna gestión pendiente":"Estado comercial de esta consulta · sin operación registrada"}</strong>
        <div><span><b>Producto:</b> {commercial.product?.title||"Por identificar"}</span><span><b>Cantidad:</b> {commercial.quantity??"Por confirmar"}</span>{commercial.budget&&<span><b>Presupuesto del cliente:</b> S/ {commercial.budget.pen} ({commercial.budget.scope==="total"?"total":commercial.budget.scope==="por_unidad"?"por unidad":"sin aclarar"})</span>}</div>
-       <small><b>Pendiente:</b> {commercial.blockers.map(x=>blockerLabels[x]||x).join(" · ")}. No hay cotización, pedido, pago ni asesor asignado.</small>
+       {signal?.key==="ended"?<small>Respetar su decisión. No solicitar datos, registrar seguimientos ni insistir en comprar.</small>:<small><b>Pendiente:</b> {commercial.blockers.map(x=>blockerLabels[x]||x).join(" · ")}. No hay cotización, pedido, pago ni asesor asignado.</small>}
        {commercial.canManuallyCreateOpportunity&&signal?.followupSuggested&&!simulated&&<button type="button" className="secondary-button" onClick={()=>{setActionOpen(true);setLinkedContact("");setApproved(false);setDueAt("");setTask(("Retomar consulta: "+lastQuestion).slice(0,390));}}>Gestionar manualmente en CRM</button>}
       </div>}
-      {actionOpen&&!simulated&&<div className="agent-sales-action">
+      {actionOpen&&!simulated&&signal?.key!=="ended"&&<div className="agent-sales-action">
        <h3>Convertir conversación en acción comercial</h3>
        {!contacts.length?<div className="agent-action-notice">Todavía no hay clientes en ARM-CRM. Registra primero un contacto real y después vuelve a esta conversación.
         <button className="secondary-button" onClick={()=>onNavigate("clientes")}>Ir a Clientes</button></div>:
