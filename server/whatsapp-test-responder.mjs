@@ -6,6 +6,7 @@ import {crmResponseSchema} from "./followup-automation.mjs";
 import {estimateUsd} from "./agent-cost.mjs";
 import {whatsappPresentationInstructions,formatWhatsAppReply} from "./whatsapp-format.mjs";
 import {buildBuyerContext,buyerGuidance} from "./buyer-reasoning.mjs";
+import {affirmativeProductText} from "./catalog-matching.mjs";
 import {isExplicitProductSwitch,selectCustomerPromptInput} from "./customer-topic.mjs";
 import {protectSalesResponse} from "./sales-response-guard.mjs";
 import {normalizeSalesMemory,snapshotSalesMemory} from "./sales-memory.mjs";
@@ -67,7 +68,7 @@ export function createWhatsAppTestResponder({
   const previousMemory=normalizeSalesMemory(leadProfile?.sales_memory);
   const hint=previousMemory?.customer_reference||previousMemory?.selected_partnumber;
   const brandHint=typeof previousMemory?.brand==="string"&&!previousMemory?.selected_partnumber?previousMemory.brand:null;
-  const catalogTurns=isExplicitProductSwitch(event.text)?[event.text]:
+  const catalogTurns=isExplicitProductSwitch(event.text)?[affirmativeProductText(event.text)]:
     hint?[...buyerTurns.slice(-14),hint,event.text]:
     brandHint?[brandHint,event.text]:buyerTurns;
   const lookup=await retrieveSalesCatalog(client,thread.workspace_id,catalogTurns,{limit:18});
