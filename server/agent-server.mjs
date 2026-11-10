@@ -10,6 +10,7 @@ import {buildConversationContext} from "./conversation-context.mjs";
 import {validAgentRequest} from "./request-validation.mjs";
 import {buildBuyerContext,buyerGuidance} from "./buyer-reasoning.mjs";
 import {normalizeSalesMemory,snapshotSalesMemory} from "./sales-memory.mjs";
+import {affirmativeProductText} from "./catalog-matching.mjs";
 import {isExplicitProductSwitch,selectCustomerPromptInput} from "./customer-topic.mjs";
 import {protectSalesResponse,hideExactStockUnits} from "./sales-response-guard.mjs";
 import {assessCommercialReadiness} from "./commercial-readiness.mjs";
@@ -119,7 +120,7 @@ async function handle(req,res){
     context.filter(t=>t.role==="user").map(t=>t.content)),msg];
   const hint=priorMemory?.customer_reference||priorMemory?.selected_partnumber;
   const brandHint=typeof priorMemory?.brand==="string"&&!priorMemory?.selected_partnumber?priorMemory.brand:null;
-  const catalogTurns=isExplicitProductSwitch(msg)?[msg]:
+  const catalogTurns=isExplicitProductSwitch(msg)?[affirmativeProductText(msg)]:
     hint?[...lookupTurns.slice(-14,-1),hint,msg]:
     brandHint?[brandHint,msg]:lookupTurns;
   const lookup=await retrieveSalesCatalog(db,workspaceId,catalogTurns,{limit:18});
