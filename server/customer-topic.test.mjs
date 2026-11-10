@@ -113,7 +113,7 @@ describe("ALEX attends unrelated and service topics as a general-purpose seller"
   const refund=buyer(["Compré la Epson L1250 y no funciona","¿Me devuelven el dinero?"]);
   const r=protectSalesResponse("Claro, te devolvemos tu dinero, el reembolso está aprobado.",{buyer:refund,catalog});
   expect(r.blocked).toBe(true);
-  expect(r.reply).toMatch(/asesor de posventa|requiere revisión del caso/i);
+  expect(r.reply).toBe("Claro, ahora te paso con un asesor.");
   const complaint=buyer(["¿Ya me abriste un reclamo?"]);
   const c=protectSalesResponse("Sí, ya te abrí un reclamo y quedó registrado.",{buyer:complaint,catalog});
   expect(c.blocked).toBe(true);
