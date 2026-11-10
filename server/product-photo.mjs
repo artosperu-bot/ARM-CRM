@@ -33,7 +33,8 @@ function publicPhotoHost(raw){
  const h=String(raw||"").toLowerCase();
  return h.length<=253&&h.includes(".")&&/^[a-z0-9.-]+$/u.test(h)&&
    !/^\d{1,3}(?:\.\d{1,3}){3}$/u.test(h)&&
-   !/(?:^|\.)(?:localhost|local|internal|invalid|test|example|onion)$/u.test(h)&&
+   !/(?:^|\.)(?:localhost|local|internal|invalid|test|example|onion|lan|home)$/u.test(h)&&
+   !/(?:^|\.)(?:example\.(?:com|org|net)|nip\.io|sslip\.io)$/u.test(h)&&
    h.split(".").every(x=>x.length>0&&x.length<=63&&!x.startsWith("-")&&!x.endsWith("-"));
 }
 export function safePublicImageUrl(raw,sourceUrl){
