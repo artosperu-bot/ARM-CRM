@@ -103,6 +103,36 @@ describe("Lead intelligence: sales signals and safe automatic actions",()=>{
   expect(r.should_reply).toBe(false);
   expect(immediateStop("¿Puedes comunicarme con alguien?")).toBe(true);
  });
+ it("uses the most recent corrected quantity, not the first number in transcript",()=>{
+  const r=analyzeSalesConversation([
+   msg("Quiero comprar 3 laptops Lenovo para la empresa"),
+   msg("Noo era 2, me equivoqué"),
+   msg("¿Y cuánto salen esas dos?")
+  ]);
+  expect(r.quantity_min).toBe(2);
+  expect(r.is_b2b).toBe(true);
+  expect(r.signals).toContain("cliente_empresa_o_volumen");
+ });
+ it("does not maintain a high-intent buying label when buyer becomes undecided",()=>{
+  const r=analyzeSalesConversation([
+   msg("Quiero comprar el Armor X13, ¿cuánto cuesta?"),
+   msg("Por ahora solo estoy averiguando, aún no decido comprar")
+  ]);
+  expect(r.signals).not.toContain("compra_explicita");
+  expect(r.signals).toContain("compra_aun_no_decidida");
+  expect(r.intent).not.toBe("compra");
+  expect(r.priority).not.toBe("alta");
+  expect(r.followup_suppressed).toBe(true);
+ });
+ it("retains a real buying signal when customer confirms the purchase again",()=>{
+  const r=analyzeSalesConversation([
+   msg("Quiero comprar el Armor X13"),
+   msg("Por ahora solo estoy averiguando"),
+   msg("Listo, lo compro")
+  ]);
+  expect(r.intent).toBe("compra");
+  expect(r.signals).toContain("compra_explicita");
+ });
  it("conservative priority is a rule-based score, not probability",()=>{
    const r=analyzeSalesConversation([msg("Hola")]);
    expect(r.score).toBeGreaterThanOrEqual(0);
