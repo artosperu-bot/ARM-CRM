@@ -181,7 +181,7 @@ describe("ALEX real dialogue review: grounded conversation coherence",()=>{
   const b=buildBuyerContext(["Necesito 2 Epson L1250, ¿cuál es el siguiente paso para comprarlas?"],{catalog:p});
   expect(b.current_intent).toBe("comprar");
   const guarded=protectSalesResponse("Envíame tu nombre completo y tu teléfono para registrar el pedido.",{buyer:b,catalog:p});
-  expect(guarded.reason).toBe("unconfirmed_action");
+  expect(guarded.reason).toBe("premature_personal_data");
   expect(guarded.reply).not.toMatch(/env[ií]ame|nombre completo|tel[eé]fono/i);
  });
  it("accepts buyer who wants to think without pushing further",()=>{
