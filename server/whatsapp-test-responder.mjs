@@ -9,6 +9,7 @@ import {buildBuyerContext,buyerGuidance} from "./buyer-reasoning.mjs";
 import {isExplicitProductSwitch,selectCustomerPromptInput} from "./customer-topic.mjs";
 import {protectSalesResponse} from "./sales-response-guard.mjs";
 import {normalizeSalesMemory,snapshotSalesMemory} from "./sales-memory.mjs";
+import {requestsProductPhoto,verifiedProductPhoto,productPhotoUnavailableReply} from "./product-photo.mjs";
 
 function textFrom(response){
   return (response.output||[]).filter(o=>o.type==="message"&&o.role==="assistant")
@@ -83,6 +84,44 @@ export function createWhatsAppTestResponder({
   const buyer=buildBuyerContext(previousMemory?[event.text]:buyerTurns,{
     leadProfile,catalog,memory:previousMemory
   });
+  if(requestsProductPhoto(event.text)){
+    const photo=verifiedProductPhoto({buyer,catalog,factsByPn:lookup.factsByPn});
+    // No LLM call: only a previously reviewed, exact-SKU public photo may be
+    // sent. With no evidence, a short text answer is safer than any substitute.
+    const responseText=photo?.caption||productPhotoUnavailableReply(buyer);
+    const {data:freshThread,error:freshError}=await client.from("arm_threads")
+      .select("status,assigned_to").eq("id",thread.id)
+      .eq("workspace_id",thread.workspace_id).maybeSingle();
+    if(freshError||!freshThread)throw new Error("ARM_PHOTO_THREAD_RECHECK_FAILED");
+    if(freshThread.status!=="pending"||freshThread.assigned_to)
+      return {status:"human_handoff"};
+    const {data:insight,error:insightError}=await client.from("arm_lead_insights")
+      .select("opt_out,requires_human").eq("thread_id",thread.id).maybeSingle();
+    if(insightError)throw new Error("ARM_PHOTO_INSIGHT_RECHECK_FAILED");
+    if(insight?.opt_out||insight?.requires_human)
+      return {status:"human_handoff"};
+    const body=photo?
+      {messaging_product:"whatsapp",recipient_type:"individual",to:event.sender,
+       type:"image",image:{link:photo.url,caption:photo.caption}}:
+      {messaging_product:"whatsapp",recipient_type:"individual",to:event.sender,
+       type:"text",text:{preview_url:false,body:responseText}};
+    const sentResponse=await fetcher("https://graph.facebook.com/"+
+      encodeURIComponent(graphVersion)+"/"+encodeURIComponent(phoneId)+"/messages",{
+      method:"POST",headers:{"Authorization":"Bearer "+whatsappToken,
+       "Content-Type":"application/json"},body:JSON.stringify(body)
+    });
+    if(!sentResponse.ok)throw new Error("WHATSAPP_PHOTO_HTTP_"+sentResponse.status);
+    const result=await sentResponse.json();
+    const messageId=result?.messages?.[0]?.id;
+    if(typeof messageId!=="string")throw new Error("WHATSAPP_PHOTO_UNCONFIRMED");
+    const {error:logError}=await client.from("arm_messages").insert({
+      workspace_id:thread.workspace_id,contact_id:thread.contact_id,thread_id:thread.id,
+      provider:"whatsapp",external_message_id:messageId,direction:"outbound",
+      message_type:photo?"image":"text",content:responseText,created_at:new Date().toISOString()
+    });
+    if(logError)throw new Error("WHATSAPP_PHOTO_LOG_FAILED");
+    return {status:"sent",messageId,type:photo?"image":"text",photoVerified:Boolean(photo)};
+  }
   const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),30000);
   let result;
   try{
