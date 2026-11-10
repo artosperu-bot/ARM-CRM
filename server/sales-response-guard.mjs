@@ -37,6 +37,8 @@ const redundantIdentifierRequest=/\b(?:(?:si\s+)?(?:me\s+)?(?:confirmas|confirme
 const phantomPreparation=/\b(?:puedo|podemos|podr[ií]a|voy\s+a|te\s+puedo)\s+(?:ayudarte\s+a\s+)?(?:preparar|armar|dejar\s+list[ao]|registrar|generar)\s+(?:la|las|el|los|una|un|tu|su)?\s*(?:referencia|detalle|resumen|solicitud|pedido|cotizaci[oó]n|proforma)\b/iu;
 const unexecutedHandoff=/\b(?:dejar|dejamos|dejo|registrar|registro|preparar|preparo|tener)\b.{0,95}\b(?:referencia|inter[eé]s|datos|solicitud|contacto|pedido|cotizaci[oó]n)\b.{0,80}\b(?:list[ao]|asesor|revisar|confirme|seguimiento|registrad[ao])\b|\b(?:referencia|inter[eé]s|solicitud|contacto)\b.{0,60}\b(?:list[ao]|registrad[ao])\b.{0,55}\b(?:asesor|seguimiento|revisar)\b/iu;
 const prematureCustomerDetails=/\b(?:me\s+falta(?:n)?|necesito|requiero|env[ií]ame|p[aá]same|ind[ií]came|dame|comp[aá]rteme|debes\s+(?:darme|enviarme))\b.{0,55}\b(?:tu\s+)?(?:nombre|apellido|celular|tel[eé]fono|correo|direcci[oó]n|dni|ruc)\b/iu;
+const unexecutedSupportOffer=/\b(?:puedo|podemos|voy\s+a|te\s+puedo)\s+(?:ayudar(?:te)?\s+a\s+)?(?:abrir|crear|registrar|dejar|enviar|derivar|escalar|levantar)\b.{0,100}\b(?:reclamo|ticket|caso|garant[ií]a|devoluci[oó]n|soporte|servicio\s+t[eé]cnico)\b/iu;
+const explicitlyNegatedOffer=/\b(?:no\s+(?:puedo|podemos|voy\s+a|te\s+puedo)|tampoco\s+(?:puedo|podemos))\s+(?:ayudar(?:te)?\s+a\s+)?(?:abrir|crear|registrar|dejar|enviar|derivar|escalar|levantar)\b/iu;
 const unsupportedSupportClaim=/\b(?:ya\s+(?:te\s+)?(?:abr[ií]|cre[eé]|registr[eé]|ingres[eé]|levant[eé]|notifiqu[eé]|asign[eé])(?=\s|[,.!?]|$).{0,65}\b(?:reclamo|ticket|caso|asesor|devoluci[oó]n)|(?:tu|su|el)\s+(?:reclamo|ticket|caso|devoluci[oó]n)\s+(?:ya\s+)?(?:est[aá]|qued[oó])\s+(?:abiert[oa]|registrad[oa]|aprobad[oa])\b)/iu;
 const unsupportedBillingClaim=/\b(?:s[ií][,.:]?\s*(?:emitimos|aceptamos|puedes pagar)|(?:emitimos|entregamos|te damos)\s+(?:factura|boleta)|(?:aceptamos|recibimos)\s+(?:pago\s+con\s+)?(?:tarjeta|visa|mastercard|yape|plin)|puedes pagar con (?:tarjeta|visa|mastercard|yape|plin))\b/iu;
 const unsupportedRefundClaim=/\b(?:te\s+(?:la|lo)\s+cambiamos|cambio inmediato (?:aprobado|asegurado|garantizado)|(?:ya\s+)?(?:aprobamos|aprobada)\s+(?:la|tu)\s+devoluci[oó]n|te\s+devolvemos\s+(?:el|tu)\s+dinero|reembolso\s+(?:aprobado|garantizado))\b/iu;
@@ -80,7 +82,7 @@ export function protectSalesResponse(reply,{catalog=[],buyer=null,simulated=fals
   const approvedPrice=!isUsd&&askedCommercialPrice&&priceValues.has(value);
   if(!approvedPrice&&!(isRestatedBudget&&!isUsd)){moneyViolation=true;break;}
  }
- const unsupportedPolicyClaim=unsupportedSupportClaim.test(text)||
+ const unsupportedPolicyClaim=unsupportedSupportClaim.test(text)||(unexecutedSupportOffer.test(text)&&!explicitlyNegatedOffer.test(text))||
    (buyer?.current_topic==="facturacion_pago"&&unsupportedBillingClaim.test(text))||
    (buyer?.current_topic==="devolucion_reclamo"&&unsupportedRefundClaim.test(text))||
    (buyer?.current_topic==="garantia"&&unsupportedWarrantyDuration.test(text));
