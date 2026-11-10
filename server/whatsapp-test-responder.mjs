@@ -10,7 +10,7 @@ import {affirmativeProductText} from "./catalog-matching.mjs";
 import {isExplicitProductSwitch,selectCustomerPromptInput} from "./customer-topic.mjs";
 import {protectSalesResponse} from "./sales-response-guard.mjs";
 import {normalizeSalesMemory,snapshotSalesMemory} from "./sales-memory.mjs";
-import {requestsProductPhoto,verifiedProductPhoto,productPhotoUnavailableReply} from "./product-photo.mjs";
+import {requestsProductPhoto,verifiedProductPhoto,productPhotoUnavailableReply,serializePhotoTurn,stripPhotoMarker} from "./product-photo.mjs";
 
 function textFrom(response){
   return (response.output||[]).filter(o=>o.type==="message"&&o.role==="assistant")
@@ -45,9 +45,9 @@ export function createWhatsAppTestResponder({
   if(countError)throw new Error("ARM_USAGE_CHECK_FAILED");
   if((count||0)>=maxDaily)return {status:"daily_limit"};
   const [recent,first]=await Promise.all([
-    client.from("arm_messages").select("id,direction,content,created_at").eq("thread_id",thread.id)
+    client.from("arm_messages").select("id,direction,content,message_type,created_at").eq("thread_id",thread.id)
       .order("created_at",{ascending:false}).limit(24),
-    client.from("arm_messages").select("id,direction,content,created_at").eq("thread_id",thread.id)
+    client.from("arm_messages").select("id,direction,content,message_type,created_at").eq("thread_id",thread.id)
       .order("created_at",{ascending:true}).limit(2)
   ]);
   if(recent.error||first.error)throw new Error("ARM_CONTEXT_READ_FAILED");
@@ -58,7 +58,7 @@ export function createWhatsAppTestResponder({
     history.set(m.id,m);
   }
   const ordered=[...history.values()].sort((a,b)=>String(a.created_at).localeCompare(String(b.created_at)))
-    .map(m=>({role:m.direction==="inbound"?"user":"assistant",content:m.content}));
+    .map(m=>({role:m.direction==="inbound"?"user":"assistant",content:m.direction==="inbound"?m.content:stripPhotoMarker(m.content)}));
   // First resolve the SKUs relevant to this request against the entire workspace
   // catalogue. This search is indexed and bounded, never "first 25 rows".
   const buyerTurns=ordered.filter(x=>x.role==="user").map(x=>x.content);
@@ -118,7 +118,7 @@ export function createWhatsAppTestResponder({
     const {error:logError}=await client.from("arm_messages").insert({
       workspace_id:thread.workspace_id,contact_id:thread.contact_id,thread_id:thread.id,
       provider:"whatsapp",external_message_id:messageId,direction:"outbound",
-      message_type:photo?"image":"text",content:responseText,created_at:new Date().toISOString()
+      message_type:photo?"image":"text",content:photo?serializePhotoTurn(photo):responseText,created_at:new Date().toISOString()
     });
     if(logError)throw new Error("WHATSAPP_PHOTO_LOG_FAILED");
     return {status:"sent",messageId,type:photo?"image":"text",photoVerified:Boolean(photo)};
