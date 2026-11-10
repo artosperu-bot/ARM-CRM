@@ -6,6 +6,7 @@
  * Sources: manufacturer/reviewed company facts in arm_product_facts.
  * Public HTTPS JPEG/PNG is required for WhatsApp Cloud API image-by-link.
  */
+import {affirmativeProductText} from "./catalog-matching.mjs";
 const norm=s=>String(s||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/\s+/g," ").trim();
 export function requestsProductPhoto(message){
  const s=norm(message);
@@ -57,13 +58,14 @@ export function verifiedProductPhoto({buyer,catalog=[],factsByPn={}}={}){
  if(!Array.isArray(catalog))return null;
  const sku=buyer?.matched_partnumber;
  if(!sku||buyer?.customer_reference&&!buyer?.matched_partnumber)return null;
- const named=explicitlyNamedProducts(buyer?.last_message||"",catalog);
- const models=[...norm(buyer?.last_message||"").matchAll(/\barmor\s*(x\d{1,2}\s*pro|25t\s*pro|x\d{1,2}|22)\b/g)]
+ const positiveText=affirmativeProductText(buyer?.last_message||"");
+ const named=explicitlyNamedProducts(positiveText,catalog);
+ const models=[...norm(positiveText).matchAll(/\barmor\s*(x\d{1,2}\s*pro|25t\s*pro|x\d{1,2}|22)\b/g)]
    .map(m=>m[1].replace(/\s+/g,""));
  if(named.size>1||new Set(models).size>1)return null; // multi-model request needs a gallery, not arbitrary last SKU
  const p=catalog.find(x=>x?.partnumber===sku);
  if(!p||named.size===1&&!named.has(sku))return null;
- const current=norm(buyer?.last_message||"");
+ const current=norm(positiveText);
  const explicitBrands=[...new Set([...current.matchAll(/\b(ulefone|samsung|epson|lenovo|brother|apple|asus|acer|dell|hp|logitech|xiaomi|motorola|canon|msi|jbl|microsoft|dji)\b/g)].map(x=>x[1]))];
  if(explicitBrands.length && (explicitBrands.length>1||explicitBrands[0]!==norm(p.marca)))return null;
  if(models.length){
