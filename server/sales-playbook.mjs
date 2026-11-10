@@ -22,6 +22,22 @@ export function salesMove(profile,{catalog=[]}={}){
  if(intent==="asesor"||p.requires_human){
   return {...result,stage:"atencion_humana",goal:"Detener la automatización",move:"No asumir asignación ni contacto humano realizado; el backend controla el traspaso.",questionPolicy:"ninguna"};
  }
+ if(intent==="postventa"){
+  return {...result,stage:"atencion_postventa",goal:"Resolver la incidencia del comprador sin venderle otro producto",
+   move:"Responde el problema reportado, ofreciendo solo orientación técnica segura y reversibles si corresponde; para devolución, reclamo o pedido existente no inventes cobertura, estado, plazos ni gestión registrada. Si no hay acceso a soporte o ticket, informa que requiere revisión real por atención al cliente. No derives como hecho ejecutado.",questionPolicy:"solo_bloqueante"};
+ }
+ if(intent==="consulta_facturacion"){
+  return {...result,stage:"facturacion_y_medios_de_pago",goal:"Resolver la duda concreta sobre facturas, boletas o pagos",
+   move:"No des un sí o no sobre métodos de pago o comprobantes sin política del comercio verificada. Contesta de forma directa qué dato está pendiente; no digas que ya comprobaste nada ni pidas datos bancarios.",questionPolicy:"solo_bloqueante"};
+ }
+ if(intent==="consulta_garantia"){
+  return {...result,stage:"garantia",goal:"Atender la duda de cobertura con transparencia",
+   move:"Responde a la garantía explícitamente preguntada, con las condiciones del modelo que estén verificadas. Si falta la política, explica brevemente qué falta confirmar sin inventar meses, excepciones o aprobación.",questionPolicy:"solo_bloqueante"};
+ }
+ if(intent==="consulta_privacidad"||intent==="consulta_ajena"||intent==="explicacion_tecnica"){
+  return {...result,stage:"respuesta_puntual",goal:"Atender el asunto actual sin forzar la venta",
+   move:"Responde exactamente la última consulta. Si es ajena al negocio o requiere datos actuales no accesibles, sé breve y no inventes. Conserva los detalles de la compra anterior para poder retomarlos cuando el cliente lo solicite.",questionPolicy:"opcional"};
+ }
  if(intent==="confirmacion"){
   return {...result,stage:"confirmacion",goal:"No reabrir la venta",move:"Reconocer brevemente lo confirmado. No volver a preguntar necesidades ni iniciar otro catálogo.",questionPolicy:"ninguna"};
  }
