@@ -1,5 +1,5 @@
 import {salesMoveInstructions} from "./sales-playbook.mjs";
-import {matchCustomerProduct,quantityForAnyCatalogItem} from "./catalog-matching.mjs";
+import {matchCustomerProduct,quantityForAnyCatalogItem,affirmativeProductText} from "./catalog-matching.mjs";
 import {classifyCustomerTopic,customerTopicInstructions,isExplicitProductSwitch,needsPostSaleSpecialist} from "./customer-topic.mjs";
 import {consumerRightsGuidance} from "./peru-consumer-knowledge.mjs";
 /**
@@ -124,7 +124,8 @@ export function buildBuyerContext(customerTurns,{leadProfile=null,catalog=[],mem
  for(const raw of turns){
   const text=norm(raw).slice(0,1600);
   if(RX.device.test(text))productSeen=true;
-  const matching=matchCustomerProduct(raw,catalog);
+  const affirmative=affirmativeProductText(raw);
+  const matching=matchCustomerProduct(affirmative,catalog);
   if(matching){
    state.product_switched=false;
    state.mentioned_product_family=matching.name;
@@ -154,7 +155,7 @@ export function buildBuyerContext(customerTurns,{leadProfile=null,catalog=[],mem
   if(RX.b2b.test(text))b2bExplicit=true;
   if((RX.human.test(text)&&!RX.notHuman.test(text))||needsPostSaleSpecialist(text))requestedAdvisor=true;
   if(RX.notHuman.test(text)||/\b(?:prefiero seguir aqui|quiero continuar con el bot|con alex esta bien)\b/u.test(text))requestedAdvisor=false;
-  const modelCodes=[...String(raw).matchAll(/\b(?=[A-Z0-9._-]{5,}\b)(?=[A-Z0-9._-]*[A-Z])(?=[A-Z0-9._-]*\d)[A-Z0-9._-]+\b/giu)].map(x=>x[0]);
+  const modelCodes=[...String(affirmative).matchAll(/\b(?=[A-Z0-9._-]{5,}\b)(?=[A-Z0-9._-]*[A-Z])(?=[A-Z0-9._-]*\d)[A-Z0-9._-]+\b/giu)].map(x=>x[0]);
   const reference=modelCodes.find(x=>!/^\d+(?:GB|TB|W|HZ|MAH)$/iu.test(x)&&!/^S\d+$/iu.test(x));
   if(reference){
    // An explicitly named different model invalidates any SKU kept from an older turn.
