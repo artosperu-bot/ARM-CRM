@@ -45,7 +45,7 @@ export function classifyCustomerTopic(message){
  if(!s)return "comercial";
  if(asksFormalComplaintReplyDeadline(s))return "plazo_reclamo";
  if(asksForComplaintBook(s))return "libro_reclamaciones";
- if(/\b(?:ya (?:le|les) avisaron a alguien|ya me pasaste con el asesor|ya me pasaron con (?:un|el) asesor|ya lo derivaron|ya avisaron al asesor|sigo esperando al asesor)\b/u.test(s))
+ if(/\b(?:ya (?:le|les) avisaron a alguien|ya (?:le|les) avisaste|ya avisaste al asesor|ya lo derivaste|ya lo pasaste|ya me pasaste con (?:el|un) asesor|ya me pasaron con (?:un|el) asesor|ya lo derivaron|ya avisaron al asesor|sigo esperando al asesor)\b/u.test(s))
   return "estado_derivacion";
  if(/\b(?:dni|foto (?:del|de mi) (?:dni|documento)|datos personales|mi privacidad|datos de mi tarjeta|documento de identidad)\b/u.test(s)&&
    /\b(?:necesit|pides?|tengo que|debo|obligatorio|requier|pedir|dar|enviar|entregar|mostrar|foto|seguridad)\b/u.test(s))
