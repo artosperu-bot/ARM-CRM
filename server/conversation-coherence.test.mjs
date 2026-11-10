@@ -189,6 +189,21 @@ describe("ALEX real dialogue review: grounded conversation coherence",()=>{
   expect(b.current_intent).toBe("despedida");
   expect(salesMove(b,{catalog}).stage).toBe("cierre_conversacion");
  });
+ it("blocks invented pending advisor handling and request for the buyer's name",()=>{
+  const catalog=[{titulo:"Epson EcoTank L1250",marca:"EPSON",partnumber:"EPSON-L1250",precio_soles:null}];
+  const buyer=buildBuyerContext(["Quiero 2 Epson L1250, ¿cuál es el siguiente paso para comprarlas?"],{catalog});
+  const replies=[
+    "El siguiente paso real es dejar la referencia lista para que un asesor la revise y te confirme. Si deseas avanzar, solo me falta tu nombre y apellido para registrarlo.",
+    "Para la compra me falta tu nombre completo y teléfono de contacto.",
+    "Vamos a dejar tu interés registrado para seguimiento del asesor."
+  ];
+  for(const reply of replies){
+    const gated=protectSalesResponse(reply,{buyer,catalog});
+    expect(gated.blocked).toBe(true);
+    expect(["unconfirmed_action","premature_personal_data"]).toContain(gated.reason);
+    expect(gated.reply).not.toMatch(/tu nombre completo|tu nombre y apellido|dejar la referencia lista|seguimiento del asesor/i);
+  }
+ });
  it("keeps normal helpful answers when no unsafe claim was made",()=>{
   const b=buildBuyerContext(["¿Cuál cargador me conviene?"],{catalog});
   const output=protectSalesResponse("Para saber si es compatible necesito la potencia y el modelo del equipo.",{catalog,buyer:b});
