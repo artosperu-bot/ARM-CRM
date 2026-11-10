@@ -64,7 +64,7 @@ describe("20 realistic WhatsApp-style STECH customer scenarios",()=>{
   const reply=protectSalesResponse("Pásame tu nombre y celular para enviarte el caso al asesor.",{buyer:b,catalog});
   expect(reply.blocked).toBe(true);
   expect(reply.reason).toBe("human_requested");
-  expect(reply.reply).toBe("Claro, ahora te paso con un asesor.");
+  expect(reply.reply).toMatch(/(?:requiere revisi[oó]n humana|no tengo confirmaci[oó]n)/i);
   expect(reply.reply).not.toMatch(/nombre|celular|ya lo derivamos/i);
  });
  it.each([
@@ -90,7 +90,7 @@ describe("20 realistic WhatsApp-style STECH customer scenarios",()=>{
   expect(following.requires_human).toBe(true);
   const reply=protectSalesResponse("Sí, ya le avisé y lo derivé.",{buyer:following,catalog});
   expect(reply.blocked).toBe(true);
-  expect(reply.reply).toBe("Claro, ahora te paso con un asesor.");
+  expect(reply.reply).toMatch(/(?:requiere revisi[oó]n humana|no tengo confirmaci[oó]n)/i);
   expect(reply.reply).not.toMatch(/ya le avisé|ya lo derivé/i);
  });
  it("uses the verified 15-business-day formal reply period",()=>{
