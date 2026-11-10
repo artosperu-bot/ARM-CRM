@@ -36,14 +36,18 @@ export function enrichCatalog(rows, simulated=false, testOffers=[],{now=Date.now
   // Physical ERP units never equal available-to-promise inventory.
   // Until reservations/committed orders are integrated, real stock stays unconfirmed.
   const availability=simulated?(demo?.stock_status||"por confirmar"):"por confirmar";
-  const certifiedFacts=factsByPn[row.partnumber]||null;
+  const allCertifiedFacts=factsByPn[row.partnumber]||null;
+  // Images are media assets, not specifications sent to the language model.
+  const certifiedFacts=allCertifiedFacts?
+   Object.fromEntries(Object.entries(allCertifiedFacts).filter(([key])=>key!=="product_image")):null;
+  const hasSpecs=Boolean(certifiedFacts&&Object.keys(certifiedFacts).length);
   return {
    titulo:row.title,marca:row.brand,partnumber:row.partnumber,
    categoria:Array.isArray(row.category_path)?row.category_path:[],
    familia:row.family_key||null,
    variante:row.variant_options&&typeof row.variant_options==="object"?row.variant_options:{},
-   especificaciones_fabricante:certifiedFacts||specsByPn[row.partnumber]||null,
-   nivel_evidencia:certifiedFacts?"hechos_revisados":specsByPn[row.partnumber]?"ficha_fabricante_heredada":"sin_ficha_verificada",
+   especificaciones_fabricante:(hasSpecs?certifiedFacts:null)||specsByPn[row.partnumber]||null,
+   nivel_evidencia:hasSpecs?"hechos_revisados":specsByPn[row.partnumber]?"ficha_fabricante_heredada":"sin_ficha_verificada",
    atributos_ficha:row.attributes||{},
    precio_soles:price,
    disponibilidad:availability,
