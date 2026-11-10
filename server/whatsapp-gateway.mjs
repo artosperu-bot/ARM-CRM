@@ -6,6 +6,7 @@ import {parseWhatsAppEvents,selectAuthorizedEvents,verifyMetaSignature,summarize
 import {createArmWhatsAppIngest} from "./whatsapp-ingest.mjs";
 import {createWhatsAppTestResponder} from "./whatsapp-test-responder.mjs";
 import {createLeadIntelligenceProcessor} from "./lead-intelligence-processor.mjs";
+import {createWhatsAppHandoffAck} from "./whatsapp-handoff-ack.mjs";
 
 function loadEnv(path) {
   const result={};
@@ -123,6 +124,11 @@ if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url)) {
     allowedNumbers:authorizedNumbers,testOffers:simulatedOffers,
     graphVersion:get("WHATSAPP_GRAPH_API_VERSION")||"v25.0"
   }):null;
+  const handoffAck=ingest&&triage&&autoReplyEnabled?createWhatsAppHandoffAck({
+    supabaseUrl:get("SUPABASE_URL"),serviceRoleKey:get("SUPABASE_SERVICE_ROLE_KEY"),
+    whatsappToken:get("WHATSAPP_ACCESS_TOKEN"),phoneId:expectedPhoneId,
+    allowedNumbers:authorizedNumbers,graphVersion:get("WHATSAPP_GRAPH_API_VERSION")||"v25.0"
+  }):null;
   const replyStats={sent:0,failed:0,lastReplyAt:null};
   const receiveEvent=ingest?async e=>{
     const result=await ingest(e);
@@ -134,6 +140,14 @@ if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url)) {
         try{decision=await triage(e);}
         catch{console.error("ARM_LEAD_TRIAGE_FAILED");}
       }
+      if(handoffAck&&decision.handoff_queued&&!decision.opt_out)queueMicrotask(()=>{
+        void handoffAck(e,decision).then(status=>{
+          if(status?.status==="sent"){replyStats.sent++;replyStats.lastReplyAt=new Date().toISOString();}
+        }).catch(err=>{
+          replyStats.failed++;
+          console.error("WHATSAPP_HANDOFF_ACK_FAILED",err instanceof Error?err.message:"unknown");
+        });
+      });
       if(responder&&decision.should_reply)queueMicrotask(()=>{
       void responder(e,decision).then(result=>{
         if(result?.status==="sent"){replyStats.sent++;replyStats.lastReplyAt=new Date().toISOString();}
