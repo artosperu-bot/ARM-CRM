@@ -17,6 +17,24 @@ describe("ALEX real dialogue review: grounded conversation coherence",()=>{
   expect(reply.reply).not.toMatch(/ahora te paso|ya te pas[eé]|un asesor asignado en este chat/i);
   expect(reply.reply).not.toMatch(/nombre|celular|p[aá]same/i);
  });
+ it("answers advisor-status question plainly without claiming an action",()=>{
+  const b=buildBuyerContext(["Quiero hablar con un asesor","¿Ya le avisaste?"],{catalog});
+  expect(b.current_topic).toBe("estado_derivacion");
+  const reply=protectSalesResponse("Sí, ya está avisado.",{buyer:b,catalog});
+  expect(reply.reason).toBe("human_requested");
+  expect(reply.reply).toMatch(/^No\./u);
+  expect(reply.reply).toMatch(/desde este chat no se ha registrado una derivaci[oó]n/i);
+ });
+ it("tells a ready buyer the actual next step without pretending checkout exists",()=>{
+  const chosen=[{titulo:"Ulefone Armor X13",marca:"ULEFONE",partnumber:"ARMOR-X13",
+     precio_soles:null,disponibilidad:"por confirmar"}];
+  const b=buildBuyerContext(["Quiero el Armor X13, listo lo compro, cómo pago?"],{catalog:chosen});
+  expect(b.current_intent).toBe("comprar");
+  const reply=protectSalesResponse("Es un excelente celular para usarlo a diario.",{buyer:b,catalog:chosen});
+  expect(reply.reason).toBe("purchase_not_ready");
+  expect(reply.reply).toMatch(/no puedo crear un pedido ni un enlace de pago/i);
+  expect(reply.reply).toMatch(/precio, disponibilidad/i);
+ });
  it("does not invent advisor assignment on first request",()=>{
   const buyer=buildBuyerContext(["Quiero hablar con un asesor"],{catalog});
   const reply=protectSalesResponse("Tu caso ya fue asignado.",{buyer,catalog});
