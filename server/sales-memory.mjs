@@ -34,7 +34,7 @@ export function snapshotSalesMemory(buyer,{previous=null,lastMessageAt=null,last
    newestReference!==old?.customer_reference&&
    newestReference!==old?.selected_partnumber);
  const selected=reference(buyer?.matched_partnumber)||
-   (!newlyDifferent?old?.selected_partnumber:null)||null;
+   (!newlyDifferent&&buyer?.product_switched!==true?old?.selected_partnumber:null)||null;
  return {
   version:1,
   quantity:Number.isInteger(buyer?.quantity)&&buyer.quantity>=1&&buyer.quantity<=999?buyer.quantity:null,
