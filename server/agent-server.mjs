@@ -117,8 +117,10 @@ async function handle(req,res){
   const lookupTurns=[...(historicalBuyerTurns.length?historicalBuyerTurns:
     context.filter(t=>t.role==="user").map(t=>t.content)),msg];
   const hint=priorMemory?.customer_reference||priorMemory?.selected_partnumber;
+  const brandHint=typeof priorMemory?.brand==="string"&&!priorMemory?.selected_partnumber?priorMemory.brand:null;
   const catalogTurns=isExplicitProductSwitch(msg)?[msg]:
-    hint?[...lookupTurns.slice(-14,-1),hint,msg]:lookupTurns;
+    hint?[...lookupTurns.slice(-14,-1),hint,msg]:
+    brandHint?[brandHint,msg]:lookupTurns;
   const lookup=await retrieveSalesCatalog(db,workspaceId,catalogTurns,{limit:18});
   const pn=lookup.products.map(x=>x.partnumber);
   const testOffers=simulated&&pn.length?await db.from("arm_offer_simulations")
