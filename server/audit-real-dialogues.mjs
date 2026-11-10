@@ -7,6 +7,7 @@ import {readFileSync} from "node:fs";
 import {colloquial20} from "./qa-colloquial-scenarios.mjs";
 import {buildBuyerContext,buyerGuidance} from "./buyer-reasoning.mjs";
 import {snapshotSalesMemory} from "./sales-memory.mjs";
+import {affirmativeProductText} from "./catalog-matching.mjs";
 import {isExplicitProductSwitch,selectCustomerPromptInput} from "./customer-topic.mjs";
 import {matchCustomerProduct} from "./catalog-matching.mjs";
 import {salesInstructions} from "./sales-policy.mjs";
@@ -122,7 +123,7 @@ async function execute(s){
   // Simulate retrieval scope: a new product request must not inherit unrelated
   // product candidates from earlier turns, even though those remain in history.
   const turnCatalog=isExplicitProductSwitch(question)?
-    catalog.filter(p=>Boolean(matchCustomerProduct(question,[p]))):catalog;
+    catalog.filter(p=>Boolean(matchCustomerProduct(affirmativeProductText(question),[p]))):catalog;
   const buyer=buildBuyerContext(memory?[question]:texts,{catalog:turnCatalog,memory});
   memory=snapshotSalesMemory(buyer,{
     previous:memory,lastMessageAt:new Date(Date.UTC(2026,10,7,19,0,i)).toISOString(),
