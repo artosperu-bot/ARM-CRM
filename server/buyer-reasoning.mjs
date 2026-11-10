@@ -130,7 +130,7 @@ export function buildBuyerContext(customerTurns,{leadProfile=null,catalog=[],mem
    productSeen=true;
   }
   const q=quantityForAnyCatalogItem(raw,catalog) ??
-    parseQuantity(text,{allowBareCorrection:state.quantity!==null&&productSeen});
+    parseQuantity(text,{allowBareCorrection:state.quantity!==null});
   if(q!==null)state.quantity=q;
   const budget=parseBudget(text);
   if(budget)state.budget=budget;
@@ -229,6 +229,7 @@ export function buyerGuidance(profile,{catalog=[]}={}){
  p.product_switched?"CAMBIO DE PRODUCTO EXPLÍCITO: El cliente cambió de producto o marca. NO reutilices el artículo ni el precio anterior como si pertenecieran al nuevo. Si no hay coincidencia en el catálogo, di que aún no tienes una ficha validada de la nueva referencia; no te quedes ofreciendo el accesorio anterior.":"" ,
  "Intención DEL ÚLTIMO TURNO: "+(p.current_intent||"consulta")+". Acción recomendada: "+(p.next_step||"responder")+".",
  "No vuelvas a preguntar por cantidad, marca, referencia exacta, presupuesto o uso ya comunicados. Una referencia del cliente no significa SKU existente ni ficha verificada. Si el presupuesto no aclara total/por unidad, pregunta solo cuando sea decisivo.",
+ "Interpreta lenguaje de chat peruano sin copiarlo: «mano» o «causa» pueden ser formas de dirigirse a alguien, no «segunda mano». Una corrección como «noo era 2, me equivoqué» significa 2 unidades, no 3.",
  "Si el cliente corrigió una cantidad o presupuesto, prevalece el dato posterior. Si canceló su compra, respétalo sin insistir. Si se despide, despídete en una oración sin opciones comerciales.",
  "Una cifra de presupuesto del comprador NO es un precio de venta ni una oferta aprobada.",
  "B2B es una pista, NO una persona jurídica comprobada; no exijas RUC para recomendar ni asumas que compra segura.",
