@@ -9,6 +9,8 @@ type Conversation={id:string;title:string;created_at:string};
 type TestOffer={partnumber:string;price_pen:number;stock_status:string};
 type Turn={id:string;role:"user"|"assistant";content:string;created_at:string};
 type Usage={model:string;inputTokens:number;outputTokens:number;cachedTokens:number;estimatedUsd:number;usageRecorded:boolean};
+type CommercialReadiness={state:"requiere_validacion";intent:string;product:{partnumber:string;title:string}|null;quantity:number|null;budget:{pen:number;scope:string}|null;priceEvidence:boolean;saleableStock:boolean;blockers:string[];quoteCreated:false;orderCreated:false;paymentRegistered:false;advisorAssigned:false;canManuallyCreateOpportunity:boolean;nextAction:string};
+const blockerLabels:Record<string,string>={modelo_por_confirmar:"modelo exacto",cantidad_por_confirmar:"cantidad",precio_vigente_por_confirmar:"precio vigente",disponibilidad_vendible_por_confirmar:"disponibilidad para venta",condiciones_cotizacion_por_confirmar:"condiciones de cotización"};
 export default function AgentPage({workspaceId,contacts,onNavigate,onCreateFollowup,onCreateDeal}:{
  workspaceId:string;contacts:Contact[];onNavigate:(section:Section)=>void;
  onCreateFollowup:(contactId:string,description:string,dueAt:string)=>Promise<void>;
@@ -26,6 +28,7 @@ export default function AgentPage({workspaceId,contacts,onNavigate,onCreateFollo
  const [error,setError]=useState("");
  const [notice,setNotice]=useState("");
  const [usage,setUsage]=useState<Usage|null>(null);
+ const [commercial,setCommercial]=useState<CommercialReadiness|null>(null);
  const [ready,setReady]=useState(false);
  const [loading,setLoading]=useState(true);
  const [actionOpen,setActionOpen]=useState(false);
@@ -39,6 +42,7 @@ export default function AgentPage({workspaceId,contacts,onNavigate,onCreateFollo
  const lastQuestion=customers.at(-1)||"";
  async function createTask(e:React.FormEvent){
   e.preventDefault();setError("");setNotice("");
+  if(simulated){setError("No se pueden crear seguimientos reales en simulación.");return;}
   if(!approved){setError("Confirma que existe autorización para el seguimiento.");return;}
   if(!linkedContact){setError("Selecciona un cliente registrado.");return;}
   if(!dueAt||Number.isNaN(Date.parse(dueAt))||new Date(dueAt).getTime()<=Date.now()){
@@ -53,6 +57,7 @@ export default function AgentPage({workspaceId,contacts,onNavigate,onCreateFollo
   finally{setSavingAction(false);}
  }
  async function createOpportunity(){
+  if(simulated){setError("No se pueden crear oportunidades reales en simulación.");return;}
   if(!linkedContact){setError("Selecciona un cliente antes de crear la oportunidad.");return;}
   setSavingAction(true);setError("");setNotice("");
   try{
@@ -116,6 +121,7 @@ export default function AgentPage({workspaceId,contacts,onNavigate,onCreateFollo
    if(!response.ok||!result.ok)throw new Error(result.error||"No fue posible consultar OpenAI.");
    setQuestion("");setSelected(result.conversationId);
    setUsage(result.usage);
+   setCommercial(result.commercial||null);
    setNotice(result.booking?.saved?"Seguimiento registrado automáticamente en Supabase.": "Respuesta real de OpenAI · sin envío al cliente.");
    const {data,error:turnError}=await supabase.from("arm_agent_turns").select("id,role,content,created_at")
     .eq("workspace_id",workspaceId).eq("conversation_id",result.conversationId)
@@ -131,7 +137,7 @@ export default function AgentPage({workspaceId,contacts,onNavigate,onCreateFollo
    </section>
    <div className="agent-stat-strip"><span><ShieldCheck size={16}/> Supervisado: no responde en redes</span><span><Zap size={16}/> Máximo 450 tokens de salida</span><span><Coins size={16}/> Hasta 20 consultas/día</span></div>
    <label className={"agent-sandbox-switch "+(simulated?"is-on":"")}>
-     <input type="checkbox" checked={simulated} disabled={sending} onChange={e=>{setSimulated(e.target.checked);setSelected(null);setTurns([]);setUsage(null);setError("");setNotice("");}}/>
+     <input type="checkbox" checked={simulated} disabled={sending} onChange={e=>{setSimulated(e.target.checked);setSelected(null);setTurns([]);setUsage(null);setCommercial(null);setActionOpen(false);setLinkedContact("");setError("");setNotice("");}}/>
      <span><strong>Simular precios y disponibilidad</strong><small>Solo laboratorio privado: cifras inventadas, etiquetadas como prueba. No se mezclan con ventas reales ni se agendan tareas.</small></span>
      {simulated&&<strong className="agent-sandbox-badge">SIMULACIÓN</strong>}
    </label>
@@ -145,9 +151,9 @@ export default function AgentPage({workspaceId,contacts,onNavigate,onCreateFollo
     <small>Solo para pruebas internas. El agente nunca debe publicar estas cifras en WhatsApp ni en modo real.</small>
    </section>}
    <div className="agent-layout-real">
-    <aside className="agent-sessions"><div className="agent-side-head"><strong>Conversaciones</strong><button aria-label="Nueva conversación" title="Nueva conversación" onClick={()=>{setSelected(null);setTurns([]);setUsage(null);setError("");setNotice("");}}><Plus size={17}/></button></div>
+    <aside className="agent-sessions"><div className="agent-side-head"><strong>Conversaciones</strong><button aria-label="Nueva conversación" title="Nueva conversación" onClick={()=>{setSelected(null);setTurns([]);setUsage(null);setCommercial(null);setActionOpen(false);setLinkedContact("");setError("");setNotice("");}}><Plus size={17}/></button></div>
      {conversations.length===0&&<p className="agent-empty-sessions">Aún no hay conversaciones.</p>}
-     {conversations.map(c=><button key={c.id} className={"agent-session "+(selected===c.id?"selected":"")} onClick={()=>{setSelected(c.id);setError("");setUsage(null);}}><MessageCircle size={16}/><span>{c.title}</span></button>)}
+     {conversations.map(c=><button key={c.id} className={"agent-session "+(selected===c.id?"selected":"")} onClick={()=>{setSelected(c.id);setError("");setUsage(null);setCommercial(null);setActionOpen(false);setLinkedContact("");}}><MessageCircle size={16}/><span>{c.title}</span></button>)}
     </aside>
     <div className="agent-conversation">
       <div className="agent-messages">
@@ -159,14 +165,20 @@ export default function AgentPage({workspaceId,contacts,onNavigate,onCreateFollo
       {signal&&<div className={"agent-commercial-signal "+(signal.priority==="high"?"hot":"")}>
        <div className="agent-signal-text"><strong>{signal.label}</strong><span>{signal.nextAction}</span>
         {signal.handoff&&<small><UserRoundCheck size={13}/> Revisión de asesor recomendada; aún no se ha asignado.</small>}</div>
-       {signal.followupSuggested&&<button className="secondary-button" onClick={()=>{
+       {signal.followupSuggested&&!simulated&&<button className="secondary-button" onClick={()=>{
         setActionOpen(v=>!v);
-        setLinkedContact(contacts[0]?.id||"");
+        setLinkedContact("");
         setTask(("Retomar solicitud: "+lastQuestion).slice(0,390));
         setDueAt("");setApproved(false);
        }}><CalendarClock size={15}/> Gestionar en CRM</button>}
       </div>}
-      {actionOpen&&<div className="agent-sales-action">
+      {commercial&&<div className="agent-readiness" role="status">
+       <strong>Estado comercial de esta consulta · sin operación registrada</strong>
+       <div><span><b>Producto:</b> {commercial.product?.title||"Por identificar"}</span><span><b>Cantidad:</b> {commercial.quantity??"Por confirmar"}</span>{commercial.budget&&<span><b>Presupuesto del cliente:</b> S/ {commercial.budget.pen} ({commercial.budget.scope==="total"?"total":commercial.budget.scope==="por_unidad"?"por unidad":"sin aclarar"})</span>}</div>
+       <small><b>Pendiente:</b> {commercial.blockers.map(x=>blockerLabels[x]||x).join(" · ")}. No hay cotización, pedido, pago ni asesor asignado.</small>
+       {commercial.canManuallyCreateOpportunity&&signal?.followupSuggested&&!simulated&&<button type="button" className="secondary-button" onClick={()=>{setActionOpen(true);setLinkedContact("");setApproved(false);setDueAt("");setTask(("Retomar consulta: "+lastQuestion).slice(0,390));}}>Gestionar manualmente en CRM</button>}
+      </div>}
+      {actionOpen&&!simulated&&<div className="agent-sales-action">
        <h3>Convertir conversación en acción comercial</h3>
        {!contacts.length?<div className="agent-action-notice">Todavía no hay clientes en ARM-CRM. Registra primero un contacto real y después vuelve a esta conversación.
         <button className="secondary-button" onClick={()=>onNavigate("clientes")}>Ir a Clientes</button></div>:
