@@ -1,7 +1,7 @@
 import {describe,it,expect} from "vitest";
 import {createWhatsAppTestResponder} from "./whatsapp-test-responder.mjs";
 
-function fixture(status="pending",onRequest=()=>{},allowedOffers=[],stateAfterModel={}){
+function fixture(status="pending",onRequest=()=>{},allowedOffers=[],stateAfterModel={},facts=[]){
   const writes=[];
   let threadReads=0;
   const db={
@@ -31,7 +31,7 @@ function fixture(status="pending",onRequest=()=>{},allowedOffers=[],stateAfterMo
       },
       limit:async()=>{
         if(table==="arm_messages")return {data:[],error:null};
-        if(table==="arm_product_facts")return {data:[],error:null};
+        if(table==="arm_product_facts")return {data:facts,error:null};
         if(table==="arm_products")return {data:[{title:"Ulefone Armor X13",brand:"ULEFONE",partnumber:"ARMOR-X13",attributes:{},verified_at:null,price_pen:null,stock_erp:null}],error:null};
         if(table==="arm_offer_simulations")return {data:allowedOffers,error:null};
         return {data:[],error:null};
@@ -123,4 +123,69 @@ describe("isolated WhatsApp test reply",()=>{
     expect(writes[0].text.body).toMatch(/^🧪 \*PRUEBA STECH\*/);
     expect(writes[0].text.body).toContain("Precio simulado: S/ 999");
   });
+});
+
+describe("WhatsApp product photo requests",()=>{
+ const imageUrl="https://store.ulefone.com/cdn/shop/files/Ulefone_Rugged_Phone_Armor_X_13.jpg?v=1729493371&width=1024";
+ const manufacturer="https://store.ulefone.com/es/products/armor-x13";
+ function photoFact(override={}){
+  return {partnumber:"ARMOR-X13",fact_key:"product_image",
+   fact_value:{url:imageUrl,verified_sku:"ARMOR-X13"},
+   source_type:"manufacturer",source_url:manufacturer,review_status:"verified",
+   reviewed_at:new Date().toISOString(),
+   expires_at:new Date(Date.now()+86400000).toISOString(),
+   ...override};
+ }
+ it("sends official image with caption, without using AI or a made-up link",async()=>{
+  const f=fixture("pending",()=>{},[],{},[photoFact()]);
+  const event={...f.event,text:"oe pásame foto del Armor X13 ps"};
+  const result=await f.respond(event);
+  expect(result.status).toBe("sent");
+  expect(result.type).toBe("image");
+  expect(result.photoVerified).toBe(true);
+  expect(f.requests).toHaveLength(1);
+  expect(f.requests[0].url).toMatch(/graph.facebook.com/);
+  const payload=JSON.parse(f.requests[0].opts.body);
+  expect(payload.type).toBe("image");
+  expect(payload.to).toBe("51900000001");
+  expect(payload.image.link).toBe(imageUrl);
+  expect(payload.image.caption).toMatch(/Ulefone Armor X13/);
+  expect(f.writes.map(x=>x.table)).toEqual(["arm_messages"]);
+  expect(f.writes[0].value.message_type).toBe("image");
+ });
+ it("never sends the image of another model when evidence is absent",async()=>{
+  const f=fixture();
+  const result=await f.respond({...f.event,text:"foto del Armor X13"});
+  expect(result.status).toBe("sent");
+  expect(result.type).toBe("text");
+  expect(result.photoVerified).toBe(false);
+  expect(f.requests).toHaveLength(1);
+  const payload=JSON.parse(f.requests[0].opts.body);
+  expect(payload.type).toBe("text");
+  expect(payload.text.body).toMatch(/foto verificada/i);
+ });
+ it("does not use expired manufacturer image facts",async()=>{
+  const f=fixture("pending",()=>{},[],{},[photoFact({expires_at:"2020-01-01T00:00:00Z"})]);
+  await f.respond({...f.event,text:"manda foto Armor X13"});
+  const payload=JSON.parse(f.requests[0].opts.body);
+  expect(payload.type).toBe("text");
+ });
+ it("does not send a product photo after human takeover",async()=>{
+  const f=fixture("pending",()=>{},[],{status:"human"},[photoFact()]);
+  const result=await f.respond({...f.event,text:"foto Armor X13"});
+  expect(result.status).toBe("human_handoff");
+  expect(f.requests).toHaveLength(0);
+  expect(f.writes).toHaveLength(0);
+ });
+ it("honors opt-out before sending any picture",async()=>{
+  const f=fixture("pending",()=>{},[],{optOut:true},[photoFact()]);
+  const result=await f.respond({...f.event,text:"pásame foto Armor X13"});
+  expect(result.status).toBe("human_handoff");
+  expect(f.requests).toHaveLength(0);
+ });
+ it("does not send an image from an unverified supplier attribute",async()=>{
+  const f=fixture("pending",()=>{},[],{},[photoFact({review_status:"pending"})]);
+  await f.respond({...f.event,text:"mandame foto del Armor X13"});
+  expect(JSON.parse(f.requests[0].opts.body).type).toBe("text");
+ });
 });
