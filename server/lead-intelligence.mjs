@@ -36,6 +36,8 @@ export function analyzeSalesConversation(messages,{
  const journey=buildBuyerContext(inbound.map(m=>m.content));
  const purchaseCancelled=journey.current_intent==="compra_cancelada";
  const conversationFinished=journey.current_intent==="despedida";
+ // A previous expression of interest is not a standing purchase commitment.
+ const purchaseDeferred=/\b(?:solo (?:estoy )?averiguando|solo (?:quiero|necesito) (?:informacion|ver|mirar|fotos?)|aun no (?:decido|he decidido|quiero|voy a) comprar|todavia no (?:decido|he decidido|quiero|voy a) comprar|no he decidido (?:comprar|aun)|por ahora (?:solo )?(?:estoy )?(?:averiguando|mirando|viendo opciones)|primero quiero (?:ver|informacion)|mas adelante (?:vemos|decido)(?: la compra)?)\b/u.test(latest);
  const body=clean(inbound.map(m=>m.content).join(" "));
  const has=(key)=>includes(body,RE[key]);
  const signals=[];
@@ -47,10 +49,12 @@ export function analyzeSalesConversation(messages,{
  const optOut=explicitStop||(Boolean(previousOptOut)&&!explicitResume);
  const human=threadStatus==="human"||Boolean(assignedTo)||askedHuman;
  const closed=threadStatus==="closed";
- const amount=quantity(body);
+ // The full-history regex returns the FIRST number and can resurrect a quantity
+ // the buyer explicitly corrected. Use the folded buyer state (latest wins).
+ const amount=Number.isInteger(journey.quantity)?journey.quantity:null;
  const isBusiness=has("business")||(amount!==null&&amount>=2&&has("product"));
  const askedPrice=has("quote");
- const intendsBuy=has("purchase")&&!purchaseCancelled&&!conversationFinished;
+ const intendsBuy=has("purchase")&&!purchaseCancelled&&!conversationFinished&&!purchaseDeferred;
  const comparison=has("compare");
  const objection=has("objection");
  const urgency=has("urgent");
@@ -58,6 +62,7 @@ export function analyzeSalesConversation(messages,{
  const budget=has("budget");
  add(intendsBuy,"compra_explicita");
  add(purchaseCancelled,"compra_cancelada");
+ add(purchaseDeferred,"compra_aun_no_decidida");
  add(conversationFinished,"conversacion_finalizada");
  add(askedPrice,"precio_cotizacion");
  add(isBusiness,"cliente_empresa_o_volumen");
