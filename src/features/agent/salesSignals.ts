@@ -28,7 +28,7 @@ export function detectCommercialSignal(customerMessages:string[]):CommercialSign
  if(/\b(?:reclam[oa]|denuncia|estafa|devolucion|me cobraron|producto defectuoso)\b/u.test(last))
   return {key:"objection",label:"Atención especializada",priority:"high",handoff:true,followupSuggested:true,
    nextAction:"Revisar el caso con el equipo comercial; no afirmar que existe una gestión registrada."};
- if(/\b(?:quiero comprar(?:lo|la|los|las)?|voy a comprar|lo compro|la compro|los compro|las compro|me lo llevo|me la llevo|donde pago|como pago|pagar ahora|confirmo la compra|procedamos con la compra|(?:siguiente paso|como hago|que sigue|como procedo)\\s+(?:para\\s+)?comprar(?:lo|la|los|las)?|siguiente paso para la compra|necesito (?:\\d+|dos|tres|cuatro) .{0,45}para comprarlos)\b/u.test(last))
+ if(/\b(?:quiero comprar(?:lo|la|los|las)?|voy a comprar|lo compro|la compro|los compro|las compro|me lo llevo|me la llevo|donde pago|como pago|pagar ahora|confirmo la compra|procedamos con la compra|(?:siguiente paso|como hago|que sigue|como procedo)\s+(?:para\s+)?comprar(?:lo|la|los|las)?|siguiente paso para la compra|necesito (?:\d+|dos|tres|cuatro) .{0,45}para comprarlos)\b/u.test(last))
   return {key:"buying",label:"Cliente quiere comprar",priority:"high",handoff:true,followupSuggested:true,
    nextAction:"Revisar precio y disponibilidad. El operador puede abrir una oportunidad con un contacto identificado; no hay pedido ni pago generado."};
  if(/\b(?:cotiz|proforma|precio exacto|cuanto cuesta|cuanto sale|descuento|disponibilidad|disponible|stock|envio|entrega|despacho)\b/u.test(last))
