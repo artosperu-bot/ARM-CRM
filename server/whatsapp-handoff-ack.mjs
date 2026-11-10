@@ -1,4 +1,5 @@
 import {createClient} from "@supabase/supabase-js";
+import {HUMAN_QUEUE_CONFIRMED_REPLY} from "./human-handoff-phrasing.mjs";
 
 /**
  * One short, deterministic confirmation when a signed + allowlisted WhatsApp
@@ -8,7 +9,7 @@ import {createClient} from "@supabase/supabase-js";
  * The lead processor authorizes this only for the *new* pending -> human
  * transition, so later angry messages cannot generate repeated acknowledgments.
  */
-export const HANDOFF_MESSAGE="Claro, ahora te paso con un asesor.";
+export const HANDOFF_MESSAGE=HUMAN_QUEUE_CONFIRMED_REPLY;
 
 const digits=value=>String(value||"").replace(/\D/g,"");
 export function createWhatsAppHandoffAck({
