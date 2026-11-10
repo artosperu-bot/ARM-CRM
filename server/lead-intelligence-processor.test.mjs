@@ -51,6 +51,21 @@ describe("safe WhatsApp triage persistence",()=>{
   expect(f.writes.map(w=>w.table)).toEqual(["arm_lead_insights","arm_threads"]);
   expect(f.writes[1].values).toEqual({status:"human"});
  });
+ it.each([
+   "oe mi producto llegó roto en caja",
+   "mi epson se malogro, recien la compre",
+   "quiero q me devuelvan la plata",
+   "mi pedido no llega",
+   "pasame con alguien que solucione esto ya"
+ ])("places post-sale complaint into human queue, never sending AI reply: %s",async message=>{
+   const f=mockDb({lastMessage:message});
+   const result=await createLeadIntelligenceProcessor({db:f.db})({...seed,text:message});
+   expect(result.requires_human).toBe(true);
+   expect(result.should_reply).toBe(false);
+   expect(f.writes.map(w=>w.table)).toEqual(["arm_lead_insights","arm_threads"]);
+   expect(f.writes[1].values).toEqual({status:"human"});
+   expect(f.writes.filter(w=>w.table==="arm_messages")).toHaveLength(0);
+ });
  it("retains previously refused outreach even after hello",async()=>{
   const f=mockDb({previousOptOut:true,lastMessage:"hola"});
   const result=await createLeadIntelligenceProcessor({db:f.db})({...seed,text:"hola"});
