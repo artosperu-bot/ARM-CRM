@@ -16,3 +16,6 @@
 .inbox-intelligence p{font-size:11px;margin:0;line-height:1.45;color:#496c80}
 .inbox-intelligence small{color:#7490a0;font-size:10px}
 .inbox-intelligence-stop{color:#a33e3e;font-size:11px}
+
+/* Reviewed outbound product media: images are read-only and source-labeled. */
+.inbox-product-photo{margin:7px 0 10px;max-width:300px}.inbox-product-photo img{display:block;width:100%;max-height:300px;object-fit:contain;background:#fff;border:1px solid #dae7ec;border-radius:10px}.inbox-product-photo figcaption{font-size:10px;color:#64818f;margin-top:4px}
