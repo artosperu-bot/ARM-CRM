@@ -13,6 +13,17 @@ export function isExplicitProductSwitch(message){
  const productMention=/\b(?:laptops?|notebooks?|computadoras?|pcs?|impresoras?|tablets?|celulares?|telefonos?|cargador(?:es)?|baterias?|camaras?|monitores?|routers?|mouse|teclados?|audifonos?|discos?|licencias?|software|lenovo|epson|ulefone|samsung|apple|brother|asus|acer|dell|microsoft|logitech|jbl|genius|xiaomi|motorola|canon|msi|dji)\b/u.test(s);
  return switchVerb&&productMention;
 }
+/** Reset only the model's conversational input after an explicit product
+ * change. Durable customer facts remain in buyerGuidance; older dialogue must
+ * not turn a request for a new tablet into a request for an old charger. */
+export function selectCustomerPromptInput(history,lastMessage){
+ const current={role:"user",content:String(lastMessage||"")};
+ if(isExplicitProductSwitch(current.content))return [current];
+ const turns=(Array.isArray(history)?history:[]).filter(x=>
+  (x?.role==="user"||x?.role==="assistant")&&typeof x.content==="string");
+ if(turns.at(-1)?.role==="user"&&turns.at(-1).content===current.content)return turns;
+ return [...turns,current];
+}
 export function classifyCustomerTopic(message){
  const s=norm(message);
  if(!s)return "comercial";
