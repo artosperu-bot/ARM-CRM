@@ -1,6 +1,6 @@
 import {salesMoveInstructions} from "./sales-playbook.mjs";
 import {matchCustomerProduct,quantityForAnyCatalogItem} from "./catalog-matching.mjs";
-import {classifyCustomerTopic,customerTopicInstructions} from "./customer-topic.mjs";
+import {classifyCustomerTopic,customerTopicInstructions,isExplicitProductSwitch} from "./customer-topic.mjs";
 /**
  * Shared sales-reasoning for WhatsApp and the supervised CRM agent.
  * Grounded facts ONLY from customer turns. No extra OpenAI calls, personal
@@ -131,15 +131,16 @@ export function buildBuyerContext(customerTurns,{leadProfile=null,catalog=[],mem
   const budget=parseBudget(text);
   if(budget)state.budget=budget;
   const brand=matching?.brand||parseBrand(text);
-  // A clear switch to a different manufacturer invalidates the previous SKU,
-  // even before the customer provides the exact new model.
-  if(brand&&state.matched_partnumber&&state.brand&&brand!==state.brand&&
-    /\b(?:ahora\s+(?:estoy\s+viendo|busco|quiero|prefiero|me\s+interesa)|mejor\s+(?:quiero|busco|prefiero|una?|otro)|prefiero|en\s+vez\s+de|cambi(?:e|amos|o)\s+(?:a|por))\b/u.test(text)&&!matching){
+  // Explicit product changes trump an old SKU even when the new catalogue
+  // query returns ZERO rows (in that case remembered wasn't revalidated).
+  if(isExplicitProductSwitch(raw)&&!matching&&
+     (state.matched_partnumber||memory?.selected_partnumber||state.customer_reference||state.brand)){
     state.matched_partnumber=null;
     state.mentioned_product_family=null;
     state.customer_reference=null;
     state.product_switched=true;
     if(q===null)state.quantity=null;
+    state.brand=null;
   }
   if(brand)state.brand=brand;
   const useCase=parseUseCase(text);
