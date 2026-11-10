@@ -72,6 +72,21 @@ describe("ALEX attends unrelated and service topics as a general-purpose seller"
   const guard=protectSalesResponse("La tablet Samsung cuesta S/ 50.",{buyer:next,catalog});
   expect(guard.reason).toBe("unverified_price");
  });
+ it("does not resurrect an old selected SKU when the new brand has zero catalogue hits",()=>{
+  const earlier=buyer(["Busco cargador USB-C para Lenovo"]);
+  const oldMemory=snapshotSalesMemory(earlier);
+  const moved=buildBuyerContext(["Pero ahora estoy viendo una tablet Samsung, ¿cuál me recomiendas?"],{
+    catalog:[],memory:oldMemory
+  });
+  expect(moved.product_switched).toBe(true);
+  expect(moved.matched_partnumber).toBeNull();
+  expect(moved.brand).toBe("SAMSUNG");
+  const saved=snapshotSalesMemory(moved,{previous:oldMemory});
+  expect(saved.selected_partnumber).toBeNull();
+  expect(saved.brand).toBe("SAMSUNG");
+  const next=buildBuyerContext(["¿Y cuánto cuesta la Samsung?"],{catalog, memory:saved});
+  expect(next.matched_partnumber).toBeNull();
+ });
  it("does not confuse a requested billing policy with permission to take a payment",()=>{
   const b=buyer(["¿Aceptan tarjeta y emiten factura electrónica?"]);
   const g=protectSalesResponse("Sí, aceptamos tarjeta y emitimos factura electrónica.",{buyer:b,catalog});
