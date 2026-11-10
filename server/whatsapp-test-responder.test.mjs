@@ -152,6 +152,7 @@ describe("WhatsApp product photo requests",()=>{
   expect(payload.image.caption).toMatch(/Ulefone Armor X13/);
   expect(f.writes.map(x=>x.table)).toEqual(["arm_messages"]);
   expect(f.writes[0].value.message_type).toBe("image");
+  expect(f.writes[0].value.content).toContain("[FOTO_VERIFICADA]("+imageUrl+")");
  });
  it("never sends the image of another model when evidence is absent",async()=>{
   const f=fixture();
