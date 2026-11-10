@@ -54,13 +54,7 @@ export function protectSalesResponse(reply,{catalog=[],buyer=null,simulated=fals
  if(!text)return {reply:"Puedo ayudarte con tu consulta. ¿Qué producto necesitas?",blocked:true,reason:"empty"};
  const intent=buyer?.current_intent||"consulta";
  if(buyer?.requires_human){
-  const status=buyer?.current_topic==="estado_derivacion"||/\b(?:ya (?:le|les) avisaron|ya me pasaste|sigo esperando|ya quedo derivado)\b/u.test(buyer?.last_message||"");
-  return {reply:status?
-   "Aún no tengo confirmación de que un asesor haya tomado la conversación. No voy a decirte que ya quedó derivada sin comprobarlo.":
-   ["devolucion_reclamo","soporte_tecnico","pedido_existente","estado_reclamo","garantia"].includes(buyer?.current_topic)?
-   "Uy, qué mal. Eso lo tiene que ver un asesor de posventa. Por aquí todavía no aparece uno asignado.":
-   "Claro, necesitas atención de un asesor. Todavía no tengo confirmación de que alguien haya tomado la conversación.",
-   blocked:true,reason:"human_requested"};
+  return {reply:"Claro, ahora te paso con un asesor.",blocked:true,reason:"human_requested"};
  }
  if(buyer?.current_topic==="plazo_reclamo"&&asksFormalComplaintReplyDeadline(buyer?.last_message))
   return {reply:lawfulComplaintDeadlineReply,blocked:true,reason:"official_complaint_reply_deadline"};
