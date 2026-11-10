@@ -6,7 +6,7 @@ import {crmResponseSchema} from "./followup-automation.mjs";
 import {estimateUsd} from "./agent-cost.mjs";
 import {whatsappPresentationInstructions,formatWhatsAppReply} from "./whatsapp-format.mjs";
 import {buildBuyerContext,buyerGuidance} from "./buyer-reasoning.mjs";
-import {isExplicitProductSwitch} from "./customer-topic.mjs";
+import {isExplicitProductSwitch,selectCustomerPromptInput} from "./customer-topic.mjs";
 import {protectSalesResponse} from "./sales-response-guard.mjs";
 import {normalizeSalesMemory,snapshotSalesMemory} from "./sales-memory.mjs";
 
@@ -99,7 +99,7 @@ export function createWhatsAppTestResponder({
            (Number.isInteger(leadProfile.quantity_min)?leadProfile.quantity_min:"no confirmada")+
            ". Utiliza estas señales solamente como hipótesis para orientar la respuesta. NO reveles puntuaciones ni etiquetas internas; confirma antes de tratar al cliente como empresa, ni afirmes cierre o cotización registrada."):"")+
           "\nEres una prueba PRIVADA por WhatsApp para un destinatario autorizado. No inventes que creaste reservas, seguimientos o enviaste archivos. El agendamiento automático por WhatsApp no está habilitado: solicita datos necesarios y explica que la confirmación requiere el backend. Devuelve JSON reply y followup. Evita mencionar cantidades exactas de stock.",
-        input:ordered.length?ordered:[{role:"user",content:event.text}]
+        input:selectCustomerPromptInput(ordered,event.text)
       })
     });
     if(!response.ok)throw new Error("OPENAI_HTTP_"+response.status);
