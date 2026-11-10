@@ -167,6 +167,28 @@ describe("ALEX real dialogue review: grounded conversation coherence",()=>{
   expect(guarded.reason).toBe("human_requested");
   expect(guarded.reply).not.toMatch(/necesito tu nombre|dame tu celular/i);
  });
+ it("does not treat the client's courier job as a delivery inquiry",()=>{
+  const b=buildBuyerContext(["Tengo un minuto, busco el Ulefone Armor X13 para reparto"],{catalog:[
+    {titulo:"Ulefone Armor X13",partnumber:"ARMOR-X13",marca:"ULEFONE"}]});
+  expect(b.current_intent).toBe("consulta");
+ });
+ it("respects explicit no-comparison despite containing the word comparar",()=>{
+  const b=buildBuyerContext(["Quiero la Epson L1250 y no quiero comparar"],{catalog});
+  expect(b.current_intent).not.toBe("comparar");
+ });
+ it("detects practical next-step purchase request and blocks premature data collection",()=>{
+  const p=[{titulo:"Epson L1250",partnumber:"EPSON-L1250",marca:"EPSON"}];
+  const b=buildBuyerContext(["Necesito 2 Epson L1250, ¿cuál es el siguiente paso para comprarlas?"],{catalog:p});
+  expect(b.current_intent).toBe("comprar");
+  const guarded=protectSalesResponse("Envíame tu nombre completo y tu teléfono para registrar el pedido.",{buyer:b,catalog:p});
+  expect(guarded.reason).toBe("unconfirmed_action");
+  expect(guarded.reply).not.toMatch(/env[ií]ame|nombre completo|tel[eé]fono/i);
+ });
+ it("accepts buyer who wants to think without pushing further",()=>{
+  const b=buildBuyerContext(["Gracias, por ahora lo voy a pensar"],{catalog});
+  expect(b.current_intent).toBe("despedida");
+  expect(salesMove(b,{catalog}).stage).toBe("cierre_conversacion");
+ });
  it("keeps normal helpful answers when no unsafe claim was made",()=>{
   const b=buildBuyerContext(["¿Cuál cargador me conviene?"],{catalog});
   const output=protectSalesResponse("Para saber si es compatible necesito la potencia y el modelo del equipo.",{catalog,buyer:b});
