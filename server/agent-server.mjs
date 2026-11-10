@@ -10,6 +10,7 @@ import {buildConversationContext} from "./conversation-context.mjs";
 import {validAgentRequest} from "./request-validation.mjs";
 import {buildBuyerContext,buyerGuidance} from "./buyer-reasoning.mjs";
 import {normalizeSalesMemory,snapshotSalesMemory} from "./sales-memory.mjs";
+import {isExplicitProductSwitch} from "./customer-topic.mjs";
 import {protectSalesResponse,hideExactStockUnits} from "./sales-response-guard.mjs";
 import {assessCommercialReadiness} from "./commercial-readiness.mjs";
 import { crmResponseSchema,validateBookingProposal } from "./followup-automation.mjs";
@@ -116,7 +117,8 @@ async function handle(req,res){
   const lookupTurns=[...(historicalBuyerTurns.length?historicalBuyerTurns:
     context.filter(t=>t.role==="user").map(t=>t.content)),msg];
   const hint=priorMemory?.customer_reference||priorMemory?.selected_partnumber;
-  const catalogTurns=hint?[...lookupTurns.slice(-14,-1),hint,msg]:lookupTurns;
+  const catalogTurns=isExplicitProductSwitch(msg)?[msg]:
+    hint?[...lookupTurns.slice(-14,-1),hint,msg]:lookupTurns;
   const lookup=await retrieveSalesCatalog(db,workspaceId,catalogTurns,{limit:18});
   const pn=lookup.products.map(x=>x.partnumber);
   const testOffers=simulated&&pn.length?await db.from("arm_offer_simulations")
