@@ -10,7 +10,7 @@ const norm=(x)=>String(x||"").normalize("NFD").replace(/[\u0300-\u036f]/gu,"").t
 export function isExplicitProductSwitch(message){
  const s=norm(message);
  const switchVerb=/\b(?:ahora\s+(?:estoy\s+viendo|quiero|busco|prefiero|me\s+interesa)|mejor\s+(?:quiero|busco|prefiero)|en\s+vez\s+de|cambie?\s+(?:a|por)|regresemos\s+(?:al?|a\s+la)|volvamos\s+(?:al?|a\s+la))\b/u.test(s);
- const productMention=/\b(?:laptops?|notebooks?|computadoras?|pcs?|impresoras?|tablets?|celulares?|telefonos?|cargadores?|baterias?|camaras?|monitores?|routers?|mouse|teclados?|audifonos?|discos?|licencias?|software|lenovo|epson|ulefone|samsung|apple|brother|asus|acer|dell|microsoft|logitech|jbl|genius|xiaomi|motorola|canon|msi|dji)\b/u.test(s);
+ const productMention=/\b(?:laptops?|notebooks?|computadoras?|pcs?|impresoras?|tablets?|celulares?|telefonos?|cargador(?:es)?|baterias?|camaras?|monitores?|routers?|mouse|teclados?|audifonos?|discos?|licencias?|software|lenovo|epson|ulefone|samsung|apple|brother|asus|acer|dell|microsoft|logitech|jbl|genius|xiaomi|motorola|canon|msi|dji)\b/u.test(s);
  return switchVerb&&productMention;
 }
 export function classifyCustomerTopic(message){
