@@ -141,6 +141,39 @@ describe("ALEX verified product photographs (any future category)",()=>{
   const next=buildBuyerContext([text],{catalog:products});
   expect(next.matched_partnumber).toBe("ARMOR-22-256G");
  });
+ it("supports a completely new manufacturer/category without code changes",()=>{
+  const future=row("DJI-MAVIC-3E","Drone DJI Mavic 3E");
+  future.marca="DJI";
+  const media={
+   value:{verified_sku:future.partnumber,url:"https://store.dji.com/media/catalog/mavic-3e.jpg"},
+   source_type:"manufacturer",source_url:"https://store.dji.com/product/mavic-3e",
+   reviewed_at:new Date().toISOString()
+  };
+  const b=buildBuyerContext(["pásame foto del DJI Mavic 3E"],{catalog:[future]});
+  expect(b.matched_partnumber).toBe(future.partnumber);
+  const result=verifiedProductPhoto({buyer:b,catalog:[future],factsByPn:{
+   "DJI-MAVIC-3E":{product_image:media}
+  }});
+  expect(result?.partnumber).toBe("DJI-MAVIC-3E");
+  expect(result?.url).toBe(media.value.url);
+  expect(result?.caption).toMatch(/Drone DJI Mavic 3E/);
+ });
+ it("does not select an older official picture when future SKU changes",()=>{
+  const old=row("DJI-MAVIC-3E","Drone DJI Mavic 3E");
+  old.marca="DJI";
+  const b={matched_partnumber:old.partnumber,last_message:"ahora mejor foto del DJI Mavic 4E"};
+  const result=verifiedProductPhoto({buyer:b,catalog:[old],factsByPn:{
+   "DJI-MAVIC-3E":{product_image:{value:{verified_sku:old.partnumber,
+     url:"https://store.dji.com/media/mavic-3e.jpg"},source_url:"https://store.dji.com/product/mavic-3e",source_type:"manufacturer"}}
+  }});
+  expect(result).toBeNull();
+ });
+ it("rejects locally resolvable domains even with matching provenance",()=>{
+  for(const domain of ["127.0.0.1","localhost","photos.internal","a.example.com","x.nip.io","a.sslip.io"]){
+   const url="https://"+domain+"/picture.jpg";
+   expect(safePublicImageUrl(url,url)).toBeNull();
+  }
+ });
  it("returns brief natural answers when photo cannot be verified",()=>{
   expect(productPhotoUnavailableReply(buyer("manda foto"))).toMatch(/no tengo una foto verificada/i);
   expect(productPhotoUnavailableReply({last_message:"foto",matched_partnumber:null})).toMatch(/de qué modelo/i);
