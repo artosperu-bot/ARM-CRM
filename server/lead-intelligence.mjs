@@ -2,12 +2,13 @@
 // not a probability of purchase, nor a replacement for a sales agent's judgment.
 // It never sends messages, schedules follow-ups or creates deals.
 import {buildBuyerContext} from "./buyer-reasoning.mjs";
+import {needsPostSaleSpecialist} from "./customer-topic.mjs";
 const clean=(s)=>String(s||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/\s+/g," ").trim();
 const includes=(text,re)=>re.test(text);
 const RE={
  optout:/\b(?:no me (?:escribas|escriban|contactes|contacten)|no (?:quiero|deseo) (?:mas )?(?:mensajes|contacto|publicidad)|(?:darme|dame) de baja|cancelar suscripcion|deja(?:n)? de escribirme|stop|unsubscribe|bloqueame)\b/u,
  optin:/\b(?:si (?:quiero|pueden|puedes) (?:que me (?:escriban|contacten)|recibir mensajes)|autorizo (?:el contacto|que me contacten)|pueden volver a escribirme|reanudar contacto)\b/u,
- human:/\b(?:quiero (?:hablar|conversar) con (?:un |una )?(?:humano|persona|asesor|vendedor)|pasame con (?:un |una )?(?:asesor|vendedor|persona)|atencion humana|comunicarme con (?:un |una )?(?:asesor|vendedor)|necesito un asesor|quiero que me atienda (?:un |una )?(?:asesor|vendedor|persona)(?: humano| humana)?|(?:puedes|podrian|podrias) comunicarme con (?:alguien|una persona|un asesor))\b/u,
+ human:/\b(?:quiero (?:hablar|conversar) con (?:un |una )?(?:humano|persona|asesor|vendedor)|pasame con (?:un |una )?(?:asesor|vendedor|persona)|atencion humana|comunicarme con (?:un |una )?(?:asesor|vendedor)|necesito un asesor|quiero q(?:ue)? un asesor (?:vea|revise|me ayude)|pasame con alguien|pasame con alguien que (?:solucione|atienda)|quiero hablar con persona|quiero que me atienda (?:un |una )?(?:asesor|vendedor|persona)(?: humano| humana)?|(?:puedes|podrian|podrias) comunicarme con (?:alguien|una persona|un asesor))\b/u,
  complaint:/\b(?:reclamo|denuncia|estafa|producto defectuoso|me llego (?:mal|roto)|no me llego|quiero devol(?:ver|ucion)|me cobraron de mas)\b/u,
  purchase:/\b(?:lo compro|la compro|los compro|quiero comprar|voy a comprar|me lo llevo|donde pago|como (?:realizo|hago) el pago|pasame (?:el|tu) (?:link|enlace) de pago|quiero hacer (?:el )?pedido|procedamos con la compra)\b/u,
  quote:/\b(?:cotiza(?:cion|r|me)|presupuesto|proforma|precio|cuanto (?:cuesta|vale|sale)|a como|valor del (?:equipo|producto)|factura|orden de compra)\b/u,
@@ -40,7 +41,7 @@ export function analyzeSalesConversation(messages,{
  const signals=[];
  const add=(cond,label)=>{if(cond)signals.push(label);};
  const deniedHuman=/\b(?:no quiero hablar con|no necesito (?:un |una )?asesor)\b/u.test(latest);
- const askedHuman=(includes(latest,RE.human)&&!deniedHuman)||includes(latest,RE.complaint);
+ const askedHuman=(includes(latest,RE.human)&&!deniedHuman)||includes(latest,RE.complaint)||needsPostSaleSpecialist(latest);
  const explicitStop=includes(latest,RE.optout);
  const explicitResume=includes(latest,RE.optin);
  const optOut=explicitStop||(Boolean(previousOptOut)&&!explicitResume);
@@ -97,5 +98,5 @@ export function analyzeSalesConversation(messages,{
 }
 export function immediateStop(text){
  const normalized=clean(text);
- return RE.optout.test(normalized)||(RE.human.test(normalized)&&!/\b(?:no quiero hablar con|no necesito (?:un |una )?asesor)\b/u.test(normalized))||RE.complaint.test(normalized);
+ return RE.optout.test(normalized)||needsPostSaleSpecialist(normalized)||(RE.human.test(normalized)&&!/\b(?:no quiero hablar con|no necesito (?:un |una )?asesor)\b/u.test(normalized))||RE.complaint.test(normalized);
 }
