@@ -31,7 +31,8 @@ describe("Short customer acknowledgment is conditional on persisted human handof
   const f=fixture();
   const result=await f.service(event(),{handoff_queued:true,opt_out:false});
   expect(result.status).toBe("sent");
-  expect(HANDOFF_MESSAGE).toBe("Claro, ahora te paso con un asesor.");
+  expect(HANDOFF_MESSAGE).toMatch(/qued[oó] en cola.*atenci[oó]n humana/i);
+  expect(HANDOFF_MESSAGE).not.toMatch(/ya te paso|ya te pas[eé]|asignad[oa] (?:a|para) (?:un|una) asesor/i);
   expect(f.sent).toHaveLength(1);
   expect(JSON.parse(f.sent[0].options.body).text.body).toBe(HANDOFF_MESSAGE);
   expect(f.written).toHaveLength(1);
