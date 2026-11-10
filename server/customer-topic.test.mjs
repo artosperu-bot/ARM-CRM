@@ -1,5 +1,5 @@
 import {describe,it,expect} from "vitest";
-import {classifyCustomerTopic,customerTopicInstructions} from "./customer-topic.mjs";
+import {classifyCustomerTopic,customerTopicInstructions,isExplicitProductSwitch} from "./customer-topic.mjs";
 import {buildBuyerContext,buyerGuidance} from "./buyer-reasoning.mjs";
 import {snapshotSalesMemory} from "./sales-memory.mjs";
 import {salesMove} from "./sales-playbook.mjs";
@@ -26,6 +26,16 @@ describe("ALEX attends unrelated and service topics as a general-purpose seller"
  ])("routes %s without inventing policy (%s)",(text,topic)=>{
   expect(classifyCustomerTopic(text)).toBe(topic);
   expect(customerTopicInstructions(topic)).toContain("TIPO DE CONSULTA ACTUAL");
+ });
+ it.each([
+  ["Pero ahora estoy viendo una tablet Samsung, ¿cuál recomiendas?",true],
+  ["Mejor quiero la impresora Epson L1250",true],
+  ["Regresemos al cargador USB-C",true],
+  ["Oye, otra cosa, ¿emiten factura electrónica?",false],
+  ["¿Y cuánto salen los dos celulares?",false],
+  ["Ahora quiero saber cómo funciona la garantía",false]
+ ])("focuses product retrieval only for explicit product transitions: %s",(message,expected)=>{
+  expect(isExplicitProductSwitch(message)).toBe(expected);
  });
  it("does not treat an unsent complaint as explicit request for human adviser",()=>{
   const b=buyer(["Compré una Epson L1250 y no imprime negro","¿Ya me abriste un reclamo?"]);
