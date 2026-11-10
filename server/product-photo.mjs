@@ -104,6 +104,12 @@ export function serializePhotoTurn(photo){
  if(!photo?.url||!safePublicImageUrl(photo.url,photo.sourceUrl))return null;
  return photo.caption+"\n[FOTO_VERIFICADA]("+photo.url+")";
 }
+/** Images remain visible in the stored CRM/inbox; no raw media URL is
+ * injected into future LLM conversation context or used as sales evidence.
+ */
+export function stripPhotoMarker(value){
+ return String(value||"").replace(/\n\[FOTO_VERIFICADA\]\(https:\/\/[^)\s]+\)\s*$/u,"").trim();
+}
 export function productPhotoUnavailableReply(buyer){
  if(!buyer?.matched_partnumber)
   return "Claro, ¿de qué modelo quieres la foto?";
