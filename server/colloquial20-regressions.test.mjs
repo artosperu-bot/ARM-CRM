@@ -146,6 +146,19 @@ describe("20 realistic WhatsApp-style STECH customer scenarios",()=>{
     expect(r.reply).not.toMatch(/te aviso apenas|te respondo apenas|en cuanto se confirme, te digo|primero confirmamos/i);
   }
  });
+ it("uses a factual answer when the database has no verified price or saleable stock",()=>{
+  const price=buyer(["buenas la epson l1250 cuanto sale"]);
+  const rp=protectSalesResponse("Te aviso luego apenas consiga el precio.",{buyer:price,catalog});
+  expect(rp.reason).toBe("unverified_price");
+  expect(rp.reply).toMatch(/precio.*por confirmar/i);
+  expect(rp.reply).not.toMatch(/te aviso|luego/i);
+  const next=buyer(["tienes ahorita? necesito una nomas"],{memory:snapshotSalesMemory(price)});
+  expect(next.current_intent).toBe("disponibilidad");
+  const rs=protectSalesResponse("Si me das un momento lo verifico.",{buyer:next,catalog});
+  expect(rs.reason).toBe("unverified_availability");
+  expect(rs.reply).toMatch(/disponibilidad.*por confirmar/i);
+  expect(rs.reply).not.toMatch(/un momento|verifico/i);
+ });
  it("gives a commercial answer to a colloquial volume-discount objection",()=>{
   const b=buyer(["armor 22 precio x 5","asu sta caro pe, no hay rebaja si llevo los 5?"]);
   expect(b.quantity).toBe(5);
