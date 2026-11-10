@@ -18,7 +18,7 @@ export function requestsProductPhoto(message){
  return /\b(?:fotos?|fotitos?|fotografias?|imagenes?|imagen|fotito|fotos)\b/u.test(s)&&
     /\b(?:manda(?:me)?|pasame|pasa|envia(?:me)?|mandame|ense[nñ]a(?:me)?|muestra(?:me)?|quiero|puedo ver|tienes|tienen|necesito|ver|env[ií]a|mostra(?:me)?|compart[eí](?:me)?|mostrar)\b/u.test(s)
     || /\b(?:muestrame|mu[eé]strame|ensename|ens[eé]ñame)\s+(?:como (?:es|se ve)|el equipo|la laptop|el celular|el producto|el telefono)\b/u.test(s)
-    || /\b(?:como se ve|quiero verlo|quiero verla|muestra el equipo)\b/u.test(s);
+    || /\b(?:como se ve|quiero verlo|quiero verla|muestra el equipo|(?:quiero|quisiera|puedo) ver (?:el|la|un|una) (?:celular|equipo|producto|modelo|telefono|laptop|tablet|impresora))\b/u.test(s);
 }
 const hosts=new Set(["store.ulefone.com","www.s-tech.com.pe","s-tech.com.pe"]);
 export function safePublicImageUrl(raw,sourceUrl){
@@ -54,7 +54,9 @@ export function verifiedProductPhoto({buyer,catalog=[],factsByPn={}}={}){
  const sku=buyer?.matched_partnumber;
  if(!sku||buyer?.customer_reference&&!buyer?.matched_partnumber)return null;
  const named=explicitlyNamedProducts(buyer?.last_message||"",catalog);
- if(named.size>1)return null; // multi-model request needs a gallery, not arbitrary last SKU
+ const models=[...norm(buyer?.last_message||"").matchAll(/\barmor\s*(x\d{1,2}\s*pro|25t\s*pro|x\d{1,2}|22)\b/g)]
+   .map(m=>m[1].replace(/\s+/g,""));
+ if(named.size>1||new Set(models).size>1)return null; // multi-model request needs a gallery, not arbitrary last SKU
  const p=catalog.find(x=>x?.partnumber===sku);
  if(!p||named.size===1&&!named.has(sku))return null;
  const fact=factsByPn?.[sku]?.product_image;
@@ -68,6 +70,10 @@ export function verifiedProductPhoto({buyer,catalog=[],factsByPn={}}={}){
   caption:("Foto referencial del modelo: "+String(p.titulo||sku)).slice(0,180),
   sourceUrl:fact.source_url
  };
+}
+export function serializePhotoTurn(photo){
+ if(!photo?.url||!safePublicImageUrl(photo.url,photo.sourceUrl))return null;
+ return photo.caption+"\n[FOTO_VERIFICADA]("+photo.url+")";
 }
 export function productPhotoUnavailableReply(buyer){
  if(!buyer?.matched_partnumber)
