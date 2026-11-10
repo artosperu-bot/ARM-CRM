@@ -4,6 +4,7 @@
  * Hard rules are separate from qualitative human review.
  */
 import {readFileSync} from "node:fs";
+import {colloquial20} from "./qa-colloquial-scenarios.mjs";
 import {buildBuyerContext,buyerGuidance} from "./buyer-reasoning.mjs";
 import {snapshotSalesMemory} from "./sales-memory.mjs";
 import {isExplicitProductSwitch,selectCustomerPromptInput} from "./customer-topic.mjs";
@@ -106,7 +107,8 @@ const allScenarios=[
  ]}
 ];
 const requested=(process.env.ALEX_QA_CASES||"").split(",").map(x=>x.trim()).filter(Boolean);
-const scenarios=requested.length?allScenarios.filter(x=>requested.includes(x.name)):allScenarios;
+const pool=process.env.ALEX_QA_PROFILE==="colloquial20"?colloquial20:[...allScenarios,...colloquial20];
+const scenarios=requested.length?pool.filter(x=>requested.includes(x.name)):pool;
 if(!scenarios.length)throw new Error("UNKNOWN_QA_CASE_SELECTION");
 const prompt=(buyer,products=catalog)=>salesInstructions(products,{simulated:false,buyer})+"\n"+buyerGuidance(buyer,{catalog:products})+
  "\nPRUEBA SINTÉTICA PRIVADA. Contesta normalmente al cliente con JSON reply/followup. No existe herramienta de pedidos, cobros ni seguimientos salientes. No inventes datos, cotizaciones, precios, entregas o contactos humanos.";
@@ -152,7 +154,7 @@ async function execute(s){
   const nQuestions=(reply.match(/[?¿]/gu)||[]).filter(c=>c==="?").length;
   const quality=reviewCommercialTurn({reply,buyer,
     previousReplies:history.filter(x=>x.role==="assistant").map(x=>x.content)});
-  report.push({turn:i+1,q:question,intent:buyer.current_intent,reply,
+  report.push({turn:i+1,q:question,intent:buyer.current_intent,topic:buyer.current_topic,reply,
     guard:guard.reason,questions:nQuestions,qualityNotes:quality.notes,
     qualityNeedsReview:quality.needsReview,needsHuman:buyer.requires_human,
     rememberedQuantity:memory.quantity,rememberedBudget:memory.budget?.pen||null,
