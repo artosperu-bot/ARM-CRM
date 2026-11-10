@@ -50,6 +50,18 @@ const unsupportedBillingClaim=/\b(?:s[ií][,.:]?\s*(?:emitimos|aceptamos|puedes 
 const unsupportedRefundClaim=/\b(?:te\s+(?:la|lo)\s+cambiamos|cambio inmediato (?:aprobado|asegurado|garantizado)|(?:ya\s+)?(?:aprobamos|aprobada)\s+(?:la|tu)\s+devoluci[oó]n|te\s+devolvemos\s+(?:el|tu)\s+dinero|reembolso\s+(?:aprobado|garantizado))\b/iu;
 const unsupportedWarrantyDuration=/\b(?:tenemos|tiene|incluye|cuenta con|ofrecemos|te damos)\s+(?:una?\s+)?(?:garant[ií]a\s+(?:de\s+)?)?\d+\s*(?:meses?|a[ñn]os?)\s+(?:de\s+)?garant[ií]a\b|\b(?:garant[ií]a\s+(?:de\s+)?\d+\s*(?:meses?|a[ñn]os?))\b/iu;
 const prematureDataRequest=/(?:\b(?:p[aá]same|dame|env[ií]ame|ind[ií]came|necesito|comp[aá]rteme|comparte|compartes|cu[aá]l es)\s+(?:tu|su)\s+(?:nombre|apellido|tel[eé]fono|celular|direcci[oó]n|ruc|dni|correo|tarjeta)\b|\b(?:tu|su)\s+(?:nombre\s+(?:y|completo)|direcci[oó]n|ruc|dni)\s+(?:para\s+(?:hacer|registrar|confirmar)))/iu;
+/** Don't volunteer inventory status when buyer only asked about product benefits.
+ * For explicit availability questions the original reply remains untouched.
+ */
+export function withoutUnsolicitedStockAside(reply,buyer){
+ const text=String(reply||"");
+ const prompt=String(buyer?.last_message||"");
+ if(["disponibilidad","entrega","comprar"].includes(buyer?.current_intent)||
+   /\b(?:stock|disponib|hay unidades|tienen unidades|entrega inmediata|hay para hoy)\b/iu.test(prompt))
+  return text;
+ const clean=text.replace(/\b(?:la disponibilidad (?:est[aá]|queda|se encuentra) (?:por confirmar|pendiente de confirmaci[oó]n)|(?:el )?stock (?:est[aá]|queda) por confirmar|no (?:puedo|podemos) confirmar (?:stock|disponibilidad)|(?:s[ií],?\s+)?(?:tenemos|hay) (?:stock|disponibilidad)(?: disponible)?)\b[.;,]?\s*/giu,"");
+ return clean.replace(/\s{2,}/g," ").replace(/\.\s*\./g,".").trim()||text;
+}
 export function protectSalesResponse(reply,{catalog=[],buyer=null,simulated=false}={}){
  const text=typeof reply==="string"?reply.trim():"";
  if(!text)return {reply:"Puedo ayudarte con tu consulta. ¿Qué producto necesitas?",blocked:true,reason:"empty"};
@@ -155,7 +167,7 @@ export function protectSalesResponse(reply,{catalog=[],buyer=null,simulated=fals
    return {reply,blocked:true,reason:"purchase_not_ready"};
   }
 
-  return {reply:polishCommercialReply(text,buyer),blocked:false,reason:null};
+  return {reply:polishCommercialReply(withoutUnsolicitedStockAside(text,buyer),buyer),blocked:false,reason:null};
  }
  const reason=wrongProduct?"product_mismatch":repeatedModelRequest?"redundant_model_question":moneyViolation?"unverified_price":affordabilityViolation?"unverified_affordability":actionViolation?"unconfirmed_action":
    stockViolation?"exact_stock":discountViolation?"unapproved_discount":prematureDataViolation?"premature_personal_data":"delivery_promise";
