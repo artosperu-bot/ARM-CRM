@@ -10,6 +10,10 @@ const norm=s=>String(s||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLo
 export function requestsProductPhoto(message){
  const s=norm(message);
  if(!s)return false;
+ // A customer declining photos must never trigger a media send.
+ if(/\b(?:no (?:quiero|necesito|me mandes|mandes|envies|muestres|me envies)\s+(?:una?\s+)?(?:fotos?|imagenes?)|sin (?:fotos?|imagenes?))\b/u.test(s))return false;
+ // Example photos captured by a phone are not pictures OF the product.
+ if(/\b(?:fotos? (?:tomadas? con|que (?:toma|saca|hace)|de (?:su|la) camara)|muestras? (?:de|fotos? de) (?:su|la) camara|fotos? de la camara)\b/u.test(s))return false;
  // Questions about camera quality or taking pictures are not photo requests.
  if(/\b(?:tomar|toma|sacar|saca|captura|hace|graba|calidad de)\s+(?:buenas?\s+)?(?:fotos?|imagenes?)\b/u.test(s)
     && !/\b(?:manda|pasa|envia|enviame|muestra|muestrame|ensena|quiero ver|tienes fotos|foto del equipo)\b/u.test(s))
