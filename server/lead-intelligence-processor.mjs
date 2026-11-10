@@ -53,12 +53,15 @@ export function createLeadIntelligenceProcessor({supabaseUrl,serviceRoleKey,db=n
     ...record,evaluated_at:new Date().toISOString()
   },{onConflict:"thread_id"});
   if(upsertError)return {...profile,should_reply:false};
-  // Explicit request for a human or a serious complaint: stop bot and hand over,
-  // but do not assign an unknown agent or send an unapproved acknowledgment.
-  if(profile.requires_human && thread.status==="pending" && !thread.assigned_to){
-    const {error}=await client.from("arm_threads").update({status:"human"})
-      .eq("id",thread.id).eq("workspace_id",thread.workspace_id).eq("status","pending");
+  // Only a confirmed transition to the human queue authorizes a short
+  // customer-facing acknowledgment. This does NOT assert staff assignment.
+  profile.handoff_queued=false;
+  if(profile.requires_human&&!profile.opt_out&&thread.status==="pending"&&!thread.assigned_to){
+    const {data:queued,error}=await client.from("arm_threads").update({status:"human"})
+      .eq("id",thread.id).eq("workspace_id",thread.workspace_id)
+      .eq("status","pending").select("id").maybeSingle();
     if(error)return {...profile,should_reply:false};
+    profile.handoff_queued=queued?.id===thread.id;
   }
   return profile;
  };
