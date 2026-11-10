@@ -31,7 +31,11 @@ describe("ALEX verified product photographs (any future category)",()=>{
   "¿La cámara del X13 saca buenas fotos?",
   "Busco una cámara para sacar fotos",
   "¿Tiene cámara de 50 MP?",
-  "Quiero tomar fotos bajo el agua"
+  "Quiero tomar fotos bajo el agua",
+  "no quiero fotos, dime precio nomas",
+  "me muestras fotos tomadas con la cámara del X13?",
+  "no me mandes foto de ese equipo",
+  "quiero ver fotos de la cámara"
  ])("does not confuse taking photos with requesting a product picture: %s",text=>{
   expect(requestsProductPhoto(text)).toBe(false);
  });
