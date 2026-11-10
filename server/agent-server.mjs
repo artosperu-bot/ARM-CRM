@@ -13,6 +13,7 @@ import {normalizeSalesMemory,snapshotSalesMemory} from "./sales-memory.mjs";
 import {isExplicitProductSwitch,selectCustomerPromptInput} from "./customer-topic.mjs";
 import {protectSalesResponse,hideExactStockUnits} from "./sales-response-guard.mjs";
 import {assessCommercialReadiness} from "./commercial-readiness.mjs";
+import {requestsProductPhoto,verifiedProductPhoto,productPhotoUnavailableReply,serializePhotoTurn} from "./product-photo.mjs";
 import { crmResponseSchema,validateBookingProposal } from "./followup-automation.mjs";
 import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
@@ -132,6 +133,25 @@ async function handle(req,res){
     {factsByPn:lookup.factsByPn});
   const buyer=buildBuyerContext(priorMemory?[msg]:lookupTurns,{catalog,memory:priorMemory});
   const commercial=assessCommercialReadiness(buyer,{catalog,simulated});
+  if(requestsProductPhoto(msg)){
+    // Product image is an authenticated catalog lookup, not an AI-generated
+    // picture or text hyperlink. Public URL is persisted to allow re-opening.
+    const photo=verifiedProductPhoto({buyer,catalog,factsByPn:lookup.factsByPn});
+    const answer=photo?.caption||productPhotoUnavailableReply(buyer);
+    const savedText=photo?serializePhotoTurn(photo):answer;
+    const {error:photoTurnError}=await db.from("arm_agent_turns").insert([
+      {workspace_id:workspaceId,conversation_id:cid,created_by:user.id,role:"user",content:msg},
+      {workspace_id:workspaceId,conversation_id:cid,created_by:user.id,role:"assistant",content:savedText||answer}
+    ]);
+    if(photoTurnError)return send(res,500,{error:"No fue posible guardar la fotografía en el historial."});
+    const saved=snapshotSalesMemory(buyer,{previous:priorMemory,lastMessageAt:new Date().toISOString()});
+    const {error:photoMemoryError}=await db.from("arm_agent_conversations")
+      .update({sales_memory:saved}).eq("id",cid)
+      .eq("workspace_id",workspaceId).eq("created_by",user.id);
+    if(photoMemoryError)console.error("ARM_AGENT_PHOTO_MEMORY_NOT_SAVED",photoMemoryError.code||"unknown");
+    return send(res,200,{ok:true,conversationId:cid,answer,photo,usage:null,
+      booking:null,simulated,memorySaved:!photoMemoryError,commercial});
+  }
   const abort=new AbortController(),timer=setTimeout(()=>abort.abort(),35000);
   let completion;
   try {
