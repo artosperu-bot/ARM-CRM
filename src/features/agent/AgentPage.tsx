@@ -2,6 +2,7 @@ import {useCallback,useEffect,useState} from "react";
 import {Bot,CheckCircle2,Coins,MessageCircle,Plus,Send,ShieldCheck,RefreshCw,Zap,CalendarClock,UserRoundCheck} from "lucide-react";
 import type {Contact,Section} from "../../types";
 import {detectCommercialSignal} from "./salesSignals";
+import {parseAgentPhotoMessage} from "./photoMessage";
 import {supabase} from "../../lib/supabase";
 import "./agent.css";
 
@@ -120,10 +121,10 @@ export default function AgentPage({workspaceId,contacts,onNavigate,onCreateFollo
    const result=await response.json();
    if(!response.ok||!result.ok)throw new Error(result.error||"No fue posible consultar OpenAI.");
    setQuestion("");setSelected(result.conversationId);
-   setUsage(result.usage);
+   setUsage(result.usage||null);
    setCommercial(result.commercial||null);
    setActionOpen(false);setLinkedContact("");setApproved(false);setDueAt("");
-   setNotice(result.booking?.saved?"Seguimiento registrado automáticamente en Supabase.": "Respuesta real de OpenAI · sin envío al cliente.");
+   setNotice(result.photo?"Foto oficial del fabricante · sin envío a clientes.":result.usage?"Respuesta real de OpenAI · sin envío al cliente.": "Consulta de catálogo · sin envío al cliente.");
    const {data,error:turnError}=await supabase.from("arm_agent_turns").select("id,role,content,created_at")
     .eq("workspace_id",workspaceId).eq("conversation_id",result.conversationId)
     .order("created_at",{ascending:true}).limit(100);
@@ -158,10 +159,20 @@ export default function AgentPage({workspaceId,contacts,onNavigate,onCreateFollo
     </aside>
     <div className="agent-conversation">
       <div className="agent-messages">
-      {!turns.length&&!loading&&<div className="agent-welcome"><div><Bot size={32}/></div><h3>Tu asesor comercial inteligente</h3><p>Haz una consulta sobre los celulares registrados en STECH. El agente conoce el catálogo real, pero no inventará precios ni stock sin validar.</p></div>}
+      {!turns.length&&!loading&&<div className="agent-welcome"><div><Bot size={32}/></div><h3>Tu asesor comercial inteligente</h3><p>Consulta productos, pide una foto del modelo o prueba la atención comercial. ALEX solo comparte información verificada.</p></div>}
       {loading&&<div className="agent-wait">Cargando conversación…</div>}
-      {turns.map(t=><div key={t.id} className={"agent-bubble "+t.role}><span>{t.role==="assistant"?"Agente STECH":"Tú"}</span><p>{t.content}</p></div>)}
-      {sending&&<div className="agent-wait"><RefreshCw size={15}/> Consultando a OpenAI…</div>}
+      {turns.map(t=>{
+       const media=t.role==="assistant"?parseAgentPhotoMessage(t.content):{body:t.content,photoUrl:null};
+       return <div key={t.id} className={"agent-bubble "+t.role}>
+        <span>{t.role==="assistant"?"Agente STECH":"Tú"}</span>
+        <p>{media.body}</p>
+        {media.photoUrl&&<figure className="agent-product-photo">
+         <img src={media.photoUrl} alt={"Imagen verificada: "+media.body} loading="lazy"/>
+         <figcaption>Foto referencial del fabricante · el color puede variar</figcaption>
+        </figure>}
+       </div>;
+      })}
+      {sending&&<div className="agent-wait"><RefreshCw size={15}/> Consultando catálogo y asesor…</div>}
       </div>
       {signal&&<div className={"agent-commercial-signal "+(signal.priority==="high"?"hot":"")}>
        <div className="agent-signal-text"><strong>{signal.label}</strong><span>{signal.nextAction}</span>
