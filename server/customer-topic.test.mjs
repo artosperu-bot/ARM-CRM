@@ -74,6 +74,14 @@ describe("ALEX attends unrelated and service topics as a general-purpose seller"
   expect(c.reply).toMatch(/No tengo confirmación/i);
   expect(c.reason).toBe("unconfirmed_action");
  });
+ it("cannot promise opening a support case, but can clearly state it has not",()=>{
+  const b=buyer(["Compré una Epson L1250. No imprime negro, ¿qué hago?"],{catalog});
+  const unsafe=protectSalesResponse("Si quieres, puedo ayudar a dejar el caso para revisión del servicio técnico.",{buyer:b,catalog});
+  expect(unsafe.blocked).toBe(true);
+  expect(unsafe.reply).not.toMatch(/dejar el caso/i);
+  const safe=protectSalesResponse("No puedo registrar un reclamo desde este chat; necesitas una comprobación del equipo de atención.",{buyer:b,catalog});
+  expect(safe.blocked).toBe(false);
+ });
  it("rejects an unsupported numeric warranty period but retains a truthful unknown",()=>{
   const b=buyer(["¿Cuánto dura la garantía de la Epson L1250?"]);
   const r=protectSalesResponse("Tiene garantía de 24 meses, confirmada.",{buyer:b,catalog});
