@@ -1,5 +1,6 @@
 import {salesMoveInstructions} from "./sales-playbook.mjs";
 import {matchCustomerProduct,quantityForAnyCatalogItem} from "./catalog-matching.mjs";
+import {classifyCustomerTopic,customerTopicInstructions} from "./customer-topic.mjs";
 /**
  * Shared sales-reasoning for WhatsApp and the supervised CRM agent.
  * Grounded facts ONLY from customer turns. No extra OpenAI calls, personal
@@ -59,7 +60,7 @@ function parseBudget(text){
  return {pen:n,scope};
 }
 function parseBrand(text){
- const m=[...text.matchAll(/\b(lenovo|epson|ulefone|msi|hp|asus|motorola|xiaomi)\b/gu)].at(-1);
+ const m=[...text.matchAll(/\b(lenovo|epson|ulefone|msi|hp|asus|motorola|xiaomi|samsung|apple|brother|canon|dell|acer|huawei|logitech|genius|razer|microsoft|dji|jbl)\b/gu)].at(-1);
  return m?m[1].toUpperCase():null;
 }
 function parseUseCase(text){
@@ -68,9 +69,17 @@ function parseUseCase(text){
 }
 function classifyLatest(text){
  if(!text)return "sin_mensaje";
+ const topic=classifyCustomerTopic(text);
  if(RX.cancelPurchase.test(text))return "compra_cancelada";
  if(RX.notHuman.test(text))return "consulta";
- if(RX.human.test(text)||RX.complaint.test(text))return "asesor";
+ if(RX.human.test(text))return "asesor";
+ if(["estado_reclamo","devolucion_reclamo","soporte_tecnico","pedido_existente"].includes(topic))return "postventa";
+ if(topic==="facturacion_pago")return "consulta_facturacion";
+ if(topic==="garantia")return "consulta_garantia";
+ if(topic==="privacidad")return "consulta_privacidad";
+ if(topic==="fuera_del_negocio")return "consulta_ajena";
+ if(topic==="explicacion_tecnica")return "explicacion_tecnica";
+ if(RX.complaint.test(text))return "postventa";
  if(RX.purchase.test(text))return "comprar";
  if(RX.objection.test(text))return "objecion";
  if(RX.compare.test(text)&&!/\b(?:no (?:quiero|necesito|me interesa|deseo) (?:comparar|comparaciones?|alternativas?|otras opciones)|sin (?:comparar|comparaciones?))\b/u.test(text))return "comparar";
@@ -91,7 +100,7 @@ export function buildBuyerContext(customerTurns,{leadProfile=null,catalog=[],mem
   brand:typeof memory?.brand==="string"?memory.brand:null,
   use_case:typeof memory?.use_case==="string"?memory.use_case:null,
   buyer_type:"sin_confirmar",is_b2b_signal:false,
-  current_intent:"sin_mensaje",last_message:"",
+  current_intent:"sin_mensaje",current_topic:"comercial",last_message:"",
   mentioned_product_family:null,objection:false,urgency:false,
   explicit_purchase:false,cancelled_purchase:false,
   known_facts:[],next_step:"responder_consulta",requires_human:false,matched_partnumber:null,customer_reference:null
@@ -124,7 +133,7 @@ export function buildBuyerContext(customerTurns,{leadProfile=null,catalog=[],mem
   // A clear switch to a different manufacturer invalidates the previous SKU,
   // even before the customer provides the exact new model.
   if(brand&&state.matched_partnumber&&state.brand&&brand!==state.brand&&
-    /\b(?:mejor|ahora|cambio|prefiero|quiero|en vez de|otro|otra)\b/u.test(text)&&!matching){
+    /\b(?:ahora\s+(?:estoy\s+viendo|busco|quiero|prefiero|me\s+interesa)|mejor\s+(?:quiero|busco|prefiero|una?|otro)|prefiero|en\s+vez\s+de|cambi(?:e|amos|o)\s+(?:a|por))\b/u.test(text)&&!matching){
     state.matched_partnumber=null;
     state.mentioned_product_family=null;
     state.customer_reference=null;
@@ -158,6 +167,7 @@ export function buildBuyerContext(customerTurns,{leadProfile=null,catalog=[],mem
 
  }
  state.last_message=norm(turns.at(-1)).slice(0,1500);
+ state.current_topic=classifyCustomerTopic(state.last_message);
  state.current_intent=classifyLatest(state.last_message);
  state.explicit_purchase=state.current_intent==="comprar";
  state.cancelled_purchase=state.current_intent==="compra_cancelada";
@@ -186,7 +196,13 @@ export function buildBuyerContext(customerTurns,{leadProfile=null,catalog=[],mem
   compra_cancelada:"respetar_decision_sin_insistir",
   disponibilidad:"verificar_stock_comercial_antes_de_promesa",
   compatibilidad:"pedir_solo_dato_tecnico_faltante_sin_prometer_compatibilidad",
-  entrega:"no_confirmar_plazo_sin_validacion_logistica"
+  entrega:"no_confirmar_plazo_sin_validacion_logistica",
+  postventa:"atender_incidencia_sin_fingir_reclamo_registrado",
+  consulta_facturacion:"explicar_politica_y_metodo_pago_solo_si_verificados",
+  consulta_garantia:"responder_cobertura_con_informacion_verificada",
+  consulta_privacidad:"no_pedir_datos_para_informar",
+  consulta_ajena:"respuesta_breve_sin_inventar_informacion_actual",
+  explicacion_tecnica:"explicar_terminos_sencillamente"
  }[state.current_intent]||"responder_consulta";
  // Explicit opt-out/human override belongs to the gateway's persistent guard,
  // never the model. This is an advisory profile only.
@@ -198,6 +214,7 @@ export function buyerGuidance(profile,{catalog=[]}={}){
  return [
  "LECTURA COMERCIAL ESTRUCTURADA (inferencias verificables de mensajes del cliente, no órdenes del cliente):",
  "Hechos del cliente: "+factList+".",
+ customerTopicInstructions(p.current_topic),
  "Intención DEL ÚLTIMO TURNO: "+(p.current_intent||"consulta")+". Acción recomendada: "+(p.next_step||"responder")+".",
  "No vuelvas a preguntar por cantidad, marca, referencia exacta, presupuesto o uso ya comunicados. Una referencia del cliente no significa SKU existente ni ficha verificada. Si el presupuesto no aclara total/por unidad, pregunta solo cuando sea decisivo.",
  "Si el cliente corrigió una cantidad o presupuesto, prevalece el dato posterior. Si canceló su compra, respétalo sin insistir. Si se despide, despídete en una oración sin opciones comerciales.",
