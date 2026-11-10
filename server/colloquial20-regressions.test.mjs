@@ -116,12 +116,20 @@ describe("20 realistic WhatsApp-style STECH customer scenarios",()=>{
   const b=buyer(["armor 22 precio x 5"]);
   for(const reply of [
    "Ahorita no tengo el precio confirmado. Si quieres te lo dejo listo para revisión.",
-   "Puedo ayudarte a dejar la consulta para cotización."
+   "Puedo ayudarte a dejar la consulta para cotización.",
+   "Sí te puedo ayudar a dejarlo listo apenas se valide el importe."
   ]){
    const r=protectSalesResponse(reply,{buyer:b,catalog});
    expect(r.blocked).toBe(true);
    expect(r.reply).not.toMatch(/te lo dejo listo|dejar la consulta/i);
   }
+ });
+ it("does not emit robotic message when unverified stock query triggers a guard",()=>{
+  const b=buyer(["buenas la epson l1250 cuanto sale","tienes ahorita? necesito una nomas"]);
+  const r=protectSalesResponse("Te puedo ayudar a dejarlo listo para revisión de stock.",{buyer:b,catalog});
+  expect(r.blocked).toBe(true);
+  expect(r.reply).toMatch(/disponibilidad de ese modelo está por confirmar/i);
+  expect(r.reply).not.toMatch(/Lo solicitado requiere información/i);
  });
  it("gives a commercial answer to a colloquial volume-discount objection",()=>{
   const b=buyer(["armor 22 precio x 5","asu sta caro pe, no hay rebaja si llevo los 5?"]);
