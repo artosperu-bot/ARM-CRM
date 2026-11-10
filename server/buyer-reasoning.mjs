@@ -47,7 +47,7 @@ function parseQuantity(text,{allowBareCorrection=false}={}){
 }
 function parseBudget(text){
  // Budget only when explicitly contextualized; never infer from an asked price.
- const re=/\b(?:presupuesto(?:\s+(?:es|de|sera|seria|aproximado|maximo|total))?|puedo gastar|cuento con|maximo(?:\s+de)?|dispongo de|hasta)\s*(?:unos?|aprox(?:imadamente)?|de)?\s*(?:s\/\.?\s*|soles?\s*)?(\d{1,3}(?:[.,]\d{3})+|\d{3,6})\s*(?:soles)?\b/gu;
+ const re=/\b(?:presupuesto(?:\s+(?:total|aproximado|maximo|por unidad))?(?:\s+(?:es|de|sera|seria))?|puedo gastar|cuento con|maximo(?:\s+de)?|dispongo de|hasta)\s*(?:unos?|aprox(?:imadamente)?|de)?\s*(?:s\/\.?\s*|soles?\s*)?(\d{1,3}(?:[.,]\d{3})+|\d{3,6})\s*(?:soles)?\b/gu;
  const matches=[...text.matchAll(re)];
  if(!matches.length)return null;
  const last=matches.at(-1);
