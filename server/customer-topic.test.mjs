@@ -53,6 +53,12 @@ describe("ALEX attends unrelated and service topics as a general-purpose seller"
   expect(next.brand).toBe("SAMSUNG");
   expect(next.matched_partnumber).toBeNull();
   expect(next.customer_reference).toBeNull();
+  expect(next.product_switched).toBe(true);
+  const persisted=snapshotSalesMemory(next,{previous:snapshotSalesMemory(old)});
+  expect(persisted.selected_partnumber).toBeNull();
+  expect(persisted.quantity).toBe(1);
+  const newTurn=buyer(["¿Y cuál recomiendas para la tablet Samsung?"],{memory:persisted});
+  expect(newTurn.matched_partnumber).toBeNull();
   const guard=protectSalesResponse("La tablet Samsung cuesta S/ 50.",{buyer:next,catalog});
   expect(guard.reason).toBe("unverified_price");
  });
@@ -89,6 +95,20 @@ describe("ALEX attends unrelated and service topics as a general-purpose seller"
   expect(r.reply).toMatch(/falta comprobar la cobertura y el plazo/i);
   const safe=protectSalesResponse("No tengo confirmado el plazo de garantía de la Epson L1250.",{buyer:b,catalog});
   expect(safe.blocked).toBe(false);
+ });
+ it("allows asking the model of a different device to verify an accessory",()=>{
+  const b=buyer(["Busco cargador USB-C Lenovo de 65W","¿Ese cargador le sirve a mi laptop?"]);
+  expect(b.matched_partnumber).toBe("CARGADOR-A");
+  expect(b.current_intent).toBe("compatibilidad");
+  const g=protectSalesResponse("Confírmame el modelo exacto de tu laptop Lenovo para determinar qué potencia requiere.",{buyer:b,catalog});
+  expect(g.blocked).toBe(false);
+ });
+ it("detects plural price questions, never promising fictitious follow-ups",()=>{
+  const b=buyer(["Quiero dos Armor 22", "Ya, ¿cuánto salen los dos?"]);
+  expect(b.current_intent).toBe("consultar_precio");
+  const g=protectSalesResponse("Si quieres puedo dejarte listo el seguimiento para cotizarlos cuando tenga precio.",{buyer:b,catalog});
+  expect(g.blocked).toBe(true);
+  expect(g.reply).not.toMatch(/dejarte listo el seguimiento/i);
  });
  it("does not force selling when buyer asks unrelated live sports result",()=>{
   const b=buyer(["Quiero una Lenovo T14","¿Quién ganó el partido de fútbol de ayer?"]);
