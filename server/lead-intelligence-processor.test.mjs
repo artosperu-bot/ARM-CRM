@@ -48,6 +48,7 @@ describe("safe WhatsApp triage persistence",()=>{
   const result=await createLeadIntelligenceProcessor({db:f.db})({...seed,text:"Quiero hablar con un asesor"});
   expect(result.requires_human).toBe(true);
   expect(result.should_reply).toBe(false);
+  expect(result.handoff_queued).toBe(true);
   expect(f.writes.map(w=>w.table)).toEqual(["arm_lead_insights","arm_threads"]);
   expect(f.writes[1].values).toEqual({status:"human"});
  });
@@ -65,6 +66,13 @@ describe("safe WhatsApp triage persistence",()=>{
    expect(f.writes.map(w=>w.table)).toEqual(["arm_lead_insights","arm_threads"]);
    expect(f.writes[1].values).toEqual({status:"human"});
    expect(f.writes.filter(w=>w.table==="arm_messages")).toHaveLength(0);
+ });
+ it("does not acknowledge a handoff from an already-human thread",async()=>{
+   const f=mockDb({status:"human",lastMessage:"QUIERO ASESOR"});
+   const result=await createLeadIntelligenceProcessor({db:f.db})({...seed,text:"QUIERO ASESOR"});
+   expect(result.handoff_queued).toBe(false);
+   expect(result.should_reply).toBe(false);
+   expect(f.writes.filter(w=>w.table==="arm_threads")).toHaveLength(0);
  });
  it("retains previously refused outreach even after hello",async()=>{
   const f=mockDb({previousOptOut:true,lastMessage:"hola"});
