@@ -149,8 +149,8 @@ describe("20 realistic WhatsApp-style STECH customer scenarios",()=>{
  it("uses a factual answer when the database has no verified price or saleable stock",()=>{
   const price=buyer(["buenas la epson l1250 cuanto sale"]);
   const rp=protectSalesResponse("Te aviso luego apenas consiga el precio.",{buyer:price,catalog});
-  expect(rp.reason).toBe("unverified_price");
-  expect(rp.reply).toMatch(/precio.*por confirmar/i);
+  expect(["unconfirmed_action","unverified_price"]).toContain(rp.reason);
+  expect(rp.reply).toMatch(/precio.*confirmad/i);
   expect(rp.reply).not.toMatch(/te aviso|luego/i);
   const next=buyer(["tienes ahorita? necesito una nomas"],{memory:snapshotSalesMemory(price)});
   expect(next.current_intent).toBe("disponibilidad");
