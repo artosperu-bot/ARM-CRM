@@ -17,7 +17,7 @@ export function needsPostSaleSpecialist(message){
  const hypothetical=/\b(?:si(?:\s+(?:el|la|lo|se))?\s+(?:se\s+)?(?:malogra|falla|rompe|moja)|que pasa si|en caso de que)\b/u.test(t)&&
   !/\b(?:se malogro|se fallo|ya fallo|llego roto|me llego roto|no prende|no funciona)\b/u.test(t);
  if(hypothetical)return false;
- return /\b(?:quiero reclamar|quiero devolucion|quiero que me devuelvan|quiero q me devuelvan|quiero reembolso|me devuelven (?:la plata|el dinero)|me regresan la plata|me dan otr[ao]|me lo cambian|me la cambian|llego roto|llego malogrado|me llego roto|vino roto|me cobraron y no me llego|me cobraron y no llego|producto defectuoso|se malogro y no prende)\b/u.test(t)||
+ return /\b(?:quiero reclamar|quiero devolucion|quiero que me devuelvan|quiero q me devuelvan|quiero reembolso|me devuelven (?:la plata|el dinero)|me regresan la plata|me dan otr[ao]|me lo cambian|me la cambian|llego roto|llego malogrado|me llego roto|vino roto|me cobraron y no me llego|me cobraron y no llego|producto defectuoso|se malogro|esta malogrado|se rompio|se mojo y no prende|mi pedido no llega|no me llego|no me llega)\b/u.test(t)||
   /\b(?:recien lo compre|acabo de comprar|lo compre con ustedes|lo compre aca|me vino)\b.{0,70}\b(?:no sirve|no funciona|fallo|malogrado|roto|no prende)\b/u.test(t);
 }
 /** Product-focused retrieval only when the client clearly switches the item,
