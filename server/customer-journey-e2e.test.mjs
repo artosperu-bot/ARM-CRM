@@ -106,7 +106,7 @@ describe("end-to-end sales conversation states: browse → photo → switch → 
 
   const followup=c.next("YA LE AVISASTE A UN ASESOR?");
   const noPhantom=protectSalesResponse("Sí, ya le avisé y lo asigné.",{catalog,buyer:followup.buyer});
-  expect(noPhantom.reply).toMatch(/no tengo confirmaci[oó]n|todav[ií]a no se ha confirmado|a[uú]n no/i);
+  expect(noPhantom.reply).toMatch(/no tengo confirmaci[oó]n|todav[ií]a no se ha confirmado|a[uú]n no|desde este chat no se ha registrado/i);
   expect(HUMAN_QUEUE_CONFIRMED_REPLY).toMatch(/cola.*atenci[oó]n humana/i);
   expect(HUMAN_QUEUE_CONFIRMED_REPLY).not.toMatch(/asign[eé] a Juan|ahora te paso/i);
  });
