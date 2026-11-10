@@ -1,6 +1,7 @@
 import {describe,it,expect} from "vitest";
 import {requestsProductPhoto,safePublicImageUrl,verifiedProductPhoto,productPhotoUnavailableReply} from "./product-photo.mjs";
 import {enrichCatalog} from "./product-knowledge.mjs";
+import {buildBuyerContext} from "./buyer-reasoning.mjs";
 import {packSalesCatalog} from "./sales-policy.mjs";
 const row=(sku,title)=>({titulo:title,marca:"ULEFONE",partnumber:sku});
 const products=[
@@ -78,6 +79,23 @@ describe("ALEX verified product photographs (any future category)",()=>{
   const enriched=enrichCatalog(rows,false,[],{factsByPn});
   expect(JSON.stringify(enriched[0].especificaciones_fabricante)).not.toContain(url);
   expect(packSalesCatalog(enriched)).not.toContain(url);
+ });
+ it.each([
+  "foto del Armor X13",
+  "foto del Armor X12 Pro",
+  "pasame foto del Armor 22",
+  "foto del Armor 25T Pro"
+ ])("does not mistake model digits for number of devices: %s",text=>{
+  const rows=[...products,row("ARMOR-25TPro-256GB","Ulefone Armor 25T Pro 256GB")];
+  expect(buildBuyerContext([text],{catalog:rows}).quantity).toBe(null);
+ });
+ it("still understands real quantity shorthand while distinguishing X13 model",()=>{
+  const b=buildBuyerContext(["precio del armor x13 x 5"],{catalog:products});
+  expect(b.quantity).toBe(5);
+  const a=buildBuyerContext(["quiero 2 Armor X13"],{catalog:products});
+  expect(a.quantity).toBe(2);
+  const c=buildBuyerContext(["armor x13 precio x5"],{catalog:products});
+  expect(c.quantity).toBe(5);
  });
  it("returns brief natural answers when photo cannot be verified",()=>{
   expect(productPhotoUnavailableReply(buyer("manda foto"))).toMatch(/no tengo una foto verificada/i);
