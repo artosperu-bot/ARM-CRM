@@ -59,6 +59,13 @@ export function verifiedProductPhoto({buyer,catalog=[],factsByPn={}}={}){
  if(named.size>1||new Set(models).size>1)return null; // multi-model request needs a gallery, not arbitrary last SKU
  const p=catalog.find(x=>x?.partnumber===sku);
  if(!p||named.size===1&&!named.has(sku))return null;
+ const current=norm(buyer?.last_message||"");
+ const explicitBrands=[...new Set([...current.matchAll(/\b(ulefone|samsung|epson|lenovo|brother|apple|asus|acer|dell|hp|logitech|xiaomi|motorola|canon|msi|jbl|microsoft|dji)\b/g)].map(x=>x[1]))];
+ if(explicitBrands.length && (explicitBrands.length>1||explicitBrands[0]!==norm(p.marca)))return null;
+ if(models.length){
+  const title=norm(p.titulo||"");
+  if(!models.every(code=>title.includes("armor "+code)))return null;
+ }
  const fact=factsByPn?.[sku]?.product_image;
  if(!fact||!["manufacturer","reviewed_internal"].includes(fact.source_type))return null;
  const value=fact.value;
