@@ -11,6 +11,7 @@ import {validAgentRequest} from "./request-validation.mjs";
 import {buildBuyerContext,buyerGuidance} from "./buyer-reasoning.mjs";
 import {normalizeSalesMemory,snapshotSalesMemory} from "./sales-memory.mjs";
 import {protectSalesResponse,hideExactStockUnits} from "./sales-response-guard.mjs";
+import {assessCommercialReadiness} from "./commercial-readiness.mjs";
 import { crmResponseSchema,validateBookingProposal } from "./followup-automation.mjs";
 import { fileURLToPath } from "node:url";
 import { dirname, resolve } from "node:path";
@@ -126,6 +127,7 @@ async function handle(req,res){
   const catalog=enrichCatalog(lookup.products,simulated,testOffers.data||[],
     {factsByPn:lookup.factsByPn});
   const buyer=buildBuyerContext(priorMemory?[msg]:lookupTurns,{catalog,memory:priorMemory});
+  const commercial=assessCommercialReadiness(buyer,{catalog,simulated});
   const abort=new AbortController(),timer=setTimeout(()=>abort.abort(),35000);
   let completion;
   try {
@@ -200,7 +202,7 @@ async function handle(req,res){
   return send(res,200,{ok:true,conversationId:cid,answer,usage:{
     model:completion.model||model,inputTokens:input,outputTokens:output,cachedTokens:cached,
     estimatedUsd:estimate,usageRecorded:!metricErr
-  },booking,simulated,memorySaved:!memoryError});
+  },booking,simulated,memorySaved:!memoryError,commercial});
  }finally{busy.delete(user.id);}
 }
 const service=createServer(async(req,res)=>{
