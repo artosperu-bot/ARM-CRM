@@ -35,6 +35,8 @@ const affordabilityCaveat=/\b(?:no puedo|no podemos|no se puede|sin verificar|no
 const unfinishedQuotePromise=/\b(?:puedo|podemos|voy a|te puedo)\s+(?:ayudarte\s+a\s+)?(?:dejar|preparar|tener)\b.{0,60}\b(?:list[ao]|cotizaci[oó]n|reserva|pedido|proforma)\b/iu;
 const redundantIdentifierRequest=/\b(?:(?:si\s+)?(?:me\s+)?(?:confirmas|confirmes|conf[ií]rmame|ind[ií]came|compartes|compartas|env[ií]as|env[ií]ame|mandas|m[aá]ndame|pasas|p[aá]same)|me\s+puedes\s+(?:confirmar|compartir|enviar)|me\s+podr[ií]as\s+confirmar)\s+(?:(?:la|el|tu|su|un|una)\s+)?(?:referencia\s+(?:completa|exacta)|c[oó]digo\s+(?:completo|exacto)|modelo\s+(?:completo|exacto)|n[uú]mero\s+de\s+modelo)\b/iu;
 const phantomPreparation=/\b(?:puedo|podemos|podr[ií]a|voy\s+a|te\s+puedo)\s+(?:ayudarte\s+a\s+)?(?:preparar|armar|dejar\s+list[ao]|registrar|generar)\s+(?:la|las|el|los|una|un|tu|su)?\s*(?:referencia|detalle|resumen|solicitud|pedido|cotizaci[oó]n|proforma)\b/iu;
+const unexecutedHandoff=/\b(?:dejar|dejamos|dejo|registrar|registro|preparar|preparo|tener)\b.{0,95}\b(?:referencia|inter[eé]s|datos|solicitud|contacto|pedido|cotizaci[oó]n)\b.{0,80}\b(?:list[ao]|asesor|revisar|confirme|seguimiento|registrad[ao])\b|\b(?:referencia|inter[eé]s|solicitud|contacto)\b.{0,60}\b(?:list[ao]|registrad[ao])\b.{0,55}\b(?:asesor|seguimiento|revisar)\b/iu;
+const prematureCustomerDetails=/\b(?:me\s+falta(?:n)?|necesito|requiero|env[ií]ame|p[aá]same|ind[ií]came|dame|comp[aá]rteme|debes\s+(?:darme|enviarme))\b.{0,55}\b(?:tu\s+)?(?:nombre|apellido|celular|tel[eé]fono|correo|direcci[oó]n|dni|ruc)\b/iu;
 const prematureDataRequest=/(?:\b(?:p[aá]same|dame|env[ií]ame|ind[ií]came|necesito|comp[aá]rteme|comparte|compartes|cu[aá]l es)\s+(?:tu|su)\s+(?:nombre|apellido|tel[eé]fono|celular|direcci[oó]n|ruc|dni|correo|tarjeta)\b|\b(?:tu|su)\s+(?:nombre\s+(?:y|completo)|direcci[oó]n|ruc|dni)\s+(?:para\s+(?:hacer|registrar|confirmar)))/iu;
 export function protectSalesResponse(reply,{catalog=[],buyer=null,simulated=false}={}){
  const text=typeof reply==="string"?reply.trim():"";
@@ -74,12 +76,12 @@ export function protectSalesResponse(reply,{catalog=[],buyer=null,simulated=fals
   const approvedPrice=!isUsd&&askedCommercialPrice&&priceValues.has(value);
   if(!approvedPrice&&!(isRestatedBudget&&!isUsd)){moneyViolation=true;break;}
  }
- const actionViolation=forbiddenActions.some(x=>x.test(text))||unconfirmedFutureAction.test(text)||promisedCommercialCheck.test(text)||unfinishedQuotePromise.test(text)||phantomPreparation.test(text)||phantomContactHandoff.test(text)||unconfirmedPaymentDirections.test(text);
+ const actionViolation=forbiddenActions.some(x=>x.test(text))||unconfirmedFutureAction.test(text)||promisedCommercialCheck.test(text)||unfinishedQuotePromise.test(text)||phantomPreparation.test(text)||phantomContactHandoff.test(text)||unconfirmedPaymentDirections.test(text)||unexecutedHandoff.test(text);
  const repeatedModelRequest=Boolean((buyer?.customer_reference||buyer?.matched_partnumber)&&redundantIdentifierRequest.test(text));
  const stockViolation=stockUnits.test(text);
  const discountViolation=discount.test(text);
  const deliveryViolation=deliveryPromise.test(text);
- const prematureDataViolation=buyer?.current_intent==="comprar"&&prematureDataRequest.test(text);
+ const prematureDataViolation=buyer?.current_intent==="comprar"&&(prematureDataRequest.test(text)||prematureCustomerDetails.test(text));
  const affordabilityViolation=unprovenAffordability.test(text)&&!affordabilityCaveat.test(text);
  if(!wrongProduct&&!moneyViolation&&!actionViolation&&!stockViolation&&!discountViolation&&!deliveryViolation&&!prematureDataViolation&&!repeatedModelRequest&&!affordabilityViolation)
   return {reply:polishCommercialReply(text,buyer),blocked:false,reason:null};
