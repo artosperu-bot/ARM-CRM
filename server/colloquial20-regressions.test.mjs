@@ -104,6 +104,34 @@ describe("20 realistic WhatsApp-style STECH customer scenarios",()=>{
   expect(r.reply).toMatch(/15 días hábiles/);
   expect(r.reply).not.toMatch(/30 días|devoluci[oó]n aprobada/i);
  });
+ it("gives accessible Libro de Reclamaciones steps without inventing a STECH link",()=>{
+  const b=buyer(["oe y el libro d reclamaciones donde esta"]);
+  expect(b.current_topic).toBe("libro_reclamaciones");
+  const r=protectSalesResponse("Sí tenemos libro virtual, te mando el enlace.",{buyer:b,catalog});
+  expect(r.reason).toBe("official_complaint_book_access");
+  expect(r.reply).toMatch(/Puedes solicitar el Libro de Reclamaciones/i);
+  expect(r.reply).not.toMatch(/sí tenemos libro virtual|te mando el enlace/i);
+ });
+ it("rejects unperformed consultation followup after colloquial price inquiry",()=>{
+  const b=buyer(["armor 22 precio x 5"]);
+  for(const reply of [
+   "Ahorita no tengo el precio confirmado. Si quieres te lo dejo listo para revisión.",
+   "Puedo ayudarte a dejar la consulta para cotización."
+  ]){
+   const r=protectSalesResponse(reply,{buyer:b,catalog});
+   expect(r.blocked).toBe(true);
+   expect(r.reply).not.toMatch(/te lo dejo listo|dejar la consulta/i);
+  }
+ });
+ it("gives a commercial answer to a colloquial volume-discount objection",()=>{
+  const b=buyer(["armor 22 precio x 5","asu sta caro pe, no hay rebaja si llevo los 5?"]);
+  expect(b.quantity).toBe(5);
+  expect(b.current_intent).toBe("objecion");
+  const r=protectSalesResponse("Puedo dejarte un seguimiento para revisar tu rebaja.",{buyer:b,catalog});
+  expect(r.blocked).toBe(true);
+  expect(r.reply).toMatch(/mejor precio por 5 unidades/i);
+  expect(r.reply).not.toMatch(/Lo solicitado requiere información/i);
+ });
  it("does not mistake refund's seven days for formal complaint reply term",()=>{
   const q="segun yo en 7 dias te devuelven si o si, es asi?";
   expect(asksFormalComplaintReplyDeadline(q)).toBe(false);
