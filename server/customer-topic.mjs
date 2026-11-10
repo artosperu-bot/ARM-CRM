@@ -4,6 +4,7 @@
  * These rules route the model; they do NOT assert merchant policies or perform
  * customer-support actions. When no rule matches, the model answers normally.
  */
+import {asksFormalComplaintReplyDeadline,asksForComplaintBook,consumerRightsGuidance} from "./peru-consumer-knowledge.mjs";
 const norm=(x)=>String(x||"").normalize("NFD").replace(/[\u0300-\u036f]/gu,"").toLowerCase().replace(/\s+/gu," ").trim();
 /** Product-focused retrieval only when the client clearly switches the item,
  * not when they briefly switch to billing, support or an unrelated question. */
@@ -27,20 +28,24 @@ export function selectCustomerPromptInput(history,lastMessage){
 export function classifyCustomerTopic(message){
  const s=norm(message);
  if(!s)return "comercial";
+ if(asksFormalComplaintReplyDeadline(s))return "plazo_reclamo";
+ if(asksForComplaintBook(s))return "libro_reclamaciones";
+ if(/\b(?:ya (?:le|les) avisaron a alguien|ya me pasaste con el asesor|ya me pasaron con (?:un|el) asesor|ya lo derivaron|ya avisaron al asesor|sigo esperando al asesor)\b/u.test(s))
+  return "estado_derivacion";
  if(/\b(?:dni|foto (?:del|de mi) (?:dni|documento)|datos personales|mi privacidad|datos de mi tarjeta|documento de identidad)\b/u.test(s)&&
    /\b(?:necesit|pides?|tengo que|debo|obligatorio|requier|pedir|dar|enviar|entregar|mostrar|foto|seguridad)\b/u.test(s))
   return "privacidad";
  if(/\b(?:ya me (?:abriste|registraste|hiciste|ingresaste) (?:un |el )?(?:reclamo|caso|ticket)|numero de reclamo|libro de reclamaciones|estado de mi reclamo)\b/u.test(s))
   return "estado_reclamo";
- if(/\b(?:devolucion|devuelv[ea]n?|devolver|reembolso|reembols[oa]|cambio inmediato|me la cambian|me lo cambian|cambiar(?:lo|la)? por (?:otr[ao]|uno nuevo)|quiero reclamar|presentar reclamo|libro de reclamaciones)\b/u.test(s))
+ if(/\b(?:devolucion|devuelv[ea]n?|devolver|reembolso|reembols[oa]|cambio inmediato|me la cambian|me lo cambian|me dan otr[oa]|me lo cambian por otr[oa]|quiero otra? (?:unidad|equipo)|me devuelven la plata|me regresan la plata|quiero reclamar|presentar reclamo)\b/u.test(s))
   return "devolucion_reclamo";
- if(/\b(?:no imprime|no enciende|no prende|no funciona|no carga|dejo de funcionar|dejo de imprimir|falla(?:ndo)?|malogr[oa]|atasco de papel|error (?:e\d+|\d{2,})|pantalla negra|problema con (?:mi|la|el) (?:impresora|celular|laptop|tablet)|servicio tecnico|reparar(?:lo|la)?)\b/u.test(s))
+ if(/\b(?:no imprime|no enciende|no prende|no funciona|no carga|dejo de funcionar|dejo de imprimir|dejo de prender|falla(?:ndo)?|fallo|se malogro|malogr[oa]|se mojo|llego roto|llego mal|vino roto|llego defectuoso|no sirve|atasco de papel|error (?:e\d+|\d{2,})|pantalla negra|problema con (?:mi|la|el) (?:impresora|celular|laptop|tablet)|servicio tecnico|reparar(?:lo|la)?)\b/u.test(s))
   return "soporte_tecnico";
  if(/\b(?:garantia|cobertura|que cubre|cuanto dura la garantia|condiciones de garantia)\b/u.test(s))
   return "garantia";
  if(/\b(?:factura electronica|factura|boleta|ruc|comprobante|igv|pago con tarjeta|tarjeta de (?:credito|debito)|yape|plin|transferencia bancaria|metodos? de pago|medios? de pago)\b/u.test(s))
   return "facturacion_pago";
- if(/\b(?:mi pedido|donde esta mi pedido|seguimiento (?:de|del) (?:envio|pedido)|guia de envio|numero de tracking|no me llego|me cobraron)\b/u.test(s))
+ if(/\b(?:mi pedido|donde esta mi pedido|seguimiento (?:de|del) (?:envio|pedido)|guia de envio|numero de tracking|no me llego|no llego nada|paquete no llega|lo pedi hace|ya lo mandaron|ya me lo mandaron|ya lo enviaron|me cobraron)\b/u.test(s))
   return "pedido_existente";
  if(/\b(?:partido de futbol|quien gano (?:el|la) (?:partido|juego)|resultados? (?:de futbol|deportivos)|clima (?:de|para|en|hoy|manana)|pronostico del tiempo|receta de cocina|quien es el presidente)\b/u.test(s))
   return "fuera_del_negocio";
@@ -51,6 +56,9 @@ export function classifyCustomerTopic(message){
 }
 const instructions={
  privacidad:"PRIVACIDAD: Responde directamente si hace falta DNI, RUC, teléfono o foto: para información y recomendaciones no es necesario compartir documentos ni datos personales. No los pidas por costumbre. Para una gestión específica indica únicamente el requisito confirmado si existe evidencia.",
+ plazo_reclamo:"PLAZO LEGAL: Responde de forma directa y corta el plazo de respuesta del Libro de Reclamaciones. No lo confundas con días para devolución ni con garantía.",
+ libro_reclamaciones:"LIBRO DE RECLAMACIONES: Orienta sobre el acceso al Libro físico o virtual, sin inventar un enlace particular de STECH. No digas que abriste un reclamo en nombre del cliente.",
+ estado_derivacion:"ESTADO DE ASESOR: El cliente pregunta si ya se avisó a alguien. No afirmes que un asesor fue notificado/asignado si no hay confirmación del backend. Responde en una oración sencilla, sin pedir de nuevo nombre, teléfono o documento.",
  estado_reclamo:"ESTADO DE RECLAMO: Es una pregunta sobre una gestión supuestamente realizada. NO afirmes que existe ticket, reclamo, número de caso, asesor asignado, registro ni actualización sin consulta al sistema. Explica con cercanía que no puedes confirmar un registro desde aquí y que requiere comprobación real. No cambies de tema hacia la venta.",
  devolucion_reclamo:"DEVOLUCIONES Y RECLAMOS: Reconoce el inconveniente en una frase, escucha qué solicita y no inventes cambios inmediatos, reembolsos aprobados, plazos ni políticas de tienda. Ofrece solo el procedimiento efectivamente conocido; si no hay herramienta o política verificada, explica que la solicitud debe ser evaluada por atención al cliente. Nunca digas que abriste o enviaste el caso.",
  soporte_tecnico:"SOPORTE: El cliente pide ayuda con un equipo, no que le vendas otro. Da uno o dos pasos de diagnóstico seguros y reversibles si están sustentados por la información disponible. No asegures una causa, compatibilidad o reparación sin evidencia. No aconsejes acciones riesgosas ni limpiezas profundas como primer paso; ofrece evaluación de servicio técnico cuando sea pertinente, sin fingir que ya la coordinaste.",
