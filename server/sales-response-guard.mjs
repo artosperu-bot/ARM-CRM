@@ -1,5 +1,6 @@
 import {matchCustomerProduct} from "./catalog-matching.mjs";
 import {polishCommercialReply} from "./commercial-voice.mjs";
+import {humanHandoffUnconfirmedReply} from "./human-handoff-phrasing.mjs";
 import {asksFormalComplaintReplyDeadline,lawfulComplaintDeadlineReply,lawfulComplaintBookReply} from "./peru-consumer-knowledge.mjs";
 /**
  * Final deterministic safety check for AI-generated commercial text.
@@ -54,7 +55,7 @@ export function protectSalesResponse(reply,{catalog=[],buyer=null,simulated=fals
  if(!text)return {reply:"Puedo ayudarte con tu consulta. ¿Qué producto necesitas?",blocked:true,reason:"empty"};
  const intent=buyer?.current_intent||"consulta";
  if(buyer?.requires_human){
-  return {reply:"Claro, ahora te paso con un asesor.",blocked:true,reason:"human_requested"};
+  return {reply:humanHandoffUnconfirmedReply(buyer),blocked:true,reason:"human_requested"};
  }
  if(buyer?.current_topic==="plazo_reclamo"&&asksFormalComplaintReplyDeadline(buyer?.last_message))
   return {reply:lawfulComplaintDeadlineReply,blocked:true,reason:"official_complaint_reply_deadline"};
