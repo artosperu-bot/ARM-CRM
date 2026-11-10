@@ -28,3 +28,5 @@ export function consumerRightsGuidance(topic,lastMessage){
  return "";
 }
 export const lawfulComplaintDeadlineReply="Si registraste un reclamo en el Libro de Reclamaciones, la empresa tiene hasta 15 días hábiles para responderte. Ese plazo es para la respuesta, no significa que una devolución se apruebe automáticamente.";
+
+export const lawfulComplaintBookReply="Puedes solicitar el Libro de Reclamaciones al establecimiento; debe estar disponible en formato físico o virtual, según el canal. Por aquí no tengo verificado el enlace de STECH ni he registrado un reclamo por ti.";
