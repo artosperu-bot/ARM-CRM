@@ -126,7 +126,13 @@ export function protectSalesResponse(reply,{catalog=[],buyer=null,simulated=fals
     (Array.isArray(catalog)?catalog:[]).find(p=>p?.partnumber===buyer.matched_partnumber):null;
   const qty=buyer?.quantity&&Number.isInteger(buyer.quantity)?
     (buyer.quantity===1?"esa unidad":"las "+buyer.quantity+" unidades"):"ese producto";
-  const priced=Boolean(selected&&available.some(p=>p.partnumber===selected.partnumber));
+  const priced=Boolean(
+   (selected&&available.some(p=>p.partnumber===selected.partnumber))||
+   // Sandbox prices are synthetic: a single priced test product remains valid
+   // without a stored buyer SKU. Never relax this condition for real sales.
+   (simulated&&((replyProduct&&available.some(p=>p.partnumber===replyProduct.partnumber))||
+     available.length===1))
+  );
   if((intent==="consultar_precio"||intent==="cotizar")&&!priced)
    return {reply:intent==="cotizar"?
     "Para cotizar "+qty+" todavía falta un precio vigente. No hay una cotización emitida desde este chat.":
