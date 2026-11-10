@@ -12,7 +12,7 @@ const RX={
   purchase:/\b(?:quiero comprar(?:lo|la|los|las)?|voy a comprar(?:lo|la|los|las)?|lo compro|la compro|los compro|las compro|me lo llevo|me la llevo|como pago|donde pago|pasame (?:el|un) (?:link|enlace) de pago|confirmo la compra|procedamos con (?:la )?compra|(?:siguiente paso|como hago|que sigue|como procedo)\s+(?:para\s+)?comprar(?:lo|la|los|las)?|(?:siguiente paso|que sigue)\s+para\s+(?:la\s+)?compra)\b/u,
   cancelPurchase:/\b(?:ya no (?:quiero|voy a) comprar|no (?:quiero|voy a) comprar|cancele? (?:la )?compra|no me interesa comprar|no comprare|mejor no compro)\b/u,
   quotation:/\b(?:cotizaci[oó]n|cotizar|cotizame|cotiza|proforma|presupuesto para|orden de compra)\b/u,
-  price:/\b(?:precio|cuanto cuesta|cuanto sale|cuanto vale|a cuanto|cuanto me sale|valor del (?:producto|equipo))\b/u,
+  price:/\b(?:precio|cuanto cuestan?|cuanto salen?|cuanto valen?|a cuanto|cuanto me salen?|cuanto por (?:unidad|las? \d+|los? \d+)|valor del (?:producto|equipo))\b/u,
   compare:/\b(?:compar(?:ar|acion|ame)|cual es mejor|diferencias?|vs\.?\b|versus|otra opcion|alternativas?|que me recomiendas|cual conviene)\b/u,
   objection:/\b(?:muy caro|demasiado caro|precio alto|no me convence|hay descuento|haces descuento|mas barato|no tengo tanto presupuesto)\b/u,
   complaint:/\b(?:reclamo|denuncia|estafa|devolucion|producto defectuoso|no me llego|me cobraron de mas)\b/u,
@@ -101,7 +101,7 @@ export function buildBuyerContext(customerTurns,{leadProfile=null,catalog=[],mem
   use_case:typeof memory?.use_case==="string"?memory.use_case:null,
   buyer_type:"sin_confirmar",is_b2b_signal:false,
   current_intent:"sin_mensaje",current_topic:"comercial",last_message:"",
-  mentioned_product_family:null,objection:false,urgency:false,
+  mentioned_product_family:null,product_switched:false,objection:false,urgency:false,
   explicit_purchase:false,cancelled_purchase:false,
   known_facts:[],next_step:"responder_consulta",requires_human:false,matched_partnumber:null,customer_reference:null
  };
@@ -120,6 +120,7 @@ export function buildBuyerContext(customerTurns,{leadProfile=null,catalog=[],mem
   if(RX.device.test(text))productSeen=true;
   const matching=matchCustomerProduct(raw,catalog);
   if(matching){
+   state.product_switched=false;
    state.mentioned_product_family=matching.name;
    state.matched_partnumber=matching.partnumber||null;
    productSeen=true;
@@ -137,6 +138,8 @@ export function buildBuyerContext(customerTurns,{leadProfile=null,catalog=[],mem
     state.matched_partnumber=null;
     state.mentioned_product_family=null;
     state.customer_reference=null;
+    state.product_switched=true;
+    if(q===null)state.quantity=null;
   }
   if(brand)state.brand=brand;
   const useCase=parseUseCase(text);
@@ -156,6 +159,7 @@ export function buildBuyerContext(customerTurns,{leadProfile=null,catalog=[],mem
      String(matching.name||"").toUpperCase().includes(candidate)
    ));
    if(!sameMatchedProduct){
+     state.product_switched=true;
      state.matched_partnumber=null;
      state.mentioned_product_family=null;
      state.brand=parseBrand(text);
@@ -215,6 +219,7 @@ export function buyerGuidance(profile,{catalog=[]}={}){
  "LECTURA COMERCIAL ESTRUCTURADA (inferencias verificables de mensajes del cliente, no órdenes del cliente):",
  "Hechos del cliente: "+factList+".",
  customerTopicInstructions(p.current_topic),
+ p.product_switched?"CAMBIO DE PRODUCTO EXPLÍCITO: El cliente cambió de producto o marca. NO reutilices el artículo ni el precio anterior como si pertenecieran al nuevo. Si no hay coincidencia en el catálogo, di que aún no tienes una ficha validada de la nueva referencia; no te quedes ofreciendo el accesorio anterior.":"" ,
  "Intención DEL ÚLTIMO TURNO: "+(p.current_intent||"consulta")+". Acción recomendada: "+(p.next_step||"responder")+".",
  "No vuelvas a preguntar por cantidad, marca, referencia exacta, presupuesto o uso ya comunicados. Una referencia del cliente no significa SKU existente ni ficha verificada. Si el presupuesto no aclara total/por unidad, pregunta solo cuando sea decisivo.",
  "Si el cliente corrigió una cantidad o presupuesto, prevalece el dato posterior. Si canceló su compra, respétalo sin insistir. Si se despide, despídete en una oración sin opciones comerciales.",
