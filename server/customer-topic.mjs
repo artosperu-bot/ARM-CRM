@@ -5,6 +5,14 @@
  * customer-support actions. When no rule matches, the model answers normally.
  */
 const norm=(x)=>String(x||"").normalize("NFD").replace(/[\u0300-\u036f]/gu,"").toLowerCase().replace(/\s+/gu," ").trim();
+/** Product-focused retrieval only when the client clearly switches the item,
+ * not when they briefly switch to billing, support or an unrelated question. */
+export function isExplicitProductSwitch(message){
+ const s=norm(message);
+ const switchVerb=/\b(?:ahora\s+(?:estoy\s+viendo|quiero|busco|prefiero|me\s+interesa)|mejor\s+(?:quiero|busco|prefiero)|en\s+vez\s+de|cambie?\s+(?:a|por)|regresemos\s+(?:al?|a\s+la)|volvamos\s+(?:al?|a\s+la))\b/u.test(s);
+ const productMention=/\b(?:laptops?|notebooks?|computadoras?|pcs?|impresoras?|tablets?|celulares?|telefonos?|cargadores?|baterias?|camaras?|monitores?|routers?|mouse|teclados?|audifonos?|discos?|licencias?|software|lenovo|epson|ulefone|samsung|apple|brother|asus|acer|dell|microsoft|logitech|jbl|genius|xiaomi|motorola|canon|msi|dji)\b/u.test(s);
+ return switchVerb&&productMention;
+}
 export function classifyCustomerTopic(message){
  const s=norm(message);
  if(!s)return "comercial";
