@@ -6,6 +6,8 @@
 import {readFileSync} from "node:fs";
 import {buildBuyerContext,buyerGuidance} from "./buyer-reasoning.mjs";
 import {snapshotSalesMemory} from "./sales-memory.mjs";
+import {isExplicitProductSwitch} from "./customer-topic.mjs";
+import {matchCustomerProduct} from "./catalog-matching.mjs";
 import {salesInstructions} from "./sales-policy.mjs";
 import {reviewCommercialTurn} from "./commercial-service-standard.mjs";
 import {protectSalesResponse} from "./sales-response-guard.mjs";
@@ -106,7 +108,7 @@ const allScenarios=[
 const requested=(process.env.ALEX_QA_CASES||"").split(",").map(x=>x.trim()).filter(Boolean);
 const scenarios=requested.length?allScenarios.filter(x=>requested.includes(x.name)):allScenarios;
 if(!scenarios.length)throw new Error("UNKNOWN_QA_CASE_SELECTION");
-const prompt=(buyer)=>salesInstructions(catalog,{simulated:false,buyer})+"\n"+buyerGuidance(buyer,{catalog})+
+const prompt=(buyer,products=catalog)=>salesInstructions(products,{simulated:false,buyer})+"\n"+buyerGuidance(buyer,{catalog:products})+
  "\nPRUEBA SINTÉTICA PRIVADA. Contesta normalmente al cliente con JSON reply/followup. No existe herramienta de pedidos, cobros ni seguimientos salientes. No inventes datos, cotizaciones, precios, entregas o contactos humanos.";
 let completed=0,valid=0,blocked=0,requests=0,usedInput=0,usedOutput=0;
 async function execute(s){
@@ -115,7 +117,11 @@ async function execute(s){
  const report=[];
  for(let i=0;i<s.turns.length;i++){
   const question=s.turns[i];texts.push(question);
-  const buyer=buildBuyerContext(memory?[question]:texts,{catalog,memory});
+  // Simulate retrieval scope: a new product request must not inherit unrelated
+  // product candidates from earlier turns, even though those remain in history.
+  const turnCatalog=isExplicitProductSwitch(question)?
+    catalog.filter(p=>Boolean(matchCustomerProduct(question,[p]))):catalog;
+  const buyer=buildBuyerContext(memory?[question]:texts,{catalog:turnCatalog,memory});
   memory=snapshotSalesMemory(buyer,{
     previous:memory,lastMessageAt:new Date(Date.UTC(2026,10,7,19,0,i)).toISOString(),
     lastMessageId:s.name+"-"+i
@@ -128,7 +134,7 @@ async function execute(s){
     method:"POST",signal:ctrl.signal,
     headers:{"Authorization":"Bearer "+env.OPENAI_API_KEY,"Content-Type":"application/json"},
     body:JSON.stringify({model:"gpt-5.4-mini",store:false,max_output_tokens:380,reasoning:{effort:"none"},
-      text:{format:crmResponseSchema},instructions:prompt(buyer),
+      text:{format:crmResponseSchema},instructions:prompt(buyer,turnCatalog),
       input:[...history,{role:"user",content:question}]})
    });
    requests++;
@@ -139,7 +145,7 @@ async function execute(s){
   const out=(result.output||[]).filter(x=>x.type==="message"&&x.role==="assistant")
     .flatMap(x=>x.content||[]).filter(x=>x.type==="output_text").map(x=>x.text).join("");
   let body;try{body=JSON.parse(out).reply;}catch{report.push({turn:i+1,q:question,error:"NON_JSON"});break;}
-  const guard=protectSalesResponse(body,{catalog,buyer});
+  const guard=protectSalesResponse(body,{catalog:turnCatalog,buyer});
   const reply=formatWhatsAppReply(guard.reply,{simulated:false,maxChars:1300});
   if(guard.blocked)blocked++;
   usedInput+=result.usage?.input_tokens||0;usedOutput+=result.usage?.output_tokens||0;
