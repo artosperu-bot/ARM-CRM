@@ -44,8 +44,10 @@ function parseQuantity(text,{allowBareCorrection=false}={}){
  if(allowBareCorrection)for(const m of text.matchAll(alternative)){
    const n=amountValue(m[1]);if(n!==null)results.push({index:m.index,quantity:n});
  }
- for(const m of text.matchAll(/\b(?:precio\s+)?x\s*(\d{1,3})\b|\b(?:si llevo|llevo|por los|serian los)\s+(\d{1,3})\b/gu)){
-   const q=amountValue(m[1]||m[2]);if(q!==null)results.push({index:m.index,quantity:q});
+ // Distinguish a sales quantity ("precio x 5", "precio x5") from a model
+ // name ("Armor X13", "X12 Pro"). A bare x13 is a MODEL, not 13 units.
+ for(const m of text.matchAll(/\b(?:precio\s+)?x\s+(\d{1,3})\b|\b(?:precio|cotiza|llev[oa]|quiero|necesito)\s+x(\d{1,3})\b|\b(?:si llevo|llevo|por los|serian los)\s+(\d{1,3})\b/gu)){
+   const q=amountValue(m[1]||m[2]||m[3]);if(q!==null)results.push({index:m.index,quantity:q});
  }
  results.sort((a,b)=>a.index-b.index);
  return results.at(-1)?.quantity??null;
