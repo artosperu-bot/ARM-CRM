@@ -23,8 +23,20 @@ describe("ventas y escenarios aislados",()=>{
  it("never promotes physical stock to availability for clients",()=>{
   const v=enrichCatalog([{...catalog[0],stock_erp:12,price_pen:999,verified_at:"2026-11-05T19:00:00Z"}],false,[],
     {now:Date.parse("2026-11-05T19:10:00Z")})[0];
-  expect(v.precio_soles).toBe(999);
+  // A recent arm_products.verified_at no longer approves a customer price.
+  expect(v.precio_soles).toBe(null);
   expect(v.disponibilidad).toBe("por confirmar");
+ });
+ it("real approved price stays independent of verified quantity",()=>{
+  const real=[{...catalog[0],workspace_id:"ws",stock_erp:12,price_pen:999}];
+  const review={priceVerified:true,pricePen:999,saleableStock:true,availableToPromiseUnits:2};
+  const three=enrichCatalog(real,false,[],{commercialByPn:{"ARMOR-22-256G":review},requestedQuantity:3})[0];
+  expect(three.precio_soles).toBe(999);
+  expect(three.disponibilidad).toBe("por confirmar");
+  expect(three.origen_stock).toBe("stock_no_verificado");
+  const two=enrichCatalog(real,false,[],{commercialByPn:{"ARMOR-22-256G":review},requestedQuantity:2})[0];
+  expect(two.disponibilidad).toBe("disponible");
+  expect(two.origen_stock).toBe("stock_vendible_verificado");
  });
  it("treats an old verified price as expired",()=>{
   const v=enrichCatalog([{...catalog[0],price_pen:999,stock_erp:12,verified_at:"2026-10-15T19:00:00Z"}],false,[],

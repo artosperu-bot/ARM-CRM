@@ -69,7 +69,7 @@ export default function App(){
   clientes:<ContactsPage contacts={crm.contacts} onCreate={crm.createContact}/>,
   seguimientos:<FollowupsPage contacts={crm.contacts} tasks={crm.followups} onCreate={crm.createFollowup} onComplete={crm.completeFollowup} onCancel={crm.cancelFollowup}/>,
   mensajes:<InboxPage workspaceId={crm.workspace!.id}/>,
-  catalogo:<CatalogPage products={crm.products} workspaceId={crm.workspace!.id}/>,
+  catalogo:<CatalogPage products={crm.products} workspaceId={crm.workspace!.id} isAdmin={crm.role==="ADMIN"}/>,
   agente:<AgentPage workspaceId={crm.workspace!.id} contacts={crm.contacts} onNavigate={setSection} onCreateFollowup={crm.createFollowup} onCreateDeal={crm.createDeal}/>,
   consumo:<UsagePage workspaceId={crm.workspace!.id}/>,
   integraciones:<IntegrationsPage workspaceId={crm.workspace!.id} isAdmin={crm.role==="ADMIN"}/>,

@@ -23,19 +23,23 @@ export const specsByPn = Object.freeze({
  }
 });
 /** Real offers are never filled from laboratory records. For simulations only use saved Supabase test offers. */
-export function enrichCatalog(rows, simulated=false, testOffers=[],{now=Date.now(),maxPriceAgeHours=6,factsByPn={}}={}) {
+export function enrichCatalog(rows, simulated=false, testOffers=[],{now=Date.now(),factsByPn={},commercialByPn={},requestedQuantity=1}={}) {
  const offers = new Map((testOffers||[]).filter(o=>o.is_test_data===true).map(o=>[String(o.partnumber).toLowerCase(),o]));
  return (rows||[]).map(row=>{
   const demo=simulated?offers.get(String(row.partnumber).toLowerCase()):null;
-  const checked=Date.parse(String(row.verified_at||""));
-  const priceFresh=Number.isFinite(checked)&&checked<=now+120000&&now-checked<=maxPriceAgeHours*3600000;
-  const validPrice=typeof row.price_pen==="number"||typeof row.price_pen==="string";
-  const trustedPrice=!simulated&&priceFresh&&validPrice&&Number(row.price_pen)>0;
+  const evidence=commercialByPn[row.partnumber]||null;
+  // Do not trust a legacy product.price_pen or verified_at alone. Only a
+  // separately approved, unexpired direct-channel review can supply a price.
+  const trustedPrice=!simulated&&evidence?.priceVerified===true&&
+    Number.isFinite(Number(evidence.pricePen))&&Number(evidence.pricePen)>0;
   const price=simulated?(demo&&Number.isFinite(Number(demo.price_pen))?Number(demo.price_pen):null):
-    trustedPrice?Number(row.price_pen):null;
+    trustedPrice?Number(evidence.pricePen):null;
+  const qty=Number.isInteger(requestedQuantity)&&requestedQuantity>0?requestedQuantity:1;
+  const saleable=!simulated&&evidence?.saleableStock===true&&
+    Number.isInteger(evidence.availableToPromiseUnits)&&evidence.availableToPromiseUnits>=qty;
   // Physical ERP units never equal available-to-promise inventory.
-  // Until reservations/committed orders are integrated, real stock stays unconfirmed.
-  const availability=simulated?(demo?.stock_status||"por confirmar"):"por confirmar";
+  const availability=simulated?(demo?.stock_status||"por confirmar"):
+    saleable?"disponible":"por confirmar";
   const allCertifiedFacts=factsByPn[row.partnumber]||null;
   // Images are media assets, not specifications sent to the language model.
   const certifiedFacts=allCertifiedFacts?
@@ -52,6 +56,7 @@ export function enrichCatalog(rows, simulated=false, testOffers=[],{now=Date.now
    precio_soles:price,
    disponibilidad:availability,
    oferta_simulada:simulated,
+   origen_stock:simulated?"simulacion_solo_pruebas":(saleable?"stock_vendible_verificado":"stock_no_verificado"),
    origen_datos:simulated?"simulacion_solo_pruebas":(trustedPrice?"precio_vigente_verificado":"precio_no_verificado")
   };
  });

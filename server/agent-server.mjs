@@ -5,6 +5,7 @@ import { randomUUID } from "node:crypto";
 import { estimateUsd } from "./agent-cost.mjs";
 import { salesInstructions } from "./sales-policy.mjs";
 import { enrichCatalog } from "./product-knowledge.mjs";
+import { loadCommercialEvidence } from "./commercial-evidence.mjs";
 import { retrieveSalesCatalog } from "./catalog-retrieval.mjs";
 import {buildConversationContext} from "./conversation-context.mjs";
 import {validAgentRequest} from "./request-validation.mjs";
@@ -130,8 +131,16 @@ async function handle(req,res){
     .eq("workspace_id",workspaceId).eq("is_test_data",true)
     .in("partnumber",pn).limit(24):{data:[],error:null};
   if(testOffers.error)throw new Error("No fue posible verificar las ofertas de prueba.");
-  const catalog=enrichCatalog(lookup.products,simulated,testOffers.data||[],
+  // First resolve quantity and SKU without exposing any unapproved prices.
+  const preliminary=enrichCatalog(lookup.products,simulated,testOffers.data||[],
     {factsByPn:lookup.factsByPn});
+  const provisionalBuyer=buildBuyerContext(priorMemory?[msg]:lookupTurns,
+    {catalog:preliminary,memory:priorMemory});
+  let commercialByPn={};
+  try{commercialByPn=await loadCommercialEvidence(db,workspaceId,lookup.products);}
+  catch{console.error("ARM_COMMERCIAL_EVIDENCE_UNAVAILABLE");}
+  const catalog=enrichCatalog(lookup.products,simulated,testOffers.data||[],
+    {factsByPn:lookup.factsByPn,commercialByPn,requestedQuantity:provisionalBuyer.quantity});
   const buyer=buildBuyerContext(priorMemory?[msg]:lookupTurns,{catalog,memory:priorMemory});
   const commercial=assessCommercialReadiness(buyer,{catalog,simulated});
   if(requestsProductPhoto(msg)){
