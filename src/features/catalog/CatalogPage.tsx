@@ -25,17 +25,18 @@ function approvedPrice(review:CommercialReview|undefined,now=Date.now()):number|
  return Number(review.price_pen);
 }
 const MAX_AGE_MINUTES=180;
-function sourceState(obs:StockObservation|undefined):"fresh"|"pending_mapping"|"stale"|"anomaly"|"missing"{
+function sourceState(obs:StockObservation|undefined,now=Date.now()):"fresh"|"pending_mapping"|"stale"|"anomaly"|"missing"{
  if(!obs)return "missing";
  if(obs.freshness==="pending_mapping")return "pending_mapping";
  if(obs.freshness==="anomaly")return "anomaly";
  const t=Date.parse(obs.source_updated_at);
- if(!Number.isFinite(t)||Date.now()-t>MAX_AGE_MINUTES*60000||t>Date.now()+120000)return "stale";
+ if(!Number.isFinite(t)||now-t>MAX_AGE_MINUTES*60000||t>now+120000)return "stale";
  return obs.freshness;
 }
 const statusLabels={fresh:"Actualizado",pending_mapping:"PN pendiente de revisión",stale:"Datos vencidos",anomaly:"Revisar anomalía",missing:"Sin conexión validada"};
 export default function CatalogPage({products,workspaceId,isAdmin=false}:{products:Product[],workspaceId:string,isAdmin?:boolean}){
  const [filter,setFilter]=useState("");
+ const [clock,setClock]=useState(Date.now());
  const [sourceFilter,setSourceFilter]=useState("all");
  const [observations,setObservations]=useState<StockObservation[]>([]);
  const [mappings,setMappings]=useState<ProductMapping[]>([]);
@@ -71,20 +72,21 @@ export default function CatalogPage({products,workspaceId,isAdmin=false}:{produc
   setLoading(false);
  },[workspaceId]);
  useEffect(()=>{void load();},[load]);
+ useEffect(()=>{const timer=setInterval(()=>setClock(Date.now()),60000);return ()=>clearInterval(timer);},[]);
  const obsByPn=useMemo(()=>new Map(observations.map(x=>[x.arm_partnumber,x])),[observations]);
  const mapByPn=useMemo(()=>new Map(mappings.map(x=>[x.arm_partnumber,x])),[mappings]);
  const reviewByPn=useMemo(()=>new Map(reviews.map(x=>[x.partnumber,x])),[reviews]);
  const selected=products.filter(p=>{
   const found=(p.partnumber+" "+p.title+" "+p.brand).toLocaleLowerCase("es").includes(filter.toLocaleLowerCase("es"));
   if(!found)return false;
-  const state=sourceState(obsByPn.get(p.partnumber));
+  const state=sourceState(obsByPn.get(p.partnumber),clock);
   return sourceFilter==="all"||(sourceFilter==="fresh"&&state==="fresh")||
      (sourceFilter==="pending"&&state==="pending_mapping")||
      (sourceFilter==="missing"&&state!=="fresh");
  });
- const freshCount=products.filter(p=>sourceState(obsByPn.get(p.partnumber))==="fresh").length;
- const pendingCount=products.filter(p=>sourceState(obsByPn.get(p.partnumber))==="pending_mapping").length;
- const approvedPriceCount=products.filter(p=>approvedPrice(reviewByPn.get(p.partnumber))!==null).length;
+ const freshCount=products.filter(p=>sourceState(obsByPn.get(p.partnumber),clock)==="fresh").length;
+ const pendingCount=products.filter(p=>sourceState(obsByPn.get(p.partnumber),clock)==="pending_mapping").length;
+ const approvedPriceCount=products.filter(p=>approvedPrice(reviewByPn.get(p.partnumber),clock)!==null).length;
  async function savePriceReview(partnumber:string,action:"approve"|"revoke"){
   if(!supabase||!isAdmin||savingPrice)return;
   const amount=Number(priceInput.trim().replace(",","."));
@@ -147,8 +149,8 @@ export default function CatalogPage({products,workspaceId,isAdmin=false}:{produc
   {!selected.length&&<div className="empty-records">No hay productos para este filtro.</div>}
   <div className="product-grid">{selected.map(p=>{
    const obs=obsByPn.get(p.partnumber),map=mapByPn.get(p.partnumber);
-   const review=reviewByPn.get(p.partnumber),verifiedPrice=approvedPrice(review);
-   const state=sourceState(obs);
+   const review=reviewByPn.get(p.partnumber),verifiedPrice=approvedPrice(review,clock);
+   const state=sourceState(obs,clock);
    return <article className="product" key={p.partnumber}>
     <span className="product-icon"><Package size={24}/></span>
     <div><strong>{p.title}</strong><p>{p.brand} · PN ARM: {p.partnumber}</p></div>
