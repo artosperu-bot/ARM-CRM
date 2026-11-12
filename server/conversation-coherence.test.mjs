@@ -92,6 +92,19 @@ describe("ALEX real dialogue review: grounded conversation coherence",()=>{
    "Voy a confirmar la compatibilidad de ese cargador."
   ])expect(protectSalesResponse(text,{catalog,buyer:b}).reason).toBe("unconfirmed_action");
  });
+ it("blocks a phantom followup that escaped real-model QA",()=>{
+  const b=buildBuyerContext(["Quiero 2 laptops Lenovo para trabajar con varias aplicaciones"]);
+  const reply="Para ese uso te conviene la ThinkPad T14 de 32 GB. Si quieres, te ayudo a avanzar con ese modelo y dejar listo el seguimiento para revisar el pedido.";
+  const result=protectSalesResponse(reply,{catalog,buyer:b});
+  expect(result).toMatchObject({blocked:true,reason:"unconfirmed_action"});
+  expect(result.reply).not.toMatch(/dejar listo el seguimiento|revisar el pedido/i);
+ });
+ it("allows an explicit denial that no followup was created",()=>{
+  const b=buildBuyerContext(["Quiero 2 laptops para trabajar con varias aplicaciones"]);
+  const reply="Todavía no se ha registrado ningún pedido ni seguimiento desde este chat.";
+  const result=protectSalesResponse(reply,{catalog,buyer:b});
+  expect(result.blocked).toBe(false);
+ });
  it("honors explicit no-ID preference without upselling followup data collection",()=>{
   const b=buildBuyerContext(["Busco impresora Epson","No quiero dar mi DNI, ¿igual puedo consultar?"],{catalog});
   const out=protectSalesResponse("Para hacerlo necesito tu nombre y celular.",{catalog,buyer:b});
