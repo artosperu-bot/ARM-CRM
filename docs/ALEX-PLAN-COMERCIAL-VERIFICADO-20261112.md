@@ -1,4 +1,6 @@
-# ALEX — plan de integración comercial verificada, 12/11/2026
+# ALEX — plan histórico reemplazado, 12/11/2026
+
+> **ARCHIVADO / NO OPERATIVO.** Este documento describe hipótesis anteriores de integración ERP. La instrucción vigente es **Supabase solamente**. Ningún flujo debe leer PC005, DB_ST ni DB_DISTRIBUIDORES. Seguir `docs/ALEX-ARQUITECTURA-SUPABASE-ONLY-20261112.md`.
 
 ## Objetivo
 Que ALEX asesore y venda con datos de STECH comprobables, sin confundir una
