@@ -66,3 +66,22 @@ export function summarizeWhatsAppEnvelope(payload) {
   }
   return summary;
 }
+
+/** Delivery receipts from signed Meta webhooks, not delivery claims from Graph POST. */
+export function parseWhatsAppDeliveryEvents(payload){
+ if(payload?.object!=="whatsapp_business_account"||!Array.isArray(payload.entry))return [];
+ const events=[];
+ for(const entry of payload.entry.slice(0,20)){
+  for(const change of (Array.isArray(entry?.changes)?entry.changes:[]).slice(0,20)){
+   if(change?.field!=="messages")continue;
+   const phoneNumberId=String(change.value?.metadata?.phone_number_id||"");
+   for(const item of (Array.isArray(change.value?.statuses)?change.value.statuses:[]).slice(0,20)){
+    if(typeof item?.id!=="string"||!["sent","delivered","read","failed"].includes(item.status))continue;
+    const timestamp=Number(item.timestamp);
+    events.push({messageId:item.id,phoneNumberId,status:item.status,
+      timestamp:Number.isFinite(timestamp)?timestamp:null});
+   }
+  }
+ }
+ return events;
+}

@@ -1,7 +1,7 @@
 import {describe,it,expect} from "vitest";
 import {createHmac} from "node:crypto";
 import {createGateway} from "./whatsapp-gateway.mjs";
-import {parseWhatsAppEvents,verifyMetaSignature,selectAuthorizedEvents,summarizeWhatsAppEnvelope} from "./whatsapp-webhook.mjs";
+import {parseWhatsAppEvents,parseWhatsAppDeliveryEvents,verifyMetaSignature,selectAuthorizedEvents,summarizeWhatsAppEnvelope} from "./whatsapp-webhook.mjs";
 
 const original = {
  object:"whatsapp_business_account",
@@ -43,6 +43,32 @@ describe("signed WhatsApp gateway based on legacy CRM",()=>{
     statusUpdates:3,receivedMessages:0,
     deliveryStatuses:{sent:1,delivered:1,read:1,failed:0,other:0}
   });
+ });
+ it("extracts only signed-compatible Meta delivery status data without recipient details",()=>{
+  const sample={object:"whatsapp_business_account",entry:[{changes:[{field:"messages",value:{
+    metadata:{phone_number_id:"phone-qa"},
+    statuses:[{id:"wm1",status:"delivered",timestamp:"1794500000"},{id:"wm2",status:"bogus"}]
+  }}]}]};
+  expect(parseWhatsAppDeliveryEvents(sample)).toEqual([
+   {messageId:"wm1",phoneNumberId:"phone-qa",status:"delivered",timestamp:1794500000}
+  ]);
+ });
+ it("persists only signed delivery receipts via the dedicated handler",async()=>{
+  const receipts=[];
+  const payload={object:"whatsapp_business_account",entry:[{changes:[{field:"messages",value:{
+   metadata:{phone_number_id:"phone-123"},
+   statuses:[{id:"wm.delivery.1",status:"delivered",timestamp:String(Math.floor(Date.now()/1000))}]
+  }}]}]};
+  const raw=JSON.stringify(payload);
+  await withGateway({verifyToken:"private-test",secret:"secret",phoneId:"phone-123",
+    allowlist:["51922920517"],since:0,onDeliveryStatus:async status=>receipts.push(status)},
+   async url=>{
+    const r=await fetch(url+"/webhooks/whatsapp",{method:"POST",
+     headers:{"content-type":"application/json","x-hub-signature-256":signature(raw,"secret")},body:raw});
+    expect(r.status).toBe(200);
+    expect(receipts).toHaveLength(1);
+    expect(receipts[0].status).toBe("delivered");
+   });
  });
  it("validates GET Meta challenge without exposing secret",async()=>{
   await withGateway({verifyToken:"private-test",secret:"secret",phoneId:"phone-123",allowlist:[]},async url=>{

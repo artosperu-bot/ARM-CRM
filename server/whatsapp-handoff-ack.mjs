@@ -31,10 +31,10 @@ export function createWhatsAppHandoffAck({
      event.timestamp*1000>Date.now()+120000)
    return {status:"stale"};
   const {data:thread,error:threadError}=await client.from("arm_threads")
-   .select("id,workspace_id,contact_id,status")
+   .select("id,workspace_id,contact_id,status,assigned_to")
    .eq("channel","whatsapp").eq("external_account_ref",phoneId)
    .eq("external_sender_id",event.sender).maybeSingle();
-  if(threadError||!thread||thread.status!=="human")
+  if(threadError||!thread||thread.status!=="human"||thread.assigned_to)
    return {status:"not_queued"};
   const {data:insight,error:insightError}=await client.from("arm_lead_insights")
    .select("opt_out").eq("thread_id",thread.id).maybeSingle();

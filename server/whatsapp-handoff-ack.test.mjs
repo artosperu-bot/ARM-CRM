@@ -2,10 +2,10 @@ import {describe,it,expect,vi} from "vitest";
 import {createWhatsAppHandoffAck,HANDOFF_MESSAGE} from "./whatsapp-handoff-ack.mjs";
 const timestamp=()=>Math.floor(Date.now()/1000);
 const event=()=>({sender:"51900000001",phoneNumberId:"phone-qa",messageId:"wamid.new",timestamp:timestamp()});
-function fixture({status="human",optOut=false}={}){
+function fixture({status="human",optOut=false,assignedTo=null}={}){
  const sent=[],written=[];
  const rows={
-  arm_threads:{id:"thread-1",workspace_id:"ws",contact_id:"contact",status},
+  arm_threads:{id:"thread-1",workspace_id:"ws",contact_id:"contact",status,assigned_to:assignedTo},
   arm_lead_insights:{opt_out:optOut}
  };
  const db={from(table){
@@ -54,6 +54,11 @@ describe("Short customer acknowledgment is conditional on persisted human handof
  });
  it("never acknowledges when the thread was not actually moved to human",async()=>{
   const f=fixture({status:"pending"});
+  expect((await f.service(event(),{handoff_queued:true})).status).toBe("not_queued");
+  expect(f.fetcher).not.toHaveBeenCalled();
+ });
+ it("never tells the customer a case is waiting if an advisor already claimed it",async()=>{
+  const f=fixture({status:"human",assignedTo:"advisor-id"});
   expect((await f.service(event(),{handoff_queued:true})).status).toBe("not_queued");
   expect(f.fetcher).not.toHaveBeenCalled();
  });

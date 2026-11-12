@@ -2,11 +2,13 @@ import {createServer} from "node:http";
 import {readFileSync} from "node:fs";
 import {resolve,dirname} from "node:path";
 import {fileURLToPath} from "node:url";
-import {parseWhatsAppEvents,selectAuthorizedEvents,verifyMetaSignature,summarizeWhatsAppEnvelope} from "./whatsapp-webhook.mjs";
+import {parseWhatsAppEvents,parseWhatsAppDeliveryEvents,selectAuthorizedEvents,verifyMetaSignature,summarizeWhatsAppEnvelope} from "./whatsapp-webhook.mjs";
 import {createArmWhatsAppIngest} from "./whatsapp-ingest.mjs";
 import {createWhatsAppTestResponder} from "./whatsapp-test-responder.mjs";
 import {createLeadIntelligenceProcessor} from "./lead-intelligence-processor.mjs";
 import {createWhatsAppHandoffAck} from "./whatsapp-handoff-ack.mjs";
+import {createWhatsAppOutboxWorker} from "./whatsapp-outbox-worker.mjs";
+import {createWhatsAppDeliveryRecorder} from "./whatsapp-delivery-recorder.mjs";
 
 function loadEnv(path) {
   const result={};
@@ -46,7 +48,7 @@ async function receive(req, limit=262144) {
   return Buffer.concat(buffers);
 }
 export function createGateway({verifyToken=verification,secret=appSecret,phoneId=expectedPhoneId,
-  allowlist=authorizedNumbers,onAuthorizedEvent=null,since=started,autoReplies=false,getReplyStats=()=>({sent:0,failed:0})}={}) {
+  allowlist=authorizedNumbers,onAuthorizedEvent=null,onDeliveryStatus=null,since=started,autoReplies=false,getReplyStats=()=>({sent:0,failed:0})}={}) {
   const localKnown = onAuthorizedEvent ? new Set() : known;
   const metrics={signedRequests:0,invalidSignatures:0,eligibleEvents:0,acceptedEvents:0,
     incomingMessages:0,statusUpdates:0,lastSignedAt:null,
@@ -57,7 +59,8 @@ export function createGateway({verifyToken=verification,secret=appSecret,phoneId
       return send(res,200,{status:secret&&verifyToken&&phoneId&&allowlist.length&&onAuthorizedEvent?"ready_for_signed_ingest":"missing_config",
         service:"arm-whatsapp-gateway",webhookVerifiedReady:Boolean(secret&&verifyToken),
         phoneConfigured:Boolean(phoneId),testNumbersConfigured:allowlist.length,
-        inboundConnected:Boolean(onAuthorizedEvent),automaticReplies:Boolean(autoReplies&&onAuthorizedEvent),
+        inboundConnected:Boolean(onAuthorizedEvent),deliveryReceiptsPersisted:Boolean(onDeliveryStatus),
+        automaticReplies:Boolean(autoReplies&&onAuthorizedEvent),
         signedRequests:metrics.signedRequests,invalidSignatures:metrics.invalidSignatures,
         incomingMessages:metrics.incomingMessages,statusUpdates:metrics.statusUpdates,
         deliveryStatuses:metrics.deliveryStatuses,lastSignedAt:metrics.lastSignedAt,
@@ -86,6 +89,12 @@ export function createGateway({verifyToken=verification,secret=appSecret,phoneId
     metrics.statusUpdates+=summary.statusUpdates;
     for(const key of Object.keys(metrics.deliveryStatuses)){
       metrics.deliveryStatuses[key]+=summary.deliveryStatuses[key];
+    }
+    if(onDeliveryStatus){
+      for(const receipt of parseWhatsAppDeliveryEvents(json)){
+        try{await onDeliveryStatus(receipt);}
+        catch{return send(res,503,{error:"DELIVERY_PERSISTENCE_FAILED"});}
+      }
     }
     const events=parseWhatsAppEvents(json);
     const allowed=selectAuthorizedEvents(events,{phoneNumberId:phoneId,authorizedNumbers:allowlist,enabledSince:since});
@@ -129,40 +138,39 @@ if(process.argv[1]&&resolve(process.argv[1])===fileURLToPath(import.meta.url)) {
     whatsappToken:get("WHATSAPP_ACCESS_TOKEN"),phoneId:expectedPhoneId,
     allowedNumbers:authorizedNumbers,graphVersion:get("WHATSAPP_GRAPH_API_VERSION")||"v25.0"
   }):null;
-  const replyStats={sent:0,failed:0,lastReplyAt:null};
-  const receiveEvent=ingest?async e=>{
-    const result=await ingest(e);
-    if(result==="stored"){
-      // Every signed message is durably recorded first. A failed triage does not
-      // trigger speculative AI responses, lead creation or automated followups.
-      let decision={should_reply:false};
-      if(triage){
-        try{decision=await triage(e);}
-        catch{console.error("ARM_LEAD_TRIAGE_FAILED");}
-      }
-      if(handoffAck&&decision.handoff_queued&&!decision.opt_out)queueMicrotask(()=>{
-        void handoffAck(e,decision).then(status=>{
-          if(status?.status==="sent"){replyStats.sent++;replyStats.lastReplyAt=new Date().toISOString();}
-        }).catch(err=>{
-          replyStats.failed++;
-          console.error("WHATSAPP_HANDOFF_ACK_FAILED",err instanceof Error?err.message:"unknown");
-        });
-      });
-      if(responder&&decision.should_reply)queueMicrotask(()=>{
-      void responder(e,decision).then(result=>{
-        if(result?.status==="sent"){replyStats.sent++;replyStats.lastReplyAt=new Date().toISOString();}
-      }).catch(err=>{
-        replyStats.failed++;
-        // Sanitized diagnostic; no phone, message, API key or third-party body.
-        console.error("WHATSAPP_TEST_REPLY_FAILED",err instanceof Error?err.message.replace(/\d{8,}/g,"[ID]"):"unknown");
-      });
-    });
+  const deliveryRecorder=ingest?createWhatsAppDeliveryRecorder({
+    supabaseUrl:get("SUPABASE_URL"),serviceRoleKey:get("SUPABASE_SERVICE_ROLE_KEY"),
+    phoneId:expectedPhoneId
+  }):null;
+  const replyStats={sent:0,failed:0,review:0,skipped:0,lastReplyAt:null};
+  const worker=ingest&&triage?createWhatsAppOutboxWorker({
+    supabaseUrl:get("SUPABASE_URL"),serviceRoleKey:get("SUPABASE_SERVICE_ROLE_KEY"),
+    phoneId:expectedPhoneId,allowedNumbers:authorizedNumbers,
+    triage,responder,handoffAck,
+    onResult:result=>{
+      if(result.status==="sent"){replyStats.sent++;replyStats.lastReplyAt=new Date().toISOString();}
+      else if(result.status==="review")replyStats.review++;
+      else if(result.status==="skipped")replyStats.skipped++;
+      else if(result.status==="retry")replyStats.failed++;
     }
-    return result;
-  }:null;
-  createGateway({onAuthorizedEvent:receiveEvent,autoReplies:Boolean(responder),getReplyStats:()=>replyStats}).listen(port,"127.0.0.1",()=>{
+  }):null;
+  // The signed webhook writes the inbound message and its outbox job in ONE DB transaction.
+  // There is no fire-and-forget Graph call in the HTTP request anymore.
+  const receiveEvent=ingest?async e=>ingest(e):null;
+  const server=createGateway({onAuthorizedEvent:receiveEvent,
+    onDeliveryStatus:deliveryRecorder,autoReplies:Boolean(responder&&worker),getReplyStats:()=>replyStats});
+  server.listen(port,"127.0.0.1",()=>{
     console.log("ARM_WHATSAPP_GATEWAY_READY port="+port+" signedValidation="+Boolean(appSecret)+
       " verifyConfigured="+Boolean(verification)+" testNumbers="+authorizedNumbers.length+
-      " durableIngest="+Boolean(ingest)+" replies="+Boolean(responder)+" testOffers="+Boolean(responder&&simulatedOffers));
+      " durableIngest="+Boolean(ingest)+" durableOutbox="+Boolean(worker)+
+      " replies="+Boolean(responder)+" testOffers="+Boolean(responder&&simulatedOffers));
   });
+  if(worker){
+    const tick=()=>{void worker.runOnce().catch(err=>{
+      replyStats.failed++;
+      console.error("ARM_OUTBOX_WORKER_ERROR",err instanceof Error?err.message.replace(/\\d{8,}/g,"[ID]"):"unknown");
+    });};
+    const poll=setInterval(tick,4000);
+    poll.unref();tick();
+  }
 }
