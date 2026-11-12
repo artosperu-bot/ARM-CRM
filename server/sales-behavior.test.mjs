@@ -8,7 +8,32 @@ describe("ventas y escenarios aislados",()=>{
   expect(v.especificaciones_fabricante.certifications).toContain("IP68");
  });
  it("oferta simulada solo activada explícitamente en pruebas",()=>{
-  const v=enrichCatalog(catalog,true,[{partnumber:"ARMOR-22-256G",price_pen:999,stock_status:"disponible",is_test_data:true}])[0];expect(v.precio_soles).toBe(999);expect(v.disponibilidad).toBe("disponible");expect(v.oferta_simulada).toBe(true);
+  const v=enrichCatalog(catalog,true,[{partnumber:"ARMOR-22-256G",price_pen:999,stock_status:"disponible",stock_units_demo:8,is_test_data:true}])[0];expect(v.precio_soles).toBe(999);expect(v.disponibilidad).toBe("disponible");expect(v.oferta_simulada).toBe(true);
+ });
+ it("demo stock is quantity-aware without exposing units in the model catalog",()=>{
+  const offers=[{partnumber:"ARMOR-22-256G",price_pen:999,stock_status:"disponible",
+    stock_units_demo:8,is_test_data:true}];
+  const enough=enrichCatalog(catalog,true,offers,{requestedQuantity:8})[0];
+  const insufficient=enrichCatalog(catalog,true,offers,{requestedQuantity:9})[0];
+  expect(enough).toMatchObject({precio_soles:999,disponibilidad:"disponible",oferta_simulada:true});
+  expect(insufficient).toMatchObject({precio_soles:999,disponibilidad:"no disponible",oferta_simulada:true});
+  expect(JSON.stringify(enough)).not.toContain("stock_units_demo");
+  expect(JSON.stringify(enough)).not.toContain("8 unidades");
+ });
+ it("demo out of stock is not offered even if the price exists",()=>{
+  const offer=[{partnumber:"ARMOR-22-256G",price_pen:999,stock_status:"no disponible",
+    stock_units_demo:0,is_test_data:true}];
+  expect(enrichCatalog(catalog,true,offer)[0].disponibilidad).toBe("no disponible");
+ });
+ it("demo never invents stock if quantitative test inventory is missing",()=>{
+  const record={partnumber:"ARMOR-22-256G",price_pen:999,stock_status:"disponible",is_test_data:true};
+  expect(enrichCatalog(catalog,true,[record])[0].disponibilidad).toBe("por confirmar");
+ });
+ it("real mode ignores assumed prices and stock even when demo row is populated",()=>{
+  const record={partnumber:"ARMOR-22-256G",price_pen:999,stock_status:"disponible",
+    stock_units_demo:100,is_test_data:true};
+  const item=enrichCatalog(catalog,false,[record])[0];
+  expect(item).toMatchObject({precio_soles:null,disponibilidad:"por confirmar",oferta_simulada:false});
  });
  it("simulación sin registro verificado no inventa precios",()=>{
   const v=enrichCatalog(catalog,true,[])[0];
@@ -16,7 +41,7 @@ describe("ventas y escenarios aislados",()=>{
   expect(v.disponibilidad).toBe("por confirmar");
  });
  it("descarta ofertas sin bandera de simulación y mantiene cotización real aislada",()=>{
-  const record={partnumber:"ARMOR-22-256G",price_pen:999,stock_status:"disponible",is_test_data:false};
+  const record={partnumber:"ARMOR-22-256G",price_pen:999,stock_status:"disponible",stock_units_demo:8,is_test_data:false};
   expect(enrichCatalog(catalog,true,[record])[0].precio_soles).toBe(null);
   expect(enrichCatalog(catalog,false,[{...record,is_test_data:true}])[0].precio_soles).toBe(null);
  });

@@ -127,7 +127,7 @@ async function handle(req,res){
   const lookup=await retrieveSalesCatalog(db,workspaceId,catalogTurns,{limit:18});
   const pn=lookup.products.map(x=>x.partnumber);
   const testOffers=simulated&&pn.length?await db.from("arm_offer_simulations")
-    .select("partnumber,price_pen,stock_status,is_test_data")
+    .select("partnumber,price_pen,stock_status,stock_units_demo,is_test_data")
     .eq("workspace_id",workspaceId).eq("is_test_data",true)
     .in("partnumber",pn).limit(24):{data:[],error:null};
   if(testOffers.error)throw new Error("No fue posible verificar las ofertas de prueba.");

@@ -5,3 +5,9 @@
 .agent-readiness{display:flex;flex-direction:column;gap:9px;padding:14px 18px;background:#f7fbff;border-top:1px solid #dcebf3;color:#34586d;font-size:12px}.agent-readiness>strong{color:#194e6a;font-size:12px}.agent-readiness>div{display:flex;gap:14px;flex-wrap:wrap}.agent-readiness small{font-size:11px;color:#657e8c;line-height:1.6}.agent-readiness>.secondary-button{align-self:flex-start;font-size:11px}
 
 .agent-product-photo{margin:10px 0 0;max-width:320px}.agent-product-photo img{display:block;width:100%;height:auto;max-height:310px;object-fit:contain;background:#fff;border-radius:10px;border:1px solid #d5e1eb}.agent-product-photo figcaption{font-size:11px;color:#637a89;margin-top:6px;line-height:1.4}
+
+/* Laboratory calculation, never a persisted quotation or an order. */
+.agent-sandbox-quote-preview{display:flex;flex-direction:column;gap:4px;margin-top:9px;padding:10px 12px;border:1px dashed #c6b9ed;border-radius:10px;background:#fbf9ff;color:#493b70}
+.agent-sandbox-quote-preview strong{font-size:12px}
+.agent-sandbox-quote-preview span{font-size:13px}
+.agent-sandbox-quote-preview small{line-height:1.5;color:#685d81}

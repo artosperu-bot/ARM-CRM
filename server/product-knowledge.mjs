@@ -37,9 +37,16 @@ export function enrichCatalog(rows, simulated=false, testOffers=[],{now=Date.now
   const qty=Number.isInteger(requestedQuantity)&&requestedQuantity>0?requestedQuantity:1;
   const saleable=!simulated&&evidence?.saleableStock===true&&
     Number.isInteger(evidence.availableToPromiseUnits)&&evidence.availableToPromiseUnits>=qty;
-  // Physical ERP units never equal available-to-promise inventory.
-  const availability=simulated?(demo?.stock_status||"por confirmar"):
-    saleable?"disponible":"por confirmar";
+  // Private stock units are assumed values, never a real inventory or order.
+  // Check the buyer's requested quantity without revealing exact units to the LLM.
+  const units=demo?.stock_units_demo;
+  const demoUnitsValid=simulated&&demo?.is_test_data===true&&
+    Number.isInteger(units)&&units>=0;
+  const availability=simulated?(
+    !demoUnitsValid?"por confirmar":
+    demo.stock_status==="no disponible"||units<qty?"no disponible":
+    demo.stock_status==="disponible"?"disponible":"por confirmar"
+  ):saleable?"disponible":"por confirmar";
   const allCertifiedFacts=factsByPn[row.partnumber]||null;
   // Images are media assets, not specifications sent to the language model.
   const certifiedFacts=allCertifiedFacts?

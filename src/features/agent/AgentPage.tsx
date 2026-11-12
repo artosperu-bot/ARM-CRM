@@ -7,10 +7,11 @@ import {supabase} from "../../lib/supabase";
 import "./agent.css";
 
 type Conversation={id:string;title:string;created_at:string};
-type TestOffer={partnumber:string;price_pen:number;stock_status:string};
+type TestOffer={partnumber:string;price_pen:number;stock_status:string;stock_units_demo:number|null};
 type Turn={id:string;role:"user"|"assistant";content:string;created_at:string};
 type Usage={model:string;inputTokens:number;outputTokens:number;cachedTokens:number;estimatedUsd:number;usageRecorded:boolean};
-type CommercialReadiness={state:"requiere_validacion";intent:string;product:{partnumber:string;title:string}|null;quantity:number|null;budget:{pen:number;scope:string}|null;priceEvidence:boolean;saleableStock:boolean;blockers:string[];quoteCreated:false;orderCreated:false;paymentRegistered:false;advisorAssigned:false;canManuallyCreateOpportunity:boolean;nextAction:string};
+type DemoEstimate={testOnly:true;partnumber:string;quantity:number;unitPricePen:number;totalPen:number;status:"disponible"|"no disponible"|"por confirmar"};
+type CommercialReadiness={state:"requiere_validacion";intent:string;product:{partnumber:string;title:string}|null;quantity:number|null;budget:{pen:number;scope:string}|null;priceEvidence:boolean;saleableStock:boolean;demoEstimate:DemoEstimate|null;blockers:string[];quoteCreated:false;orderCreated:false;paymentRegistered:false;advisorAssigned:false;canManuallyCreateOpportunity:boolean;nextAction:string};
 const blockerLabels:Record<string,string>={modelo_por_confirmar:"modelo exacto",cantidad_por_confirmar:"cantidad",precio_vigente_por_confirmar:"precio vigente",disponibilidad_vendible_por_confirmar:"disponibilidad para venta",condiciones_cotizacion_por_confirmar:"condiciones de cotización"};
 export default function AgentPage({workspaceId,contacts,onNavigate,onCreateFollowup,onCreateDeal}:{
  workspaceId:string;contacts:Contact[];onNavigate:(section:Section)=>void;
@@ -22,7 +23,7 @@ export default function AgentPage({workspaceId,contacts,onNavigate,onCreateFollo
  const [turns,setTurns]=useState<Turn[]>([]);
  const [question,setQuestion]=useState("");
  const [sending,setSending]=useState(false);
- const [simulated,setSimulated]=useState(false);
+ const [simulated,setSimulated]=useState(true); // Private ARM-CRM pilot defaults to clearly labeled sandbox figures.
  const [testOffers,setTestOffers]=useState<TestOffer[]>([]);
  const [offersLoading,setOffersLoading]=useState(false);
  const [offersError,setOffersError]=useState("");
@@ -80,7 +81,7 @@ export default function AgentPage({workspaceId,contacts,onNavigate,onCreateFollo
   if(!simulated||!supabase){setTestOffers([]);setOffersError("");return;}
   let active=true;setOffersLoading(true);setOffersError("");
   void supabase.from("arm_offer_simulations")
-    .select("partnumber,price_pen,stock_status")
+    .select("partnumber,price_pen,stock_status,stock_units_demo")
     .eq("workspace_id",workspaceId).eq("is_test_data",true).order("partnumber")
     .then(({data,error:readError})=>{
       if(!active)return;
@@ -148,7 +149,7 @@ export default function AgentPage({workspaceId,contacts,onNavigate,onCreateFollo
     {offersLoading?<span>Cargando ofertas…</span>:offersError?<span role="alert">{offersError}</span>:
      testOffers.length===0?<span>No hay ofertas ficticias registradas en este espacio.</span>:
      <div className="agent-db-test-grid">{testOffers.map(offer=><div key={offer.partnumber}>
-      <strong>{offer.partnumber}</strong><span>S/ {Number(offer.price_pen).toFixed(2)}</span><small>{offer.stock_status}</small>
+      <strong>{offer.partnumber}</strong><span>S/ {Number(offer.price_pen).toFixed(2)}</span><small>{offer.stock_status} · {offer.stock_units_demo===null?"sin cantidad supuesta":`${offer.stock_units_demo} unidades supuestas`}</small>
      </div>)}</div>}
     <small>Solo para pruebas internas. El agente nunca debe publicar estas cifras en WhatsApp ni en modo real.</small>
    </section>}
@@ -187,7 +188,14 @@ export default function AgentPage({workspaceId,contacts,onNavigate,onCreateFollo
       {commercial&&<div className="agent-readiness" role="status">
        <strong>{signal?.key==="ended"?"El cliente decidió no continuar · ninguna gestión pendiente":"Estado comercial de esta consulta · sin operación registrada"}</strong>
        <div><span><b>Producto:</b> {commercial.product?.title||"Por identificar"}</span><span><b>Cantidad:</b> {commercial.quantity??"Por confirmar"}</span>{commercial.budget&&<span><b>Presupuesto del cliente:</b> S/ {commercial.budget.pen} ({commercial.budget.scope==="total"?"total":commercial.budget.scope==="por_unidad"?"por unidad":"sin aclarar"})</span>}</div>
-       {signal?.key==="ended"?<small>Respetar su decisión. No solicitar datos, registrar seguimientos ni insistir en comprar.</small>:<small><b>Pendiente:</b> {commercial.blockers.map(x=>blockerLabels[x]||x).join(" · ")}. No hay cotización, pedido, pago ni asesor asignado.</small>}
+       {signal?.key==="ended"?<small>Respetar su decisión. No solicitar datos, registrar seguimientos ni insistir en comprar.</small>:
+       simulated?<small>Laboratorio privado. No hay cotización, pedido, reserva real, pago ni asesor asignado.</small>:
+       <small><b>Pendiente:</b> {commercial.blockers.map(x=>blockerLabels[x]||x).join(" · ")}. No hay cotización, pedido, pago ni asesor asignado.</small>}
+       {simulated&&commercial.demoEstimate&&signal?.key!=="ended"&&<div className="agent-sandbox-quote-preview">
+        <strong>Estimación matemática de prueba (no es una cotización)</strong>
+        <span>{commercial.demoEstimate.quantity} × S/ {commercial.demoEstimate.unitPricePen.toFixed(2)} = <b>S/ {commercial.demoEstimate.totalPen.toFixed(2)}</b></span>
+        <small>Stock supuesto para esta cantidad: {commercial.demoEstimate.status}. Los impuestos y gastos de envío no están comprobados; no se ha creado ninguna operación.</small>
+       </div>}
        {commercial.canManuallyCreateOpportunity&&signal?.followupSuggested&&!simulated&&<button type="button" className="secondary-button" onClick={()=>{setActionOpen(true);setLinkedContact("");setApproved(false);setDueAt("");setTask(("Retomar consulta: "+lastQuestion).slice(0,390));}}>Gestionar manualmente en CRM</button>}
       </div>}
       {actionOpen&&!simulated&&signal?.key!=="ended"&&<div className="agent-sales-action">

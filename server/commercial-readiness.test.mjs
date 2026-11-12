@@ -28,6 +28,32 @@ describe("ALEX commercial operation readiness",()=>{
   expect(test.saleableStock).toBe(false);
   expect(test.canManuallyCreateOpportunity).toBe(false);
  });
+ it("computes a clearly fake total only for selected quantity in the private sandbox",()=>{
+  const simulatedItem={...priced,oferta_simulada:true,origen_datos:"simulacion_solo_pruebas",
+    disponibilidad:"disponible"};
+  const b=buyer(["Quiero 3 Ulefone Armor X13"],[simulatedItem]);
+  const result=assessCommercialReadiness(b,{catalog:[simulatedItem],simulated:true});
+  expect(result.demoEstimate).toMatchObject({
+   testOnly:true,partnumber:"ARMOR-X13",quantity:3,unitPricePen:799,totalPen:2397,status:"disponible"
+  });
+  expect(result.quoteCreated).toBe(false);
+  expect(result.orderCreated).toBe(false);
+  expect(result.paymentRegistered).toBe(false);
+  expect(result.canManuallyCreateOpportunity).toBe(false);
+ });
+ it("shows simulated insufficiency without pretending a reservation occurred",()=>{
+  const demo={...priced,oferta_simulada:true,disponibilidad:"no disponible"};
+  const result=assessCommercialReadiness(buyer(["Quiero comprar 6 Armor X13"],[demo]),{
+   catalog:[demo],simulated:true
+  });
+  expect(result.demoEstimate?.status).toBe("no disponible");
+  expect(result.saleableStock).toBe(false);
+  expect(result.quoteCreated).toBe(false);
+ });
+ it("never computes a demo total from unverified real data",()=>{
+  const result=assessCommercialReadiness(buyer(["Quiero 3 Armor X13"]),{catalog});
+  expect(result.demoEstimate).toBeNull();
+ });
  it("does not turn physical stock labels into available-to-promise stock",()=>{
   const x=assessCommercialReadiness(buyer(["Lo compro, Armor X13"]),{
    catalog:[{...priced,disponibilidad:"disponible",origen_datos:"precio_vigente_verificado"}]});

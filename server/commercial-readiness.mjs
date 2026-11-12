@@ -20,6 +20,14 @@ export function assessCommercialReadiness(buyer,{catalog=[],simulated=false}={})
   Number.isFinite(rawPrice)&&rawPrice>0);
  const saleableStock=Boolean(!simulated&&selected?.disponibilidad==="disponible"&&
    selected?.origen_stock==="stock_vendible_verificado");
+ // Mathematical exercise only: no quote, reservation, tax or delivery operation.
+ const demoEstimate=simulated&&selected?.oferta_simulada===true&&product&&quantity&&
+   selected?.precio_soles!==null&&selected?.precio_soles!==undefined&&
+   Number.isFinite(rawPrice)&&rawPrice>0?
+   {testOnly:true,partnumber:product.partnumber,quantity,
+    unitPricePen:rawPrice,totalPen:Math.round(rawPrice*quantity*100)/100,
+    status:selected.disponibilidad==="disponible"?"disponible":
+      selected.disponibilidad==="no disponible"?"no disponible":"por confirmar"}:null;
  const missing=[];
  if(!product)missing.push("modelo_por_confirmar");
  if(!quantity)missing.push("cantidad_por_confirmar");
@@ -36,6 +44,7 @@ export function assessCommercialReadiness(buyer,{catalog=[],simulated=false}={})
   budget:buyer?.budget?.pen?{pen:buyer.budget.pen,scope:buyer.budget.scope}:null,
   priceEvidence,
   saleableStock,
+  demoEstimate,
   blockers:missing,
   quoteCreated:false,orderCreated:false,paymentRegistered:false,
   advisorAssigned:false,
