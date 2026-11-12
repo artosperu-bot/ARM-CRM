@@ -42,10 +42,24 @@ describe("ALEX conversation-first commercial tone",()=>{
   expect(guarded.reply).toMatch(/6320 mAh/i);
   expect(guarded.reply).not.toMatch(/bajo pruebas controladas|resistencia no es permanente|daños por líquidos/i);
  });
+ it("avoids a liquid-warranty lecture for routine warehouse dust-and-bumps advice",()=>{
+  const b=buildBuyerContext(["Trabajo en almacén con polvo y golpes; qué tal el Armor X13?"],{catalog});
+  const packed=JSON.parse(packSalesCatalog(catalog,{lastMessage:b.last_message}));
+  expect(packed.resultados[0].especificaciones_verificadas).not.toHaveProperty("note");
+  const reply="Para almacén, el X13 tiene protección IP68/IP69K y batería de 6320 mAh. Eso sí, esa resistencia es bajo pruebas de laboratorio y los daños por líquidos no están cubiertos por garantía.";
+  const safe=protectSalesResponse(reply,{buyer:b,catalog});
+  expect(safe.reply).toMatch(/batería de 6320 mAh/i);
+  expect(safe.reply).not.toMatch(/daños por líquidos/i);
+ });
  it("keeps factual warranty exclusions when the client asks about coverage",()=>{
   const b=buildBuyerContext(["¿La garantía cubre daños por líquidos del Armor X13?"],{catalog});
   const reply="Según la ficha del fabricante, los daños por líquidos no están cubiertos por garantía.";
   expect(protectSalesResponse(reply,{buyer:b,catalog}).reply).toBe(reply);
+ });
+ it("retains liquid exclusion details when buyer explicitly asks whether they can submerge the phone",()=>{
+  const b=buildBuyerContext(["¿Puedo sumergirlo en la piscina?"],{catalog});
+  const packed=JSON.parse(packSalesCatalog(catalog,{lastMessage:b.last_message}));
+  expect(packed.resultados[0].especificaciones_verificadas.note).toMatch(/líquidos/i);
  });
  it("does not rewrite meaningful physical limits when buyer asks about immersion",()=>{
   const b=buildBuyerContext(["¿Se puede meter al agua este Armor X13 y por cuánto tiempo?"],{catalog});

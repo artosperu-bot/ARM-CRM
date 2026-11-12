@@ -38,7 +38,11 @@ describe("ALEX verified product photographs (any future category)",()=>{
   "no quiero fotos, dime precio nomas",
   "me muestras fotos tomadas con la cámara del X13?",
   "no me mandes foto de ese equipo",
-  "quiero ver fotos de la cámara"
+  "quiero ver fotos de la cámara",
+  "tengo que mandar foto de mi DNI para preguntar por el Armor X13?",
+  "pasame foto del DNI para que sepas quien soy",
+  "necesitas imagen de documento de identidad?",
+  "te mando foto de mi tarjeta?"
  ])("does not confuse taking photos with requesting a product picture: %s",text=>{
   expect(requestsProductPhoto(text)).toBe(false);
  });

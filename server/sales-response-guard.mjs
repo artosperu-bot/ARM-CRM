@@ -1,12 +1,31 @@
 import {matchCustomerProduct} from "./catalog-matching.mjs";
 import {polishCommercialReply} from "./commercial-voice.mjs";
 import {humanHandoffUnconfirmedReply} from "./human-handoff-phrasing.mjs";
+import {analyzeConversationTurn} from "./conversation-turn-plan.mjs";
 import {asksFormalComplaintReplyDeadline,lawfulComplaintDeadlineReply,lawfulComplaintBookReply} from "./peru-consumer-knowledge.mjs";
 /**
  * Final deterministic safety check for AI-generated commercial text.
  * No model is trusted to approve prices, discounts, promises or actions.
  * When ungrounded, replace the claim rather than "correcting" its amount.
  */
+const normalizeComparison=s=>String(s||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"")
+ .toLowerCase().replace(/[^a-z0-9]+/g," ").replace(/\s+/g," ").trim();
+function comparedCameraFacts(question,catalog){
+ const q=" "+normalizeComparison(question)+" ";
+ const matches=(Array.isArray(catalog)?catalog:[]).filter(p=>{
+  const id=normalizeComparison((p.titulo||p.title||"")+" "+(p.partnumber||""));
+  const signals=[...id.matchAll(/\b(?:[a-z]{2,20} \d{2,5}|[a-z]{1,12}\d{1,5})\b/gu)]
+   .map(x=>x[0]).filter(x=>!/^\d+(?:gb|tb|mah|mp|w)$/u.test(x));
+  return signals.some(token=>token.length>=3&&q.includes(" "+token+" "));
+ }).slice(0,3);
+ return matches.map(p=>{
+  const specs=p.especificaciones_fabricante;
+  const highlights=Array.isArray(specs?.highlights)?specs.highlights:[];
+  const camera=highlights.filter(x=>/\b(?:c[aá]mara|visi[oó]n nocturna|megap[ií]xeles|\d+\s*mp)\b/iu.test(String(x))).slice(0,2);
+  return camera.length?String(p.titulo||p.title||p.partnumber).slice(0,65)+": "+
+    camera.map(x=>String(x).slice(0,65)).join(", "):null;
+ }).filter(Boolean);
+}
 const number=(v)=>{
  const s=String(v||"").trim().replace(/\s/g,"");
  // S/ 1,799, S/ 1.799, S/ 1799, S/ 999.90
@@ -68,6 +87,7 @@ export function protectSalesResponse(reply,{catalog=[],buyer=null,simulated=fals
  const text=typeof reply==="string"?reply.trim():"";
  if(!text)return {reply:"Puedo ayudarte con tu consulta. ¿Qué producto necesitas?",blocked:true,reason:"empty"};
  const intent=buyer?.current_intent||"consulta";
+ const turnPlan=analyzeConversationTurn(buyer,catalog);
  if(buyer?.requires_human){
   return {reply:humanHandoffUnconfirmedReply(buyer),blocked:true,reason:"human_requested"};
  }
@@ -78,7 +98,7 @@ export function protectSalesResponse(reply,{catalog=[],buyer=null,simulated=fals
  if(/\bno quiero (?:dar|compartir) (?:mi )?(?:dni|ruc|tel[eé]fono|n[uú]mero)\b/iu.test(buyer?.last_message||""))
    return {reply:"Sí, puedes consultar productos y recibir orientación sin dar tu DNI ni otros datos personales.",blocked:true,reason:"privacy_preference"};
 
- const askedCommercialPrice=["consultar_precio","cotizar","comparar","objecion","comprar"].includes(intent);
+ const askedCommercialPrice=turnPlan.asksPrice||["consultar_precio","cotizar","comparar","objecion","comprar"].includes(intent);
  const available=(Array.isArray(catalog)?catalog:[]).filter(p=>p?.precio_soles!==null&&
    p?.precio_soles!==undefined&&Number.isFinite(Number(p.precio_soles))&&Number(p.precio_soles)>0);
  const replyProduct=matchCustomerProduct(text,catalog);
@@ -127,6 +147,66 @@ export function protectSalesResponse(reply,{catalog=[],buyer=null,simulated=fals
  const deliveryViolation=deliveryPromise.test(text);
  const prematureDataViolation=buyer?.current_intent==="comprar"&&(prematureDataRequest.test(text)||prematureCustomerDetails.test(text));
  const affordabilityViolation=unprovenAffordability.test(text)&&!affordabilityCaveat.test(text);
+ // A compound price + availability request cannot be answered with price only.
+ // Also distinguish confirmed zero/insufficient stock from truly unknown stock.
+ // Only use the exact SKU and evidence already authorized in this conversation.
+ const selectedForStock=buyer?.matched_partnumber?
+   (Array.isArray(catalog)?catalog:[]).find(x=>x?.partnumber===buyer.matched_partnumber):null;
+ const status=selectedForStock?.disponibilidad;
+ const saleQuestion=turnPlan.asksStock &&
+   !["soporte","handoff","cierre","decision"].includes(turnPlan.focus)&&
+   ["comercial","facturacion_pago"].includes(buyer?.current_topic||"comercial")&&
+   selectedForStock&&["disponible","no disponible","por confirmar"].includes(status);
+ if(saleQuestion){
+   const normalized=text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"");
+   const saysNo=/\b(?:no disponible|no esta disponible|sin stock|agotad[oa]s?|no hay (?:stock|disponibilidad|para)|no tenemos (?:stock|disponibilidad)|no alcanzan? las unidades)\b/u.test(normalized);
+   const saysUnknown=/\b(?:por confirmar|sin confirmar|falta confirmar|pendiente de confirmar|no (?:puedo|podemos) (?:asegurar|confirmar))\b/u.test(normalized);
+   const saysYes=/\b(?:esta disponible|estan disponibles|figura disponible|disponibilidad\s*:?\s*disponible|estan disponibles|tenemos disponible|hay stock|tenemos stock|si hay|si tenemos|disponibilidad confirmada)\b/u.test(normalized);
+   const consistentStock=status==="no disponible"?saysNo&&!saysYes:
+     status==="por confirmar"?saysUnknown&&!saysYes:
+     saysYes&&!saysNo;
+   const price=Number(selectedForStock.precio_soles);
+   const priceKnown=selectedForStock.precio_soles!==null&&
+      selectedForStock.precio_soles!==undefined&&Number.isFinite(price)&&price>0;
+   const priceWasAsked=turnPlan.asksPrice;
+   const pricesInReply=[...text.matchAll(moneyRe)]
+     .map(m=>number(String(m.slice(1).find(x=>x!==undefined)||"")));
+   moneyRe.lastIndex=0;
+   const hasCorrectPrice=pricesInReply.some(x=>x===price);
+   const needsCorrection=!consistentStock||(buyer?.current_topic==="facturacion_pago"&&unsupportedBillingClaim.test(text))||
+      (priceWasAsked&&priceKnown&&!hasCorrectPrice)||
+      (priceWasAsked&&!priceKnown&&pricesInReply.length>0);
+   if(needsCorrection){
+     const label=String(selectedForStock.titulo||selectedForStock.title||"ese modelo").slice(0,110);
+     const quantity=Number.isInteger(buyer?.quantity)&&buyer.quantity>0?
+       " para las "+buyer.quantity+" unidades solicitadas":"";
+     const availability=status==="no disponible"?
+       "no está disponible"+quantity:
+       status==="disponible"?"está disponible"+quantity:
+       "tiene disponibilidad por confirmar"+quantity;
+     const summary=priceWasAsked?(priceKnown?
+       " Su precio "+(simulated?"simulado":"verificado")+" es S/ "+price.toFixed(2)+".":
+       " Su precio está por confirmar."):"";
+     return {reply:(simulated?"En esta simulación, ":"")+label+" "+availability+"."+summary+
+       (buyer?.current_topic==="facturacion_pago"?" El medio de pago solicitado aún no está confirmado.":"")+
+       (simulated?" No se ha generado un pedido ni una cotización.":""),
+       blocked:true,reason:"availability_fact_correction"};
+   }
+ }
+ // Rankings of camera/photo quality require comparable evidence, not just
+ // one model's megapixels or a generic night-vision marketing claim.
+ const buyerCamera=/\b(?:camara|fotos?|video)\b/u.test(normalizeComparison(buyer?.last_message));
+ const responseNormalized=normalizeComparison(text);
+ const assertedCameraRanking=/(?:\b(?:mejor|superior|ventaja|mas complet[oa]|mas fuerte|gana)\b.{0,110}\b(?:camara|fotos?|video)\b|\b(?:camara|fotos?|video)\b.{0,110}\b(?:mejor|superior|ventaja|mas complet[oa]|mas fuerte)\b)/u.test(responseNormalized)&&
+   !/\b(?:no puedo asegurar|no podemos asegurar|no hay pruebas|sin pruebas|no puedo afirmar|no se puede afirmar)\b/u.test(responseNormalized);
+ const comparedFacts=buyerCamera&&(intent==="comparar"||turnPlan.asksComparison)?
+   comparedCameraFacts(buyer?.last_message,catalog):[];
+ if(buyerCamera&&comparedFacts.length>=2&&assertedCameraRanking){
+  return {reply:"No tengo una prueba comparativa que permita asegurar cuál toma mejores fotos. "+
+   "Las fichas verificadas indican: "+comparedFacts.slice(0,2).join("; ")+
+   ". La calidad real de imagen requiere una comparación equivalente.",
+   blocked:true,reason:"unverified_camera_ranking"};
+ }
  if(!wrongProduct&&!moneyViolation&&!actionViolation&&!stockViolation&&!discountViolation&&!deliveryViolation&&!prematureDataViolation&&!repeatedModelRequest&&!affordabilityViolation){
   // Earlier guards preserve specific denial reasons for invented payments,
   // quotes, discounts, delivery promises and repeated customer questions.
@@ -147,13 +227,12 @@ export function protectSalesResponse(reply,{catalog=[],buyer=null,simulated=fals
     "Para cotizar "+qty+" todavía falta un precio vigente. No hay una cotización emitida desde este chat.":
     "El precio de "+qty+" está por confirmar. Aún no tengo un monto vigente para darte.",
     blocked:true,reason:"unverified_price"};
+  if(intent==="disponibilidad"&&selected?.disponibilidad==="no disponible")
+   return {reply:"Ese modelo no está disponible para la cantidad solicitada. Todavía no se ha registrado ningún pedido.",blocked:true,reason:"unavailable_stock"};
   if(intent==="disponibilidad"&&selected?.disponibilidad!=="disponible")
    return {reply:"La disponibilidad de ese modelo está por confirmar. Por ahora no puedo asegurarte stock para entrega.",blocked:true,reason:"unverified_availability"};
-  if(intent==="objecion"&&/\b(?:rebaja|descuento|descuentito|promocion)\b/u.test(buyer?.last_message||""))
-   return {reply:"Entiendo que busques un mejor precio por "+
-    (buyer?.quantity&&Number.isInteger(buyer.quantity)?buyer.quantity+" unidades":"el producto")+
-    ". No tengo un descuento aprobado para confirmarte.",
-    blocked:true,reason:"unapproved_discount"};
+  // A safe, natural objection response must not be overwritten just because the buyer asked for a discount.
+  // The deterministic discountViolation and moneyViolation checks above still block invented offers.
  // No checkout tool is wired into either the private CRM chat or WhatsApp
  // sandbox. A buying signal means the customer wants to proceed, NOT that an
  // order, payment link, reservation or handoff was created.
@@ -176,11 +255,11 @@ export function protectSalesResponse(reply,{catalog=[],buyer=null,simulated=fals
  const quantity=Number.isInteger(buyer?.quantity)&&buyer.quantity>0?buyer.quantity:null;
  const qtyLabel=quantity?quantity+" unidad"+(quantity===1?"":"es"):"la cantidad solicitada";
  const fallback={
-  product_mismatch:"Necesito verificar el modelo exacto antes de darte un precio; no quiero mezclar productos diferentes.",
+  product_mismatch:intent==="objecion"?"Entiendo que busques un mejor precio. No tengo un descuento aprobado que pueda confirmarte; tampoco mezclaré ofertas de modelos distintos.":"Necesito verificar el modelo exacto antes de darte un precio; no quiero mezclar productos diferentes.",
   redundant_model_question:"Ya tengo el modelo que indicaste. No necesitas repetirlo. Aún no dispongo de una ficha o precio vigente verificado de esa referencia.",
   unverified_affordability:intent==="cotizar"?"Entiendo que solicitas una cotización por "+qtyLabel+". No dispongo de precios vigentes verificados para calcularla y todavía no se ha generado ningún documento.":buyer?.budget?"Tengo presente el presupuesto indicado, pero sin precios confirmados no es posible asegurar que los productos se ajusten al monto.":"No sería correcto asegurar que una compra encaja en un presupuesto sin precios y condiciones comerciales confirmados.",
   premature_personal_data:"Ya tengo el producto que elegiste. Para comprarlo falta confirmar el precio y la disponibilidad vigente. Todavía no hay un pedido registrado ni es necesario que me envíes datos personales por aquí.",
-  unverified_price:intent==="cotizar"?"Tengo registrada tu solicitud por "+qtyLabel+", pero faltan precios vigentes verificados para emitir una cotización. No hay un documento generado.":intent==="consulta"?"Tengo presente tu consulta y sus requisitos. Sin precios verificados no puedo asegurar importes ni que los equipos entren en el presupuesto.":"No dispongo de un precio vigente verificado para ese modelo. Prefiero no darte una cifra que pueda ser incorrecta.",
+  unverified_price:intent==="objecion"?"Entiendo que busques un mejor precio. No tengo un descuento aprobado para ese modelo y no mezclaré ofertas de otros productos.":intent==="cotizar"?"Tengo registrada tu solicitud por "+qtyLabel+", pero faltan precios vigentes verificados para emitir una cotización. No hay un documento generado.":intent==="consulta"?"Tengo presente tu consulta y sus requisitos. Sin precios verificados no puedo asegurar importes ni que los equipos entren en el presupuesto.":"No dispongo de un precio vigente verificado para ese modelo. Prefiero no darte una cifra que pueda ser incorrecta.",
   unconfirmed_action:intent==="disponibilidad"?"La disponibilidad de ese modelo está por confirmar; por ahora no puedo asegurarte stock para entrega.":intent==="objecion"?"Entiendo que buscas un mejor precio por "+qtyLabel+". Por ahora no tengo un descuento confirmado para ofrecerte.":buyer?.current_topic==="pedido_existente"?"No tengo acceso para confirmar el estado de tu pedido desde aquí. Eso necesita revisarlo una persona con acceso al sistema; todavía no hay una consulta registrada por este chat.":buyer?.current_topic==="estado_derivacion"?"Aún no tengo confirmación de que un asesor haya recibido la conversación.":buyer?.current_topic==="soporte_tecnico"?"Entiendo el problema con el equipo. Puedes comprobar si muestra algún mensaje de error y revisar las opciones de diagnóstico del fabricante. Si la falla continúa, requiere evaluación técnica; no se ha creado un caso desde este chat.":buyer?.current_topic==="facturacion_pago"?"Sobre la factura electrónica y el pago con tarjeta: todavía no tengo confirmadas esas condiciones comerciales de STECH, así que prefiero no asegurarte algo incorrecto.":buyer?.current_topic==="estado_reclamo"?"No tengo confirmación de que se haya abierto un reclamo o ticket. Eso necesita comprobarse en el sistema de atención; no hay una gestión registrada por este chat.":buyer?.current_topic==="devolucion_reclamo"?"Entiendo que necesitas resolver lo ocurrido con el equipo. No tengo confirmación de un cambio o devolución aprobados; eso requiere revisión del caso y de las condiciones de compra.":buyer?.current_topic==="garantia"?"Para darte una respuesta correcta sobre la garantía, falta comprobar la cobertura y el plazo específico de ese producto.":intent==="comprar"?"Para avanzar con la compra, falta confirmar precio y disponibilidad del producto elegido. Todavía no hay un pedido ni un pago registrado desde este chat.":intent==="cotizar"?"Entiendo que necesitas una cotización por "+qtyLabel+". Todavía no hay precios vigentes confirmados y no se ha generado ninguna cotización.":intent==="consultar_precio"?"No dispongo de un precio vigente confirmado para ese modelo. No sería correcto inventar el importe.":intent==="entrega"?"No hay una fecha de entrega confirmada para ofrecerte todavía. La disponibilidad y el despacho requieren verificación.":"Lo solicitado requiere información o una acción comercial que todavía no está confirmada. No afirmaré que se haya realizado.",
   exact_stock:"La disponibilidad para venta está por confirmar. Puedo ayudarte a revisar qué producto se ajusta mejor a tu necesidad.",
   unapproved_discount:"No tengo un descuento aprobado para confirmarte. Puedo ayudarte a comparar opciones y preparar una consulta comercial.",

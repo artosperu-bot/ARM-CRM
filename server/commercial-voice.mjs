@@ -5,6 +5,7 @@
  * the buyer specifically asks. Never claim absolute water or impact resistance.
  */
 const normalized=(s)=>String(s||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase();
+const asksWaterOrWarranty=(value)=>/\b(?:garantias?|cobertura|exclusion|excluye|agua|liquid[oa]s?|moj[a-z]*|inmersion|sumerg[a-z]*|impermeable|lluvia|bajo el agua|ip68 hasta)\b/u.test(normalized(value));
 export function asksDurabilityDetails(lastMessage){
  const s=normalized(lastMessage);
  return /\b(?:garantia|garantias|cobertura|exclusion|excluye|liquidos?|agua|mojad[oa]s?|mojar|se moja|inmers[ioa]n|sumergible|sumergir(?:lo|la|los|las|se)?|sumergid[oa]s?|impermeable|lluvia|bajo el agua|condiciones de prueba|laboratorio|ip68 hasta|limites de resistencia|resistencia no permanente|cuanto resiste|caidas?|golpes?)\b/u.test(s);
@@ -20,12 +21,12 @@ export function salesVoiceInstructions(buyer){
    "PREGUNTA EXPLÍCITA DE CONDICIONES: El cliente preguntó por agua, golpes, garantía o límites. Responde su duda de forma clara y veraz, incluyendo las condiciones pertinentes cuando estén verificadas. No ocultes exclusiones relevantes ni prometas cobertura que el fabricante no ofrece.":
    "EN ESTA CONSULTA: El cliente NO pidió detalles de garantía o resistencia en agua. Habla de beneficios relevantes y evita introducir condiciones que no fueron preguntadas. Solo añade una salvedad si es material para no inducir una compra incorrecta.",
   "PERSONALIDAD: Escucha. No vendas un producto distinto ni compares si el comprador ya eligió uno. No termines por costumbre con 'si quieres, puedo ayudarte a revisar', '¿quieres que compare con otro?' o 'te ayudo con el siguiente paso'. Cuando la respuesta ya resolvió la duda, termina sin pregunta. Pregunta UNA cosa solo si cambia la recomendación o impide avanzar. Si ya quiere comprar, explica el paso realmente disponible; no inventes pagos, cotizaciones, reservas o contactos humanos.",
-  "FRASES A EVITAR POR SONAR ROBÓTICAS: 'bajo pruebas controladas' sin que lo pidan, 'resistencia no permanente' sin contexto, 'con los límites normales del fabricante' sin contexto, 'lo que tengo verificado es', 'en el registro que veo', 'no sería correcto inventar' repetido, 'ficha técnica no verificada' repetido y 'si quieres puedo ayudarte a revisar' en cada turno."
+  "FRASES A EVITAR POR SONAR ROBÓTICAS: 'bajo pruebas controladas' sin que lo pidan, 'resistencia no permanente' sin contexto, 'con los límites normales del fabricante' sin contexto, 'lo que tengo verificado es', 'en el registro que veo', 'no sería correcto inventar' repetido, 'ficha técnica no verificada' repetido, 'no manejo descuentos inventados', y 'si quieres puedo ayudarte a revisar' en cada turno. Ante un descuento no aprobado, prefiere 'No tengo un descuento autorizado para ese modelo' y continúa solo si aporta valor."
  ].join("\n");
 }
 export function evidenceForSalesTurn(specs,lastMessage){
  if(!specs||typeof specs!=="object"||Array.isArray(specs))return specs;
- if(asksDurabilityDetails(lastMessage))return specs;
+ if(asksWaterOrWarranty(lastMessage))return specs;
  // Support/legal clauses stay in trusted source data for direct buyer questions,
  // but do not prime the model to recite them unsolicited.
  const {note,ip68,...benefits}=specs;
@@ -34,7 +35,7 @@ export function evidenceForSalesTurn(specs,lastMessage){
 /** Drop only unsolicited disclaimer *sentences*; don't suppress legitimate
  * warranty/immersion answers or alter technical claims/prices. */
 export function softenUnsolicitedDurabilityCaveats(text,lastMessage){
- if(asksDurabilityDetails(lastMessage))return String(text||"");
+ if(asksWaterOrWarranty(lastMessage))return String(text||"");
  let answer=String(text||"").trim();
  // Remove self-contained warning sentences, including 'Ojo: ...', in ordinary
  // product recommendations. If a sentence contains useful product information
@@ -42,7 +43,7 @@ export function softenUnsolicitedDurabilityCaveats(text,lastMessage){
  const sentences=answer.split(/(?<=[.!?])\s+(?=[A-ZÁÉÍÓÚÑ])/u);
  answer=sentences.filter(s=>{
   const n=normalized(s);
-  return !/^\s*(?:ojo[:;,]?\s*)?(?:esas?|estas?|las?|los?)?\s*(?:certificaciones?|resistencia|danos?|segun el fabricante|el fabricante|en cuanto a la garantia|la garantia)\b/u.test(n) ||
+  return !/^\s*(?:(?:ojo|eso si|pero ojo|ten en cuenta)[:;,]?\s*)?(?:esas?|estas?|las?|los?)?\s*(?:certificaciones?|resistencia|danos?|segun el fabricante|el fabricante|en cuanto a la garantia|la garantia)\b/u.test(n) ||
    !/(?:pruebas controladas|laboratorio|no es permanente|puede disminuir|danos por liquidos|no (?:estan|esta) cubiert[oa]s?)/u.test(n);
  }).join(" ");
  answer=answer

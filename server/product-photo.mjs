@@ -13,6 +13,8 @@ export function requestsProductPhoto(message){
  if(!s)return false;
  // A customer declining photos must never trigger a media send.
  if(/\b(?:no (?:quiero|necesito|me mandes|mandes|envies|muestres|me envies)\s+(?:una?\s+)?(?:fotos?|imagenes?)|sin (?:fotos?|imagenes?))\b/u.test(s))return false;
+ // Document identification, payment cards and private photos must NEVER trigger product media sends.
+ if(/\b(?:foto|fotito|imagen)\s+(?:(?:de|del)\s+)?(?:mi\s+)?(?:dni|documento|identidad|tarjeta|carnet)\b/u.test(s))return false;
  // Example photos captured by a phone are not pictures OF the product.
  if(/\b(?:fotos? (?:tomadas? con|que (?:toma|saca|hace)|de (?:su|la) camara)|muestras? (?:de|fotos? de) (?:su|la) camara|fotos? de la camara)\b/u.test(s))return false;
  // Questions about camera quality or taking pictures are not photo requests.

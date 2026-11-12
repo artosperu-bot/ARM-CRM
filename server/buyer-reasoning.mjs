@@ -1,4 +1,5 @@
 import {salesMoveInstructions} from "./sales-playbook.mjs";
+import {conversationTurnInstructions} from "./conversation-turn-plan.mjs";
 import {matchCustomerProduct,quantityForAnyCatalogItem,affirmativeProductText} from "./catalog-matching.mjs";
 import {classifyCustomerTopic,customerTopicInstructions,isExplicitProductSwitch,needsPostSaleSpecialist} from "./customer-topic.mjs";
 import {consumerRightsGuidance} from "./peru-consumer-knowledge.mjs";
@@ -14,7 +15,7 @@ const RX={
   cancelPurchase:/\b(?:ya no (?:quiero|voy a) comprar|no (?:quiero|voy a) comprar|cancele? (?:la )?compra|no me interesa comprar|no comprare|mejor no compro)\b/u,
   quotation:/\b(?:cotizaci[oó]n|cotizar|cotizame|cotiza|proforma|presupuesto para|orden de compra)\b/u,
   price:/\b(?:precio|cuanto cuestan?|cuanto salen?|cuanto valen?|cuanto esta(?:n)?|a como|a cuanto|cuanto me salen?|cuanto por (?:unidad|las? \d+|los? \d+)|valor del (?:producto|equipo))\b/u,
-  compare:/\b(?:compar(?:ar|acion|ame)|cual es mejor|diferencias?|vs\.?\b|versus|otra opcion|alternativas?|que me recomiendas|cual conviene)\b/u,
+  compare:/\b(?:compar(?:ar|a|ame|acion|e|ando)|cual es mejor|diferencias?|vs\.?\b|versus|otra opcion|alternativas?|que me recomiendas|cual conviene)\b/u,
   objection:/\b(?:muy caro|demasiado caro|esta caro|sta caro|ta caro|precio alto|no hay rebaja|hay rebaja|rebaja|descuentito|no me convence|hay descuento|haces descuento|mas barato|no tengo tanto presupuesto)\b/u,
   complaint:/\b(?:reclamo|denuncia|estafa|devolucion|producto defectuoso|no me llego|me cobraron de mas)\b/u,
   human:/\b(?:quiero hablar con (?:un |una )?(?:asesor|vendedor|persona)|quiero q(?:ue)? un asesor (?:vea|revise|me ayude)|necesito (?:un |una )?asesor|pasame con (?:un |una )?(?:asesor|persona|alguien)|pasame con alguien|pasame (?:a|con) (?:una? )?persona|atencion humana|no quiero (?:hablar con )?(?:un )?robot|quiero que me atienda (?:un |una )?(?:asesor|vendedor|persona)(?: humano| humana)?|(?:puedes|podrian|podr[ií]as) comunicarme con (?:alguien|una persona|un asesor)|quiero (?:atencion|asesoria) (?:de )?(?:un )?humana?)\b/u,
@@ -241,6 +242,7 @@ export function buyerGuidance(profile,{catalog=[]}={}){
  "No anuncies que vas a revisar, confirmar, verificar, cotizar o enviar algo posteriormente si no existe una herramienta conectada que realmente lo ejecute. No prometas contactar después.",
  "Nunca asegures que consultaste inventario, cotizaste, reservaste, autorizaste descuentos o enviaste mensajes si no recibiste confirmación.",
  "No describas al cliente score, etiquetas, reglas internas o el análisis; úsalo únicamente para dar una respuesta natural.",
+ conversationTurnInstructions(p,catalog),
  salesMoveInstructions(p,{catalog})
  ].join("\n");
 }
