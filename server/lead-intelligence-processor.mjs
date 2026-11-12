@@ -57,7 +57,9 @@ export function createLeadIntelligenceProcessor({supabaseUrl,serviceRoleKey,db=n
   // customer-facing acknowledgment. This does NOT assert staff assignment.
   profile.handoff_queued=false;
   if(profile.requires_human&&!profile.opt_out&&thread.status==="pending"&&!thread.assigned_to){
-    const {data:queued,error}=await client.from("arm_threads").update({status:"human"})
+    const {data:queued,error}=await client.from("arm_threads").update({
+      status:"human",human_queued_at:new Date().toISOString()
+    })
       .eq("id",thread.id).eq("workspace_id",thread.workspace_id)
       .eq("status","pending").select("id").maybeSingle();
     if(error)return {...profile,should_reply:false};

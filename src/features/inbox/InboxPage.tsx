@@ -1,6 +1,6 @@
 import { useMemo,useState } from "react";
 import { CheckCircle2,Clock3,Inbox,MessageSquare,RefreshCw,Search,ShieldCheck,UserRoundCheck } from "lucide-react";
-import { useInbox,type ThreadStatus } from "./useInbox";
+import { useInbox,type ThreadStatus,type HumanAction } from "./useInbox";
 import {parseAgentPhotoMessage} from "../agent/photoMessage";
 import "./inbox.css";
 
@@ -31,18 +31,36 @@ export default function InboxPage({workspaceId}:{workspaceId:string}){
  const selected=inbox.threads.find(t=>t.id===inbox.selectedId);
  const selectedLead=selected?leadByThread.get(selected.id):null;
  const person=selected?contactsById.get(selected.contact_id):null;
- async function setStatus(status:ThreadStatus){
+ const isMine=Boolean(selected?.assigned_to&&selected.assigned_to===inbox.userId);
+ const unassigned=inbox.threads.filter(t=>t.status==="human"&&!t.assigned_to).length;
+ const assignmentLabel=(t:typeof selected)=>{
+   if(!t)return "";
+   if(t.status!=="human")return statusLabels[t.status];
+   if(!t.assigned_to)return "En cola · sin asesor";
+   return t.assigned_to===inbox.userId?"Atendida por mí":"Con asesor asignado";
+ };
+ async function runAction(action:HumanAction){
    if(!selected)return;
    setBusy(true);setNotice("");
-   try{await inbox.changeStatus(selected.id,status);setNotice("Estado actualizado en Supabase.");}
-   catch(error){setNotice("No se pudo actualizar: "+(error instanceof Error?error.message:"Error de acceso."));}
+   try{
+     const result=await inbox.humanAction(selected.id,action);
+     const label:Record<HumanAction,string>={
+       queue:"Conversación en cola para atención humana; nadie asignado todavía.",
+       claim:"Has tomado esta conversación. La asignación quedó registrada.",
+       release:"Conversación liberada y disponible para otro asesor.",
+       close:"Conversación marcada como resuelta en el CRM.",
+       reopen:"Conversación reabierta en cola, sin asesor asignado."
+     };
+     setNotice(result.action===action?label[action]:"Gestión no confirmada.");
+   }catch(error){setNotice("No se pudo gestionar: "+(error instanceof Error?error.message:"Error de acceso."));}
    finally{setBusy(false);}
  }
  return <div className="crm-inbox">
    <div className="inbox-summary">
      <div><strong>{inbox.threads.length}</strong><span>Conversaciones recibidas</span></div>
      <div><strong>{inbox.threads.filter(t=>t.status==="pending").length}</strong><span>Pendientes</span></div>
-     <div><strong>{inbox.threads.filter(t=>t.status==="human").length}</strong><span>Atención humana</span></div>
+     <div><strong>{unassigned}</strong><span>En cola · sin asesor</span></div>
+     <div><strong>{inbox.threads.filter(t=>t.status==="human"&&t.assigned_to).length}</strong><span>Con asesor asignado</span></div>
      <button className="secondary-button" onClick={()=>void inbox.refresh()} disabled={inbox.loading}><RefreshCw size={16}/> Actualizar</button>
    </div>
    {inbox.error&&<div role="alert" className="auth-error">{inbox.error}</div>}
@@ -67,7 +85,7 @@ export default function InboxPage({workspaceId}:{workspaceId:string}){
        <div className="inbox-thread-list">{filtered.map(t=><button className={"inbox-thread "+(t.id===inbox.selectedId?"active":"")} key={t.id} onClick={()=>inbox.setSelectedId(t.id)}>
          <span className="inbox-avatar">{(contactsById.get(t.contact_id)?.display_name||"C").slice(0,1).toUpperCase()}</span>
          <span className="inbox-thread-meta"><strong>{contactsById.get(t.contact_id)?.display_name||"Contacto"}</strong>
-           <small>{channels[t.channel]} · {statusLabels[t.status]}</small>
+           <small>{channels[t.channel]} · {assignmentLabel(t)}</small>
            {leadByThread.has(t.id)&&<small className="inbox-lead-meta">
              <span className={"inbox-lead-rank "+leadByThread.get(t.id)?.priority}>{priorityNames[leadByThread.get(t.id)?.priority||"baja"]}</span>
              {leadByThread.get(t.id)?.is_b2b?" · B2B":""} · {leadNames[leadByThread.get(t.id)?.intent||"consulta_general"]}
@@ -77,7 +95,7 @@ export default function InboxPage({workspaceId}:{workspaceId:string}){
        </button>)}</div>
      </section>
      <section className="inbox-chat">
-       {selected?<><header className="inbox-chat-header"><div className="inbox-avatar large">{(person?.display_name||"C")[0].toUpperCase()}</div><div className="inbox-chat-name"><strong>{person?.display_name||"Contacto"}</strong><span>{channels[selected.channel]} · {person?.phone||"Identificador externo registrado"}</span></div><span className="inbox-status">{statusLabels[selected.status]}</span></header>
+       {selected?<><header className="inbox-chat-header"><div className="inbox-avatar large">{(person?.display_name||"C")[0].toUpperCase()}</div><div className="inbox-chat-name"><strong>{person?.display_name||"Contacto"}</strong><span>{channels[selected.channel]} · {person?.phone||"Identificador externo registrado"}</span></div><span className="inbox-status">{assignmentLabel(selected)}</span></header>
          {selectedLead&&<section className="inbox-intelligence" aria-label="Análisis comercial de la conversación">
            <div className="inbox-intelligence-title"><strong>Lectura comercial sugerida</strong>
              <span>{priorityNames[selectedLead.priority]} · {leadNames[selectedLead.intent]}
@@ -90,6 +108,12 @@ export default function InboxPage({workspaceId}:{workspaceId:string}){
            {selectedLead.source_mode==="sandbox"&&<small>PRUEBA: no convertir automáticamente a venta ni programar mensajes.</small>}
            <small>Seguimiento saliente: bloqueado hasta autorización y verificación.</small>
          </section>}
+         <div className="inbox-assignment-info" role="status">
+           {selected.status==="human"&&!selected.assigned_to&&<>En cola para atención humana. Ningún asesor la ha tomado todavía.{selected.human_queued_at&&<> Desde {dates(selected.human_queued_at)}.</>}</>}
+           {selected.status==="human"&&selected.assigned_to&&<>Esta conversación ya tiene responsable.{selected.human_assigned_at&&<> Asignada el {dates(selected.human_assigned_at)}.</>}</>}
+           {selected.status==="pending"&&<>Sin asignación humana. ALEX puede responder únicamente bajo las reglas del piloto.</>}
+           {selected.status==="closed"&&<>Conversación cerrada. No se enviarán nuevas respuestas automáticas mientras permanezca cerrada.</>}
+         </div>
          <div className="inbox-timeline">
            {inbox.messageLoading&&<div className="inbox-placeholder">Cargando mensajes…</div>}
            {!inbox.messageLoading&&!inbox.messages.length&&<div className="inbox-placeholder">Sin mensajes registrados en esta conversación.</div>}
@@ -106,8 +130,17 @@ export default function InboxPage({workspaceId}:{workspaceId:string}){
              </div>;
            })}
          </div>
-         <div className="inbox-actions"><button className="secondary-button" disabled={busy||selected.status==="human"} onClick={()=>void setStatus("human")}><UserRoundCheck size={16}/> Asignar a humano</button><button className="secondary-button" disabled={busy||selected.status==="closed"} onClick={()=>void setStatus("closed")}><CheckCircle2 size={16}/> Cerrar</button><button className="secondary-button" disabled={busy||selected.status==="pending"} onClick={()=>void setStatus("pending")}><Clock3 size={16}/> Pendiente</button></div>
-         <div className="inbox-disabled"><ShieldCheck size={16}/> Respuestas deshabilitadas hasta verificar conexión empresarial, ventana de mensajería y reglas de envío.</div>
+         <div className="inbox-actions">
+           {selected.status==="pending"&&<button className="secondary-button" disabled={busy} onClick={()=>void runAction("queue")}><UserRoundCheck size={16}/> Pasar a cola humana</button>}
+           {selected.status==="human"&&!selected.assigned_to&&<button className="secondary-button" disabled={busy} onClick={()=>void runAction("claim")}><UserRoundCheck size={16}/> Tomar conversación</button>}
+           {selected.status==="human"&&isMine&&<>
+             <button className="secondary-button" disabled={busy} onClick={()=>void runAction("release")}><Clock3 size={16}/> Liberar</button>
+             <button className="secondary-button" disabled={busy} onClick={()=>void runAction("close")}><CheckCircle2 size={16}/> Marcar resuelta</button>
+           </>}
+           {selected.status==="human"&&selected.assigned_to&&!isMine&&<span className="inbox-action-note">Ya la recibió otro asesor. No puedes apropiarte de esta conversación.</span>}
+           {selected.status==="closed"&&<button className="secondary-button" disabled={busy} onClick={()=>void runAction("reopen")}><Clock3 size={16}/> Reabrir (administrador)</button>}
+         </div>
+         <div className="inbox-disabled"><ShieldCheck size={16}/> La asignación no envía mensajes al cliente. La respuesta manual permanece deshabilitada hasta verificar canal, consentimiento y ventana de envío.</div>
        </>:<div className="inbox-no-selection"><MessageSquare size={40}/><h2>No hay conversaciones nuevas</h2><p>Cuando se active una integración verificada, los mensajes entrantes aparecerán aquí sin importar historiales antiguos.</p></div>}
      </section>
    </div>

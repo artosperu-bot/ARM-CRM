@@ -19,3 +19,7 @@
 
 /* Reviewed outbound product media: images are read-only and source-labeled. */
 .inbox-product-photo{margin:7px 0 10px;max-width:300px}.inbox-product-photo img{display:block;width:100%;max-height:300px;object-fit:contain;background:#fff;border:1px solid #dae7ec;border-radius:10px}.inbox-product-photo figcaption{font-size:10px;color:#64818f;margin-top:4px}
+
+/* Human handoff: queue is distinct from an acknowledged assignment. */
+.inbox-assignment-info{padding:10px 17px;background:#f8fbfd;color:#38627a;font-size:11px;line-height:1.5;border-bottom:1px solid #e1edf3}
+.inbox-action-note{font-size:11px;color:#647c89;align-self:center}

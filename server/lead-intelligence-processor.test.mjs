@@ -50,7 +50,8 @@ describe("safe WhatsApp triage persistence",()=>{
   expect(result.should_reply).toBe(false);
   expect(result.handoff_queued).toBe(true);
   expect(f.writes.map(w=>w.table)).toEqual(["arm_lead_insights","arm_threads"]);
-  expect(f.writes[1].values).toEqual({status:"human"});
+  expect(f.writes[1].values).toMatchObject({status:"human"});
+  expect(Number.isFinite(Date.parse(f.writes[1].values.human_queued_at))).toBe(true);
  });
  it.each([
    "oe mi producto llegó roto en caja",
@@ -64,7 +65,8 @@ describe("safe WhatsApp triage persistence",()=>{
    expect(result.requires_human).toBe(true);
    expect(result.should_reply).toBe(false);
    expect(f.writes.map(w=>w.table)).toEqual(["arm_lead_insights","arm_threads"]);
-   expect(f.writes[1].values).toEqual({status:"human"});
+   expect(f.writes[1].values).toMatchObject({status:"human"});
+  expect(Number.isFinite(Date.parse(f.writes[1].values.human_queued_at))).toBe(true);
    expect(f.writes.filter(w=>w.table==="arm_messages")).toHaveLength(0);
  });
  it("does not acknowledge a handoff from an already-human thread",async()=>{
