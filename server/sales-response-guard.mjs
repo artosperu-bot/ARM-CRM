@@ -107,6 +107,31 @@ export function protectSalesResponse(reply,{catalog=[],buyer=null,simulated=fals
    "? Mantengo la lista anterior sin cambios hasta que me indiques cuál.",
    blocked:true,reason:"ambiguous_draft_quantity"};
  }
+ // A purchase decision is an actionable lead, not an executed sale. Always
+ // summarize every independent SKU/quantity instead of using a global count.
+ // Run before generic model-response checks that can erase the buying intent.
+ if(intent==="comprar"){
+  const lines=(Array.isArray(buyer?.draft_items)?buyer.draft_items:[])
+   .map(it=>{
+    const p=(Array.isArray(catalog)?catalog:[]).find(x=>x.partnumber===it.partnumber);
+    return {qty:it.quantity,name:String(p?.titulo||p?.title||it.partnumber).slice(0,95),
+      available:p?.disponibilidad==="disponible"};
+   });
+  const single=(Array.isArray(catalog)?catalog:[]).find(x=>x.partnumber===buyer?.matched_partnumber);
+  const description=lines.length?
+    lines.map(x=>x.qty+" × "+x.name).join("; "):
+    single?String(single.titulo||single.title||single.partnumber).slice(0,100):null;
+  const shortfall=lines.some(x=>!x.available);
+  const opening=description?"Entiendo que quieres comprar: "+description+". ":
+    "Entiendo que quieres continuar con la compra. ";
+  const next=shortfall?
+    "Hay al menos un artículo cuya disponibilidad para esa cantidad requiere revisión. ":
+    "El siguiente paso es validar los datos comerciales vigentes con STECH. ";
+  return {reply:(simulated?"Simulación: ":"")+opening+next+
+    "Aún no se ha creado un pedido, reserva, cotización ni pago. "+
+    "Antes de concretar la compra se deben confirmar precio, stock y condiciones de entrega.",
+    blocked:true,reason:"purchase_interest_no_checkout"};
+ }
  const buyerText=String(buyer?.last_message||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase();
  const askedAll=/(?:\b(?:cuanto(?: me)? (?:sale|cuesta|salen|saldria)|calcula|dame|pasame|precio|cotiza\w*)\b.{0,60}\b(?:total|todo|todos|los dos|ambos)\b|\b(?:total|todo)\b.{0,35}\b(?:cuanto|precio|cotiza\w*)\b|\b(?:y\s+)?el\s+total\b|^(?:y\s+)?(?:el\s+)?total\s*\??$)/u.test(buyerText);
  // Deterministic private calculation: the AI is not allowed to invent a
