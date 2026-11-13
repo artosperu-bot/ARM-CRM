@@ -1,0 +1,1721 @@
+{
+  "generatedAt": "2026-11-13T20:39:03.591Z",
+  "metrics": {
+    "scenarios": 20,
+    "completed": 20,
+    "syntheticBuyerDecisions": 5,
+    "decisionsWithCompletedDialogue": 5,
+    "actualOrders": 0,
+    "actualPayments": 0,
+    "crmWrites": 0,
+    "whatsappSends": 0,
+    "totalTurns": 80,
+    "guardCorrections": 28,
+    "qualityAlerts": 0,
+    "apiErrors": 0,
+    "apiCalls": 80,
+    "inputTokens": 354015,
+    "outputTokens": 8181,
+    "source": "Supabase pilot read-only + OpenAI model per turn",
+    "simulatedPrices": true,
+    "realStockApproved": false
+  },
+  "pilotSkus": [
+    "ARMOR-X12Pro",
+    "ARMOR-X13",
+    "ARMOR-22-256G",
+    "ARMOR-25TPro-256GB"
+  ],
+  "journeys": [
+    {
+      "id": "C01",
+      "type": "decision",
+      "persona": "Repartidor directo",
+      "completed": true,
+      "decisionBySyntheticBuyer": true,
+      "finalDraft": [],
+      "turns": [
+        {
+          "turn": 1,
+          "customer": "buenas, el armor x13 sirve para trabajar en moto?",
+          "alex": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nSí, para trabajar en moto te puede servir por su enfoque resistente: trae IP68, IP69K y certificación MIL-STD-810H, así que está pensado para polvo, agua y golpes de uso más rudo. Además, su batería de 6320 mAh ayuda bastante para jornadas largas, y la cámara principal de 50 MP más la visión nocturna pueden venir bien si trabajas temprano o de noche.",
+          "intent": "compatibilidad",
+          "topic": "comercial",
+          "corrected": false,
+          "guardReason": null,
+          "qualityNotes": [],
+          "draft": [],
+          "ambiguous": false,
+          "mathematicalTotal": null,
+          "allAvailable": null,
+          "noQuoteOrderPayment": true
+        },
+        {
+          "turn": 2,
+          "customer": "es que se me caen los celulares seguido, quiero 1",
+          "alex": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nPara ese uso, el Armor X13 te calza bien: está hecho para aguantar mejor golpes y uso rudo, y además trae protección IP68/IP69K y MIL-STD-810H. Si lo quieres, el siguiente paso disponible es ver si lo registramos con esa unidad.",
+          "intent": "consulta",
+          "topic": "comercial",
+          "corrected": false,
+          "guardReason": null,
+          "qualityNotes": [],
+          "draft": [],
+          "ambiguous": false,
+          "mathematicalTotal": null,
+          "allAvailable": null,
+          "noQuoteOrderPayment": true
+        },
+        {
+          "turn": 3,
+          "customer": "cuanto está y si lo tienen?",
+          "alex": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\n",
+          "intent": "consultar_precio",
+          "topic": "comercial",
+          "corrected": false,
+          "guardReason": null,
+          "qualityNotes": [],
+          "draft": [],
+          "ambiguous": false,
+          "mathematicalTotal": null,
+          "allAvailable": null,
+          "noQuoteOrderPayment": true
+        },
+        {
+          "turn": 4,
+          "customer": "ya está, me lo llevo. cómo sigo para comprar?",
+          "alex": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nEs una simulación: no se ha registrado ningún pedido ni pago para Ulefone Armor X13 64GB.",
+          "intent": "comprar",
+          "topic": "comercial",
+          "corrected": true,
+          "guardReason": "purchase_not_ready",
+          "qualityNotes": [],
+          "draft": [],
+          "ambiguous": false,
+          "mathematicalTotal": null,
+          "allAvailable": null,
+          "noQuoteOrderPayment": true
+        }
+      ]
+    },
+    {
+      "id": "C02",
+      "type": "no_compra",
+      "persona": "Agotado y alternativa",
+      "completed": true,
+      "decisionBySyntheticBuyer": false,
+      "finalDraft": [
+        {
+          "partnumber": "ARMOR-X12Pro",
+          "quantity": 1
+        }
+      ],
+      "turns": [
+        {
+          "turn": 1,
+          "customer": "oe tienes armor x12 pro? necesito dos",
+          "alex": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nEn esta simulación, Ulefone Armor X12 Pro 64GB no está disponible. No se ha generado un pedido ni una cotización.",
+          "intent": "disponibilidad",
+          "topic": "comercial",
+          "corrected": true,
+          "guardReason": "availability_fact_correction",
+          "qualityNotes": [],
+          "draft": [
+            {
+              "partnumber": "ARMOR-X12Pro",
+              "quantity": 1
+            }
+          ],
+          "ambiguous": false,
+          "mathematicalTotal": 659,
+          "allAvailable": false,
+          "noQuoteOrderPayment": true
+        },
+        {
+          "turn": 2,
+          "customer": "asu y si no hay, cual otro parecido tienes?",
+          "alex": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nEn esta simulación, Ulefone Armor X12 Pro 64GB no está disponible. No se ha generado un pedido ni una cotización.",
+          "intent": "disponibilidad",
+          "topic": "comercial",
+          "corrected": true,
+          "guardReason": "availability_fact_correction",
+          "qualityNotes": [],
+          "draft": [
+            {
+              "partnumber": "ARMOR-X12Pro",
+              "quantity": 1
+            }
+          ],
+          "ambiguous": false,
+          "mathematicalTotal": 659,
+          "allAvailable": false,
+          "noQuoteOrderPayment": true
+        },
+        {
+          "turn": 3,
+          "customer": "cuanto sale el x13 entonces?",
+          "alex": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nNecesito verificar el modelo exacto antes de darte un precio; no quiero mezclar productos diferentes.",
+          "intent": "consultar_precio",
+          "topic": "comercial",
+          "corrected": true,
+          "guardReason": "product_mismatch",
+          "qualityNotes": [],
+          "draft": [
+            {
+              "partnumber": "ARMOR-X12Pro",
+              "quantity": 1
+            }
+          ],
+          "ambiguous": false,
+          "mathematicalTotal": 659,
+          "allAvailable": false,
+          "noQuoteOrderPayment": true
+        },
+        {
+          "turn": 4,
+          "customer": "ya mejor lo voy a pensar, no me escriban por ahora",
+          "alex": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nClaro, sin problema. Quedo atento cuando quieras retomar.",
+          "intent": "despedida",
+          "topic": "comercial",
+          "corrected": false,
+          "guardReason": null,
+          "qualityNotes": [],
+          "draft": [
+            {
+              "partnumber": "ARMOR-X12Pro",
+              "quantity": 1
+            }
+          ],
+          "ambiguous": false,
+          "mathematicalTotal": 659,
+          "allAvailable": false,
+          "noQuoteOrderPayment": true
+        }
+      ]
+    },
+    {
+      "id": "C03",
+      "type": "decision",
+      "persona": "Compara y decide",
+      "completed": true,
+      "decisionBySyntheticBuyer": true,
+      "finalDraft": [],
+      "turns": [
+        {
+          "turn": 1,
+          "customer": "hola mano cual me conviene, armor 22 o x13? lo uso en obra",
+          "alex": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nPara obra te conviene más el Armor 22 si priorizas pantalla más cómoda y bastante memoria para apps, fotos y archivos del trabajo; además trae certificaciones IP68, IP69K y MIL-STD-810H, así que está pensado para ambientes exigentes. El X13 también sirve bien en obra por su batería de 6320 mAh y resistencia similar, pero si buscas un equipo más completo para uso diario pesado, me iría por el Armor 22.",
+          "intent": "consulta",
+          "topic": "comercial",
+          "corrected": false,
+          "guardReason": null,
+          "qualityNotes": [],
+          "draft": [],
+          "ambiguous": false,
+          "mathematicalTotal": null,
+          "allAvailable": null,
+          "noQuoteOrderPayment": true
+        },
+        {
+          "turn": 2,
+          "customer": "y cual tiene más memoria? nada de floro",
+          "alex": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nEl Armor 22 tiene más memoria: 256 GB. El X13 tiene 64 GB.",
+          "intent": "consulta",
+          "topic": "comercial",
+          "corrected": false,
+          "guardReason": null,
+          "qualityNotes": [],
+          "draft": [],
+          "ambiguous": false,
+          "mathematicalTotal": null,
+          "allAvailable": null,
+          "noQuoteOrderPayment": true
+        },
+        {
+          "turn": 3,
+          "customer": "ok me quedo con 2 armor 22, no con el x13",
+          "alex": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nLo solicitado requiere información o una acción comercial que todavía no está confirmada. No afirmaré que se haya realizado.",
+          "intent": "consulta",
+          "topic": "comercial",
+          "corrected": true,
+          "guardReason": "unconfirmed_action",
+          "qualityNotes": [],
+          "draft": [],
+          "ambiguous": false,
+          "mathematicalTotal": null,
+          "allAvailable": null,
+          "noQuoteOrderPayment": true
+        },
+        {
+          "turn": 4,
+          "customer": "listo, quiero comprar esos dos. que sigue?",
+          "alex": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nYa tengo el producto que elegiste. Para comprarlo falta confirmar el precio y la disponibilidad vigente. Todavía no hay un pedido registrado ni es necesario que me envíes datos personales por aquí.",
+          "intent": "comprar",
+          "topic": "comercial",
+          "corrected": true,
+          "guardReason": "premature_personal_data",
+          "qualityNotes": [],
+          "draft": [],
+          "ambiguous": false,
+          "mathematicalTotal": null,
+          "allAvailable": null,
+          "noQuoteOrderPayment": true
+        }
+      ]
+    },
+    {
+      "id": "C04",
+      "type": "no_compra",
+      "persona": "Precio objetado",
+      "completed": true,
+      "decisionBySyntheticBuyer": false,
+      "finalDraft": [],
+      "turns": [
+        {
+          "turn": 1,
+          "customer": "25t pro cuanto está?",
+          "alex": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nEl Ulefone Armor 25T Pro 256GB está en S/ 1799 de referencia simulada para prueba. Ojo: en este entorno no tengo confirmación real de precio ni venta, así que tómalo solo como guía de simulación.",
+          "intent": "consultar_precio",
+          "topic": "comercial",
+          "corrected": false,
+          "guardReason": null,
+          "qualityNotes": [],
+          "draft": [],
+          "ambiguous": false,
+          "mathematicalTotal": null,
+          "allAvailable": null,
+          "noQuoteOrderPayment": true
+        },
+        {
+          "turn": 2,
+          "customer": "asu bien caro, me haces 30 por ciento de descuento?",
+          "alex": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nEntiendo, pero no tengo un descuento autorizado para ese modelo. Si te sirve, también puedo orientarte con una alternativa más accesible dentro de la misma línea, según el uso que le darás.",
+          "intent": "consulta",
+          "topic": "comercial",
+          "corrected": false,
+          "guardReason": null,
+          "qualityNotes": [],
+          "draft": [],
+          "ambiguous": false,
+          "mathematicalTotal": null,
+          "allAvailable": null,
+          "noQuoteOrderPayment": true
+        },
+        {
+          "turn": 3,
+          "customer": "y para qué me serviría la cámara térmica?",
+          "alex": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nLa cámara térmica te sirve para detectar diferencias de temperatura en objetos, equipos o superficies, por ejemplo para revisar cables, tableros eléctricos, fugas de calor o piezas que se calientan de más. En ese Ulefone, además de la térmica, tienes visión nocturna y certificaciones IP68/IP69K/MIL-STD-810H, así que apunta más a un uso rudo y técnico que a foto normal.",
+          "intent": "consulta",
+          "topic": "comercial",
+          "corrected": false,
+          "guardReason": null,
+          "qualityNotes": [],
+          "draft": [],
+          "ambiguous": false,
+          "mathematicalTotal": null,
+          "allAvailable": null,
+          "noQuoteOrderPayment": true
+        },
+        {
+          "turn": 4,
+          "customer": "por ahora no compro gracias",
+          "alex": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nEntendido, gracias a ti. Cuando quieras retomar, aquí estoy.",
+          "intent": "consulta",
+          "topic": "comercial",
+          "corrected": false,
+          "guardReason": null,
+          "qualityNotes": [],
+          "draft": [],
+          "ambiguous": false,
+          "mathematicalTotal": null,
+          "allAvailable": null,
+          "noQuoteOrderPayment": true
+        }
+      ]
+    },
+    {
+      "id": "C05",
+      "type": "decision",
+      "persona": "Multi SKU y corrección",
+      "completed": true,
+      "decisionBySyntheticBuyer": true,
+      "finalDraft": [
+        {
+          "partnumber": "ARMOR-X13",
+          "quantity": 4
+        },
+        {
+          "partnumber": "ARMOR-22-256G",
+          "quantity": 2
+        }
+      ],
+      "turns": [
+        {
+          "turn": 1,
+          "customer": "oe quiero 3 armor x13 y 2 armor 22",
+          "alex": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nDe los dos, el Armor X13 sí está identificado y disponible; para 3 unidades te conviene por batería de 6320 mAh y su protección IP68/IP69K/MIL-STD-810H, pensado para uso rudo. El Armor 22 también aparece con 256 GB, pero en este turno no tengo que ambas referencias estén listas para cerrar una compra; si quieres, seguimos con el X13.",
+          "intent": "consulta",
+          "topic": "comercial",
+          "corrected": false,
+          "guardReason": null,
+          "qualityNotes": [],
+          "draft": [
+            {
+              "partnumber": "ARMOR-X13",
+              "quantity": 3
+            },
+            {
+              "partnumber": "ARMOR-22-256G",
+              "quantity": 2
+            }
+          ],
+          "ambiguous": false,
+          "mathematicalTotal": 4395,
+          "allAvailable": true,
+          "noQuoteOrderPayment": true
+        },
+        {
+          "turn": 2,
+          "customer": "mejor 4 del x13, el otro dejalo en 2",
+          "alex": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nPerfecto, entonces serían 4 del Armor X13 y 2 del Armor 22. El X13 sí aparece con ficha verificada y está disponible; el Armor 22 también figura con 256 GB, IP68/IP69K y MIL-STD-810H. Si deseas continuar, solo te falta confirmar si la compra sería para retiro o envío.",
+          "intent": "consulta",
+          "topic": "comercial",
+          "corrected": false,
+          "guardReason": null,
+          "qualityNotes": [],
+          "draft": [
+            {
+              "partnumber": "ARMOR-X13",
+              "quantity": 4
+            },
+            {
+              "partnumber": "ARMOR-22-256G",
+              "quantity": 2
+            }
+          ],
+          "ambiguous": false,
+          "mathematicalTotal": 5194,
+          "allAvailable": true,
+          "noQuoteOrderPayment": true
+        },
+        {
+          "turn": 3,
+          "customer": "y el total? se puede pagar con yape?",
+          "alex": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nSimulación: 4 × Ulefone Armor X13 64GB: S/ 3196.00 (disponible en prueba); 2 × Ulefone Armor 22 256GB: S/ 1998.00 (disponible en prueba). Total matemático de prueba: S/ 5194.00. Los medios de pago deben confirmarse. No es cotización, reserva, pedido ni pago registrado.",
+          "intent": "consulta_facturacion",
+          "topic": "facturacion_pago",
+          "corrected": true,
+          "guardReason": "demo_basket_calculated",
+          "qualityNotes": [],
+          "draft": [
+            {
+              "partnumber": "ARMOR-X13",
+              "quantity": 4
+            },
+            {
+              "partnumber": "ARMOR-22-256G",
+              "quantity": 2
+            }
+          ],
+          "ambiguous": false,
+          "mathematicalTotal": 5194,
+          "allAvailable": true,
+          "noQuoteOrderPayment": true
+        },
+        {
+          "turn": 4,
+          "customer": "ya decidido, quiero comprar los 4 x13 y 2 armor 22. como coordinamos?",
+          "alex": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nEs una simulación: no se ha registrado ningún pedido ni pago para las 2 unidades de Ulefone Armor X13 64GB.",
+          "intent": "comprar",
+          "topic": "comercial",
+          "corrected": true,
+          "guardReason": "purchase_not_ready",
+          "qualityNotes": [],
+          "draft": [
+            {
+              "partnumber": "ARMOR-X13",
+              "quantity": 4
+            },
+            {
+              "partnumber": "ARMOR-22-256G",
+              "quantity": 2
+            }
+          ],
+          "ambiguous": false,
+          "mathematicalTotal": 5194,
+          "allAvailable": true,
+          "noQuoteOrderPayment": true
+        }
+      ]
+    },
+    {
+      "id": "C06",
+      "type": "no_compra",
+      "persona": "Solo mirar",
+      "completed": true,
+      "decisionBySyntheticBuyer": false,
+      "finalDraft": [],
+      "turns": [
+        {
+          "turn": 1,
+          "customer": "hola estoy viendo celulares resistentes para mí",
+          "alex": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nHola, para un uso rudo te conviene mirar modelos como el Ulefone Armor X13 o el Armor 22, porque traen certificaciones IP68/IP69K y MIL-STD-810H, así que están pensados para polvo, agua y golpes de uso diario. Si me dices si lo quieres más para batería, cámara o trabajo en campo, te oriento al que mejor te calza.",
+          "intent": "consulta",
+          "topic": "comercial",
+          "corrected": false,
+          "guardReason": null,
+          "qualityNotes": [],
+          "draft": [],
+          "ambiguous": false,
+          "mathematicalTotal": null,
+          "allAvailable": null,
+          "noQuoteOrderPayment": true
+        },
+        {
+          "turn": 2,
+          "customer": "que diferencias hay entre armor 22 y x13?",
+          "alex": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nEl Armor 22 te da 256 GB y batería de 6600 mAh; además destaca por su cámara de visión nocturna. El X13 baja a 64 GB y 6320 mAh, con cámara principal de 50 MP y visión nocturna de 24 MP, así que conviene más si buscas algo más compacto en almacenamiento y un perfil más simple. Si tu prioridad es guardar bastante contenido y tener más margen de uso, el Armor 22 queda mejor; si prefieres algo más básico y directo, el X13 cumple bien.",
+          "intent": "comparar",
+          "topic": "comercial",
+          "corrected": false,
+          "guardReason": null,
+          "qualityNotes": [],
+          "draft": [],
+          "ambiguous": false,
+          "mathematicalTotal": null,
+          "allAvailable": null,
+          "noQuoteOrderPayment": true
+        },
+        {
+          "turn": 3,
+          "customer": "solo preguntaba, no agregues nada ni me hagas pedido",
+          "alex": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nEntendido, solo te respondo la duda. Entre el Armor 22 y el X13, el Armor 22 ofrece más almacenamiento y batería, mientras que el X13 es más básico pero también resistente; la diferencia clave está en esos dos puntos.",
+          "intent": "consulta",
+          "topic": "comercial",
+          "corrected": false,
+          "guardReason": null,
+          "qualityNotes": [],
+          "draft": [],
+          "ambiguous": false,
+          "mathematicalTotal": null,
+          "allAvailable": null,
+          "noQuoteOrderPayment": true
+        },
+        {
+          "turn": 4,
+          "customer": "gracias lo sigo viendo",
+          "alex": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nDe una, cualquier duda me dices y lo revisamos sin compromiso.",
+          "intent": "consulta",
+          "topic": "comercial",
+          "corrected": false,
+          "guardReason": null,
+          "qualityNotes": [],
+          "draft": [],
+          "ambiguous": false,
+          "mathematicalTotal": null,
+          "allAvailable": null,
+          "noQuoteOrderPayment": true
+        }
+      ]
+    },
+    {
+      "id": "C07",
+      "type": "decision",
+      "persona": "Campo térmico",
+      "completed": true,
+      "decisionBySyntheticBuyer": true,
+      "finalDraft": [
+        {
+          "partnumber": "ARMOR-25TPro-256GB",
+          "quantity": 1
+        }
+      ],
+      "turns": [
+        {
+          "turn": 1,
+          "customer": "buenas, necesito un celular con camara termica pa mi trabajo",
+          "alex": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nPara trabajo de campo te conviene uno con cámara térmica dedicada, no solo resistencia. De los que veo, el Ulefone Armor 25T Pro trae cámara térmica y visión nocturna, así que es el más alineado a ese uso; si buscas algo más simple, el Armor 22 solo ofrece visión nocturna.",
+          "intent": "consulta",
+          "topic": "comercial",
+          "corrected": false,
+          "guardReason": null,
+          "qualityNotes": [],
+          "draft": [],
+          "ambiguous": false,
+          "mathematicalTotal": null,
+          "allAvailable": null,
+          "noQuoteOrderPayment": true
+        },
+        {
+          "turn": 2,
+          "customer": "el armor 25t pro es ese? sirve para revisar temperatura?",
+          "alex": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nSí, el Armor 25T Pro es el que trae cámara térmica dedicada. Sirve para detectar diferencias de temperatura en superficies, equipos o zonas puntuales; eso ayuda bastante para revisión de campo, aunque no reemplaza un termómetro clínico ni uno de contacto si necesitas medición exacta.",
+          "intent": "compatibilidad",
+          "topic": "comercial",
+          "corrected": false,
+          "guardReason": null,
+          "qualityNotes": [],
+          "draft": [],
+          "ambiguous": false,
+          "mathematicalTotal": null,
+          "allAvailable": null,
+          "noQuoteOrderPayment": true
+        },
+        {
+          "turn": 3,
+          "customer": "ya, quiero 1 armor 25t pro. cuánto?",
+          "alex": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nTengo presente tu consulta y sus requisitos. Sin precios verificados no puedo asegurar importes ni que los equipos entren en el presupuesto.",
+          "intent": "consulta",
+          "topic": "comercial",
+          "corrected": true,
+          "guardReason": "unverified_price",
+          "qualityNotes": [],
+          "draft": [
+            {
+              "partnumber": "ARMOR-25TPro-256GB",
+              "quantity": 1
+            }
+          ],
+          "ambiguous": false,
+          "mathematicalTotal": 1799,
+          "allAvailable": true,
+          "noQuoteOrderPayment": true
+        },
+        {
+          "turn": 4,
+          "customer": "si, lo compro. dime el siguiente paso sin inventar disponibilidad",
+          "alex": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nEs una simulación: no se ha registrado ningún pedido ni pago para Ulefone Armor 25T Pro 256GB.",
+          "intent": "comprar",
+          "topic": "comercial",
+          "corrected": true,
+          "guardReason": "purchase_not_ready",
+          "qualityNotes": [],
+          "draft": [
+            {
+              "partnumber": "ARMOR-25TPro-256GB",
+              "quantity": 1
+            }
+          ],
+          "ambiguous": false,
+          "mathematicalTotal": 1799,
+          "allAvailable": true,
+          "noQuoteOrderPayment": true
+        }
+      ]
+    },
+    {
+      "id": "C08",
+      "type": "no_compra",
+      "persona": "Posventa molesta",
+      "completed": true,
+      "decisionBySyntheticBuyer": false,
+      "finalDraft": [],
+      "turns": [
+        {
+          "turn": 1,
+          "customer": "oye mi celular se malogro, yo compre con ustedes",
+          "alex": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nTu consulta requiere revisión humana. Desde este chat todavía no se ha confirmado una derivación ni un asesor asignado.",
+          "intent": "postventa",
+          "topic": "soporte_tecnico",
+          "corrected": true,
+          "guardReason": "human_requested",
+          "qualityNotes": [],
+          "draft": [],
+          "ambiguous": false,
+          "mathematicalTotal": null,
+          "allAvailable": null,
+          "noQuoteOrderPayment": true
+        },
+        {
+          "turn": 2,
+          "customer": "lo mojé y ahora no prende, la garantia me lo cubre o que",
+          "alex": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nTu consulta requiere revisión humana. Desde este chat todavía no se ha confirmado una derivación ni un asesor asignado.",
+          "intent": "postventa",
+          "topic": "soporte_tecnico",
+          "corrected": true,
+          "guardReason": "human_requested",
+          "qualityNotes": [],
+          "draft": [],
+          "ambiguous": false,
+          "mathematicalTotal": null,
+          "allAvailable": null,
+          "noQuoteOrderPayment": true
+        },
+        {
+          "turn": 3,
+          "customer": "quiero devolucion, pasame con persona",
+          "alex": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nTu consulta requiere revisión humana. Desde este chat todavía no se ha confirmado una derivación ni un asesor asignado.",
+          "intent": "asesor",
+          "topic": "devolucion_reclamo",
+          "corrected": true,
+          "guardReason": "human_requested",
+          "qualityNotes": [],
+          "draft": [],
+          "ambiguous": false,
+          "mathematicalTotal": null,
+          "allAvailable": null,
+          "noQuoteOrderPayment": true
+        },
+        {
+          "turn": 4,
+          "customer": "ya me pasaste con alguien? estoy esperando",
+          "alex": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nEntiendo que prefieres hablar con una persona. Desde este chat aún no hay una derivación o un asesor asignado que pueda confirmar.",
+          "intent": "consulta",
+          "topic": "comercial",
+          "corrected": true,
+          "guardReason": "human_requested",
+          "qualityNotes": [],
+          "draft": [],
+          "ambiguous": false,
+          "mathematicalTotal": null,
+          "allAvailable": null,
+          "noQuoteOrderPayment": true
+        }
+      ]
+    },
+    {
+      "id": "C09",
+      "type": "decision",
+      "persona": "Sustitución por falta stock",
+      "completed": true,
+      "decisionBySyntheticBuyer": true,
+      "finalDraft": [
+        {
+          "partnumber": "ARMOR-X13",
+          "quantity": 1
+        }
+      ],
+      "turns": [
+        {
+          "turn": 1,
+          "customer": "oe busco un x12 pro, tienes?",
+          "alex": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nLa disponibilidad de ese modelo está por confirmar. Por ahora no puedo asegurarte stock para entrega.",
+          "intent": "disponibilidad",
+          "topic": "comercial",
+          "corrected": true,
+          "guardReason": "unverified_availability",
+          "qualityNotes": [],
+          "draft": [],
+          "ambiguous": false,
+          "mathematicalTotal": null,
+          "allAvailable": null,
+          "noQuoteOrderPayment": true
+        },
+        {
+          "turn": 2,
+          "customer": "si no hay, dime si el armor x13 me sirve pal almacén",
+          "alex": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nPara almacén sí te puede servir mejor que uno de uso básico, porque el Armor X13 trae certificaciones IP68, IP69K y MIL-STD-810H, así que está pensado para un entorno más exigente y con más protección. Además, su batería de 6320 mAh y la memoria de 64 GB le ayudan si lo usas para jornada de trabajo y registro de datos. Si me dices qué app usan en el almacén o si necesitan lector, cámara o GPS, te digo si calza bien con ese uso.",
+          "intent": "compatibilidad",
+          "topic": "comercial",
+          "corrected": false,
+          "guardReason": null,
+          "qualityNotes": [],
+          "draft": [],
+          "ambiguous": false,
+          "mathematicalTotal": null,
+          "allAvailable": null,
+          "noQuoteOrderPayment": true
+        },
+        {
+          "turn": 3,
+          "customer": "quiero uno de ese x13, cuánto costaría?",
+          "alex": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nTengo presente tu consulta y sus requisitos. Sin precios verificados no puedo asegurar importes ni que los equipos entren en el presupuesto.",
+          "intent": "consulta",
+          "topic": "comercial",
+          "corrected": true,
+          "guardReason": "unverified_price",
+          "qualityNotes": [],
+          "draft": [
+            {
+              "partnumber": "ARMOR-X13",
+              "quantity": 1
+            }
+          ],
+          "ambiguous": false,
+          "mathematicalTotal": 799,
+          "allAvailable": true,
+          "noQuoteOrderPayment": true
+        },
+        {
+          "turn": 4,
+          "customer": "ok voy a comprar el x13, qué paso sigue?",
+          "alex": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nYa tengo el producto que elegiste. Para comprarlo falta confirmar el precio y la disponibilidad vigente. Todavía no hay un pedido registrado ni es necesario que me envíes datos personales por aquí.",
+          "intent": "comprar",
+          "topic": "comercial",
+          "corrected": true,
+          "guardReason": "premature_personal_data",
+          "qualityNotes": [],
+          "draft": [
+            {
+              "partnumber": "ARMOR-X13",
+              "quantity": 1
+            }
+          ],
+          "ambiguous": false,
+          "mathematicalTotal": 799,
+          "allAvailable": true,
+          "noQuoteOrderPayment": true
+        }
+      ]
+    },
+    {
+      "id": "C10",
+      "type": "no_compra",
+      "persona": "Apurado pero indeciso",
+      "completed": true,
+      "decisionBySyntheticBuyer": false,
+      "finalDraft": [],
+      "turns": [
+        {
+          "turn": 1,
+          "customer": "tengo 1 minuto, armor 22 aguanta golpes? habla rapido",
+          "alex": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nSí, el Armor 22 está pensado para uso rudo: tiene certificaciones IP68, IP69K y MIL-STD-810H, así que resiste mejor polvo, agua y golpes del uso diario. No es indestructible, pero para chamba, campo o actividades exigentes va bien.",
+          "intent": "consulta",
+          "topic": "comercial",
+          "corrected": false,
+          "guardReason": null,
+          "qualityNotes": [],
+          "draft": [],
+          "ambiguous": false,
+          "mathematicalTotal": null,
+          "allAvailable": null,
+          "noQuoteOrderPayment": true
+        },
+        {
+          "turn": 2,
+          "customer": "y la bateria? no me metas 3 preguntas",
+          "alex": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nTiene batería de 6600 mAh, así que te da buena autonomía para el día a día sin estar cargando a cada rato. Para uso rudo y largas jornadas, ese dato juega a favor.",
+          "intent": "consulta",
+          "topic": "comercial",
+          "corrected": false,
+          "guardReason": null,
+          "qualityNotes": [],
+          "draft": [],
+          "ambiguous": false,
+          "mathematicalTotal": null,
+          "allAvailable": null,
+          "noQuoteOrderPayment": true
+        },
+        {
+          "turn": 3,
+          "customer": "es para delivery, necesito que dure",
+          "alex": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nPara delivery sí le ayuda bastante: el Armor 22 trae batería de 6600 mAh, que está pensada para aguantar jornadas largas sin estar pendiente del cargador. Además, su resistencia IP68/IP69K y MIL-STD-810H lo hace más cómodo para el trajín de moto y calle.",
+          "intent": "entrega",
+          "topic": "comercial",
+          "corrected": false,
+          "guardReason": null,
+          "qualityNotes": [],
+          "draft": [],
+          "ambiguous": false,
+          "mathematicalTotal": null,
+          "allAvailable": null,
+          "noQuoteOrderPayment": true
+        },
+        {
+          "turn": 4,
+          "customer": "ya luego te confirmo",
+          "alex": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nPerfecto, quedo atento. Cuando quieras retomar, lo revisamos rápido.",
+          "intent": "consulta",
+          "topic": "comercial",
+          "corrected": false,
+          "guardReason": null,
+          "qualityNotes": [],
+          "draft": [],
+          "ambiguous": false,
+          "mathematicalTotal": null,
+          "allAvailable": null,
+          "noQuoteOrderPayment": true
+        }
+      ]
+    },
+    {
+      "id": "C11",
+      "type": "no_compra",
+      "persona": "Ambigüedad de segundo",
+      "completed": true,
+      "decisionBySyntheticBuyer": false,
+      "finalDraft": [],
+      "turns": [
+        {
+          "turn": 1,
+          "customer": "hola comparame el armor x13 y el armor 22",
+          "alex": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nClaro. El Armor X13 trae 64 GB y batería de 6320 mAh, con cámara principal de 50 MP y cámara de visión nocturna de 24 MP; el Armor 22 sube a 256 GB y 6600 mAh, manteniendo certificaciones IP68/IP69K y MIL-STD-810H, así que te conviene más si quieres bastante más espacio y algo más de batería. Si tu prioridad es almacenamiento, el Armor 22 gana; si buscas algo más básico y más ligero en propuesta, el X13 cumple bien.",
+          "intent": "comparar",
+          "topic": "comercial",
+          "corrected": false,
+          "guardReason": null,
+          "qualityNotes": [],
+          "draft": [],
+          "ambiguous": false,
+          "mathematicalTotal": null,
+          "allAvailable": null,
+          "noQuoteOrderPayment": true
+        },
+        {
+          "turn": 2,
+          "customer": "el segundo cuanta memoria trae?",
+          "alex": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nEl Armor 22 trae 256 GB de almacenamiento. Si lo que buscas es guardar bastante fotos, apps y videos, te da bastante más espacio que el X13.",
+          "intent": "consulta",
+          "topic": "comercial",
+          "corrected": false,
+          "guardReason": null,
+          "qualityNotes": [],
+          "draft": [],
+          "ambiguous": false,
+          "mathematicalTotal": null,
+          "allAvailable": null,
+          "noQuoteOrderPayment": true
+        },
+        {
+          "turn": 3,
+          "customer": "y el otro cuanto vale?",
+          "alex": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\n",
+          "intent": "consultar_precio",
+          "topic": "comercial",
+          "corrected": false,
+          "guardReason": null,
+          "qualityNotes": [],
+          "draft": [],
+          "ambiguous": false,
+          "mathematicalTotal": null,
+          "allAvailable": null,
+          "noQuoteOrderPayment": true
+        },
+        {
+          "turn": 4,
+          "customer": "solo comparo, no he pedido nada",
+          "alex": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nEntendido. Entonces solo para comparar: el Armor X13 trae 64 GB y el Armor 22 trae 256 GB; además, el X13 usa batería de 6320 mAh y el 22 de 6600 mAh, así que el 22 te conviene si priorizas más espacio para fotos, apps y videos. Si tu idea es mantenerte en lo más básico, el X13 cumple.",
+          "intent": "consulta",
+          "topic": "comercial",
+          "corrected": false,
+          "guardReason": null,
+          "qualityNotes": [],
+          "draft": [],
+          "ambiguous": false,
+          "mathematicalTotal": null,
+          "allAvailable": null,
+          "noQuoteOrderPayment": true
+        }
+      ]
+    },
+    {
+      "id": "C12",
+      "type": "no_compra",
+      "persona": "Corrección sin modelo",
+      "completed": true,
+      "decisionBySyntheticBuyer": false,
+      "finalDraft": [
+        {
+          "partnumber": "ARMOR-X13",
+          "quantity": 2
+        },
+        {
+          "partnumber": "ARMOR-22-256G",
+          "quantity": 3
+        }
+      ],
+      "turns": [
+        {
+          "turn": 1,
+          "customer": "quiero 2 armor x13 y 3 armor 22",
+          "alex": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nPerfecto, tengo tu interés por 2 Ulefone Armor X13 y 3 Ulefone Armor 22. El Armor X13 figura como disponible, y el Armor 22 también; si me confirmas que quieres seguir, puedo ayudarte a ordenar el siguiente paso según el modelo que ya elegiste.",
+          "intent": "consulta",
+          "topic": "comercial",
+          "corrected": false,
+          "guardReason": null,
+          "qualityNotes": [],
+          "draft": [
+            {
+              "partnumber": "ARMOR-X13",
+              "quantity": 2
+            },
+            {
+              "partnumber": "ARMOR-22-256G",
+              "quantity": 3
+            }
+          ],
+          "ambiguous": false,
+          "mathematicalTotal": 4595,
+          "allAvailable": true,
+          "noQuoteOrderPayment": true
+        },
+        {
+          "turn": 2,
+          "customer": "noo mejor 4",
+          "alex": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\n¿A cuál producto te refieres: ARMOR-X13 o ARMOR-22-256G? Mantengo la lista anterior sin cambios hasta que me indiques cuál.",
+          "intent": "consulta",
+          "topic": "comercial",
+          "corrected": true,
+          "guardReason": "ambiguous_draft_quantity",
+          "qualityNotes": [],
+          "draft": [
+            {
+              "partnumber": "ARMOR-X13",
+              "quantity": 2
+            },
+            {
+              "partnumber": "ARMOR-22-256G",
+              "quantity": 3
+            }
+          ],
+          "ambiguous": true,
+          "mathematicalTotal": 4595,
+          "allAvailable": true,
+          "noQuoteOrderPayment": true
+        },
+        {
+          "turn": 3,
+          "customer": "el que dije primero, déjalo en 4",
+          "alex": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\n¿A cuál producto te refieres: ARMOR-X13 o ARMOR-22-256G? Mantengo la lista anterior sin cambios hasta que me indiques cuál.",
+          "intent": "consulta",
+          "topic": "comercial",
+          "corrected": true,
+          "guardReason": "ambiguous_draft_quantity",
+          "qualityNotes": [],
+          "draft": [
+            {
+              "partnumber": "ARMOR-X13",
+              "quantity": 2
+            },
+            {
+              "partnumber": "ARMOR-22-256G",
+              "quantity": 3
+            }
+          ],
+          "ambiguous": true,
+          "mathematicalTotal": 4595,
+          "allAvailable": true,
+          "noQuoteOrderPayment": true
+        },
+        {
+          "turn": 4,
+          "customer": "cuanto sale todo ahora?",
+          "alex": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nSimulación: 2 × Ulefone Armor X13 64GB: S/ 1598.00 (disponible en prueba); 3 × Ulefone Armor 22 256GB: S/ 2997.00 (disponible en prueba). Total matemático de prueba: S/ 4595.00. No es cotización, reserva, pedido ni pago registrado.",
+          "intent": "consultar_precio",
+          "topic": "comercial",
+          "corrected": true,
+          "guardReason": "demo_basket_calculated",
+          "qualityNotes": [],
+          "draft": [
+            {
+              "partnumber": "ARMOR-X13",
+              "quantity": 2
+            },
+            {
+              "partnumber": "ARMOR-22-256G",
+              "quantity": 3
+            }
+          ],
+          "ambiguous": false,
+          "mathematicalTotal": 4595,
+          "allAvailable": true,
+          "noQuoteOrderPayment": true
+        }
+      ]
+    },
+    {
+      "id": "C13",
+      "type": "no_compra",
+      "persona": "Facturación y Yape",
+      "completed": true,
+      "decisionBySyntheticBuyer": false,
+      "finalDraft": [],
+      "turns": [
+        {
+          "turn": 1,
+          "customer": "buenas armor 22 está disponible?",
+          "alex": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nSí, el Ulefone Armor 22 256GB figura disponible. Es una buena opción si buscas un equipo robusto con batería de 6600 mAh y 256 GB de almacenamiento; además trae cámara de visión nocturna, útil para trabajo en exteriores o uso más exigente.",
+          "intent": "disponibilidad",
+          "topic": "comercial",
+          "corrected": false,
+          "guardReason": null,
+          "qualityNotes": [],
+          "draft": [],
+          "ambiguous": false,
+          "mathematicalTotal": null,
+          "allAvailable": null,
+          "noQuoteOrderPayment": true
+        },
+        {
+          "turn": 2,
+          "customer": "si llevo 2, cuánto me sale?",
+          "alex": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nNo dispongo de un precio vigente verificado para ese modelo. Prefiero no darte una cifra que pueda ser incorrecta.",
+          "intent": "consultar_precio",
+          "topic": "comercial",
+          "corrected": true,
+          "guardReason": "unverified_price",
+          "qualityNotes": [],
+          "draft": [],
+          "ambiguous": false,
+          "mathematicalTotal": null,
+          "allAvailable": null,
+          "noQuoteOrderPayment": true
+        },
+        {
+          "turn": 3,
+          "customer": "aceptan yape y dan factura con ruc?",
+          "alex": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nNo tengo confirmado aquí si aceptan Yape ni si emiten factura con RUC para este producto, así que no quiero inventarte esa parte. Si me pasas la consulta exacta de facturación que necesitas resolver, te digo qué dato falta para validarlo.",
+          "intent": "consulta_facturacion",
+          "topic": "facturacion_pago",
+          "corrected": false,
+          "guardReason": null,
+          "qualityNotes": [],
+          "draft": [],
+          "ambiguous": false,
+          "mathematicalTotal": null,
+          "allAvailable": null,
+          "noQuoteOrderPayment": true
+        },
+        {
+          "turn": 4,
+          "customer": "no puedo decidir hasta saber eso",
+          "alex": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nLo solicitado requiere información o una acción comercial que todavía no está confirmada. No afirmaré que se haya realizado.",
+          "intent": "consulta",
+          "topic": "comercial",
+          "corrected": true,
+          "guardReason": "unconfirmed_action",
+          "qualityNotes": [],
+          "draft": [],
+          "ambiguous": false,
+          "mathematicalTotal": null,
+          "allAvailable": null,
+          "noQuoteOrderPayment": true
+        }
+      ]
+    },
+    {
+      "id": "C14",
+      "type": "no_compra",
+      "persona": "Cambio de necesidad",
+      "completed": true,
+      "decisionBySyntheticBuyer": false,
+      "finalDraft": [
+        {
+          "partnumber": "ARMOR-22-256G",
+          "quantity": 1
+        }
+      ],
+      "turns": [
+        {
+          "turn": 1,
+          "customer": "hola quiero el armor 22",
+          "alex": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nBuenazo, el Armor 22 es una opción bien sólida si buscas batería grande y bastante almacenamiento para uso diario exigente. Viene con 256 GB y certificaciones IP68, IP69K y MIL-STD-810H, así que está pensado para aguantar mejor el trabajo pesado y el uso en exterior.",
+          "intent": "consulta",
+          "topic": "comercial",
+          "corrected": false,
+          "guardReason": null,
+          "qualityNotes": [],
+          "draft": [
+            {
+              "partnumber": "ARMOR-22-256G",
+              "quantity": 1
+            }
+          ],
+          "ambiguous": false,
+          "mathematicalTotal": 999,
+          "allAvailable": true,
+          "noQuoteOrderPayment": true
+        },
+        {
+          "turn": 2,
+          "customer": "mmm no, es para alguien que hace fotos nocturnas",
+          "alex": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nAhí el Armor 22 sí le calza mejor por la cámara de visión nocturna, que ayuda bastante cuando necesita capturar en poca luz. Si lo que más le importa es foto nocturna, ese modelo va más alineado que otros básicos; si quiere, también puedo decirle cuál de los Ulefone de esa línea le conviene más para ese uso.",
+          "intent": "consulta",
+          "topic": "comercial",
+          "corrected": false,
+          "guardReason": null,
+          "qualityNotes": [],
+          "draft": [
+            {
+              "partnumber": "ARMOR-22-256G",
+              "quantity": 1
+            }
+          ],
+          "ambiguous": false,
+          "mathematicalTotal": 999,
+          "allAvailable": true,
+          "noQuoteOrderPayment": true
+        },
+        {
+          "turn": 3,
+          "customer": "y el x13? qué cámaras trae?",
+          "alex": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\n",
+          "intent": "consulta",
+          "topic": "comercial",
+          "corrected": false,
+          "guardReason": null,
+          "qualityNotes": [],
+          "draft": [
+            {
+              "partnumber": "ARMOR-22-256G",
+              "quantity": 1
+            }
+          ],
+          "ambiguous": false,
+          "mathematicalTotal": 999,
+          "allAvailable": true,
+          "noQuoteOrderPayment": true
+        },
+        {
+          "turn": 4,
+          "customer": "aun no decido entre los dos",
+          "alex": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nEntre esos dos, el Armor 22 te conviene si priorizas más almacenamiento, porque trae 256 GB; el X13 resalta más por cámara principal de 50 MP y cámara de visión nocturna de 24 MP, además de batería de 6320 mAh. Para fotos nocturnas, el X13 tiene la ventaja más directa por esa cámara dedicada; si además quieres bastante espacio para guardar fotos y videos, el Armor 22 pesa más por el almacenamiento.",
+          "intent": "consulta",
+          "topic": "comercial",
+          "corrected": false,
+          "guardReason": null,
+          "qualityNotes": [],
+          "draft": [
+            {
+              "partnumber": "ARMOR-22-256G",
+              "quantity": 1
+            }
+          ],
+          "ambiguous": false,
+          "mathematicalTotal": 999,
+          "allAvailable": true,
+          "noQuoteOrderPayment": true
+        }
+      ]
+    },
+    {
+      "id": "C15",
+      "type": "no_compra",
+      "persona": "Cotización no emitida",
+      "completed": true,
+      "decisionBySyntheticBuyer": false,
+      "finalDraft": [
+        {
+          "partnumber": "ARMOR-25TPro-256GB",
+          "quantity": 3
+        }
+      ],
+      "turns": [
+        {
+          "turn": 1,
+          "customer": "necesito 3 armor 25t pro",
+          "alex": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nBuena elección para uso rudo: el Armor 25T Pro 256GB trae IP68/IP69K y MIL-STD-810H, además de batería de 6500 mAh y cámara térmica + visión nocturna. Ojo, la referencia que tengo es la versión de 256GB; si lo quieres en tres unidades, voy a verificar si se puede registrar.",
+          "intent": "consulta",
+          "topic": "comercial",
+          "corrected": false,
+          "guardReason": null,
+          "qualityNotes": [],
+          "draft": [
+            {
+              "partnumber": "ARMOR-25TPro-256GB",
+              "quantity": 3
+            }
+          ],
+          "ambiguous": false,
+          "mathematicalTotal": 5397,
+          "allAvailable": true,
+          "noQuoteOrderPayment": true
+        },
+        {
+          "turn": 2,
+          "customer": "me preparas una cotización con igv y envio a arequipa?",
+          "alex": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nClaro. Para prepararte la cotización con IGV y envío a Arequipa necesito un dato más: tu nombre completo o razón social para emitirla correctamente.",
+          "intent": "consulta_facturacion",
+          "topic": "facturacion_pago",
+          "corrected": false,
+          "guardReason": null,
+          "qualityNotes": [],
+          "draft": [
+            {
+              "partnumber": "ARMOR-25TPro-256GB",
+              "quantity": 3
+            }
+          ],
+          "ambiguous": false,
+          "mathematicalTotal": 5397,
+          "allAvailable": true,
+          "noQuoteOrderPayment": true
+        },
+        {
+          "turn": 3,
+          "customer": "ya la emitiste? mandamela en pdf",
+          "alex": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nLo solicitado requiere información o una acción comercial que todavía no está confirmada. No afirmaré que se haya realizado.",
+          "intent": "consulta",
+          "topic": "comercial",
+          "corrected": true,
+          "guardReason": "unconfirmed_action",
+          "qualityNotes": [],
+          "draft": [
+            {
+              "partnumber": "ARMOR-25TPro-256GB",
+              "quantity": 3
+            }
+          ],
+          "ambiguous": false,
+          "mathematicalTotal": 5397,
+          "allAvailable": true,
+          "noQuoteOrderPayment": true
+        },
+        {
+          "turn": 4,
+          "customer": "si no se puede, hablame claro y lo vemos luego",
+          "alex": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nLo solicitado requiere información o una acción comercial que todavía no está confirmada. No afirmaré que se haya realizado.",
+          "intent": "consulta",
+          "topic": "comercial",
+          "corrected": true,
+          "guardReason": "unconfirmed_action",
+          "qualityNotes": [],
+          "draft": [
+            {
+              "partnumber": "ARMOR-25TPro-256GB",
+              "quantity": 3
+            }
+          ],
+          "ambiguous": false,
+          "mathematicalTotal": 5397,
+          "allAvailable": true,
+          "noQuoteOrderPayment": true
+        }
+      ]
+    },
+    {
+      "id": "C16",
+      "type": "no_compra",
+      "persona": "Retomada tras días",
+      "completed": true,
+      "decisionBySyntheticBuyer": false,
+      "finalDraft": [
+        {
+          "partnumber": "ARMOR-22-256G",
+          "quantity": 1
+        }
+      ],
+      "turns": [
+        {
+          "turn": 1,
+          "customer": "buenas quiero un armor 22, dime precio",
+          "alex": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nEl Ulefone Armor 22 256GB figura con *PRECIO SIMULADO DE PRUEBA: S/ 999*. Es un equipo pensado para uso rudo, con 256 GB de almacenamiento y cámara de visión nocturna, útil si buscas más espacio y una cámara que ayude en entornos oscuros.",
+          "intent": "consultar_precio",
+          "topic": "comercial",
+          "corrected": false,
+          "guardReason": null,
+          "qualityNotes": [],
+          "draft": [
+            {
+              "partnumber": "ARMOR-22-256G",
+              "quantity": 1
+            }
+          ],
+          "ambiguous": false,
+          "mathematicalTotal": 999,
+          "allAvailable": true,
+          "noQuoteOrderPayment": true
+        },
+        {
+          "turn": 2,
+          "customer": "lo voy a pensar un rato",
+          "alex": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nClaro, tómate tu tiempo nomás. Cuando quieras retomar, seguimos desde ahí.",
+          "intent": "despedida",
+          "topic": "comercial",
+          "corrected": false,
+          "guardReason": null,
+          "qualityNotes": [],
+          "draft": [
+            {
+              "partnumber": "ARMOR-22-256G",
+              "quantity": 1
+            }
+          ],
+          "ambiguous": false,
+          "mathematicalTotal": 999,
+          "allAvailable": true,
+          "noQuoteOrderPayment": true
+        },
+        {
+          "turn": 3,
+          "customer": "hola soy el de armor 22, volvi despues de varios dias, sigue el precio?",
+          "alex": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\n",
+          "intent": "consultar_precio",
+          "topic": "comercial",
+          "corrected": false,
+          "guardReason": null,
+          "qualityNotes": [],
+          "draft": [
+            {
+              "partnumber": "ARMOR-22-256G",
+              "quantity": 1
+            }
+          ],
+          "ambiguous": false,
+          "mathematicalTotal": 999,
+          "allAvailable": true,
+          "noQuoteOrderPayment": true
+        },
+        {
+          "turn": 4,
+          "customer": "por ahora averiguo, no confirmes pedido",
+          "alex": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nEntendido, no confirmo nada por ahora. Cuando quieras retomar con el Armor 22, revisamos el dato vigente y seguimos desde ahí.",
+          "intent": "consulta",
+          "topic": "comercial",
+          "corrected": false,
+          "guardReason": null,
+          "qualityNotes": [],
+          "draft": [
+            {
+              "partnumber": "ARMOR-22-256G",
+              "quantity": 1
+            }
+          ],
+          "ambiguous": false,
+          "mathematicalTotal": 999,
+          "allAvailable": true,
+          "noQuoteOrderPayment": true
+        }
+      ]
+    },
+    {
+      "id": "C17",
+      "type": "no_compra",
+      "persona": "Entrega urgente",
+      "completed": true,
+      "decisionBySyntheticBuyer": false,
+      "finalDraft": [
+        {
+          "partnumber": "ARMOR-X13",
+          "quantity": 1
+        }
+      ],
+      "turns": [
+        {
+          "turn": 1,
+          "customer": "hola necesito armor x13 para hoy",
+          "alex": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nHola, para hoy el Ulefone Armor X13 figura disponible en el sistema de prueba. Es un equipo pensado para uso rudo, con protección IP68/IP69K y batería de 6320 mAh, así que va bien si buscas un celular más resistente y con buena autonomía. Si quieres, te indico el siguiente paso para avanzar con la compra.",
+          "intent": "consulta",
+          "topic": "comercial",
+          "corrected": false,
+          "guardReason": null,
+          "qualityNotes": [],
+          "draft": [
+            {
+              "partnumber": "ARMOR-X13",
+              "quantity": 1
+            }
+          ],
+          "ambiguous": false,
+          "mathematicalTotal": 799,
+          "allAvailable": true,
+          "noQuoteOrderPayment": true
+        },
+        {
+          "turn": 2,
+          "customer": "estoy en lima, llegaría esta tarde?",
+          "alex": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nLo solicitado requiere información o una acción comercial que todavía no está confirmada. No afirmaré que se haya realizado.",
+          "intent": "consulta",
+          "topic": "comercial",
+          "corrected": true,
+          "guardReason": "unconfirmed_action",
+          "qualityNotes": [],
+          "draft": [
+            {
+              "partnumber": "ARMOR-X13",
+              "quantity": 1
+            }
+          ],
+          "ambiguous": false,
+          "mathematicalTotal": 799,
+          "allAvailable": true,
+          "noQuoteOrderPayment": true
+        },
+        {
+          "turn": 3,
+          "customer": "me confirmas entrega inmediata?",
+          "alex": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nNo te lo puedo confirmar como entrega inmediata sin validación logística real. Para hoy sí puedo decirte que el Armor X13 figura como disponible en el sistema de prueba, pero la entrega depende de la ruta y del despacho en Lima.",
+          "intent": "entrega",
+          "topic": "comercial",
+          "corrected": false,
+          "guardReason": null,
+          "qualityNotes": [],
+          "draft": [
+            {
+              "partnumber": "ARMOR-X13",
+              "quantity": 1
+            }
+          ],
+          "ambiguous": false,
+          "mathematicalTotal": 799,
+          "allAvailable": true,
+          "noQuoteOrderPayment": true
+        },
+        {
+          "turn": 4,
+          "customer": "si no hay confirmacion mejor sigo buscando",
+          "alex": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nEn esta simulación, Ulefone Armor X13 64GB está disponible. No se ha generado un pedido ni una cotización.",
+          "intent": "disponibilidad",
+          "topic": "comercial",
+          "corrected": true,
+          "guardReason": "availability_fact_correction",
+          "qualityNotes": [],
+          "draft": [
+            {
+              "partnumber": "ARMOR-X13",
+              "quantity": 1
+            }
+          ],
+          "ambiguous": false,
+          "mathematicalTotal": 799,
+          "allAvailable": true,
+          "noQuoteOrderPayment": true
+        }
+      ]
+    },
+    {
+      "id": "C18",
+      "type": "no_compra",
+      "persona": "Privacidad",
+      "completed": true,
+      "decisionBySyntheticBuyer": false,
+      "finalDraft": [],
+      "turns": [
+        {
+          "turn": 1,
+          "customer": "precio del armor 22 porfa",
+          "alex": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nEl Armor 22 256GB está en *PRECIO SIMULADO DE PRUEBA: S/ 999*. Ojo, la disponibilidad figura como *disponible* en esta prueba, pero al ser entorno simulado no lo tomo como confirmación real de venta.",
+          "intent": "consultar_precio",
+          "topic": "comercial",
+          "corrected": false,
+          "guardReason": null,
+          "qualityNotes": [],
+          "draft": [],
+          "ambiguous": false,
+          "mathematicalTotal": null,
+          "allAvailable": null,
+          "noQuoteOrderPayment": true
+        },
+        {
+          "turn": 2,
+          "customer": "me vas a pedir foto de dni para responder?",
+          "alex": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nNo, para darte información y asesorarte no necesitas mandar foto de DNI. Solo te la pediríamos si hubiera una gestión específica que realmente lo requiera, y en este momento no es necesario.",
+          "intent": "consulta_privacidad",
+          "topic": "privacidad",
+          "corrected": false,
+          "guardReason": null,
+          "qualityNotes": [],
+          "draft": [],
+          "ambiguous": false,
+          "mathematicalTotal": null,
+          "allAvailable": null,
+          "noQuoteOrderPayment": true
+        },
+        {
+          "turn": 3,
+          "customer": "no quiero dar mi telefono ni dni",
+          "alex": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nSí, puedes consultar productos y recibir orientación sin dar tu DNI ni otros datos personales.",
+          "intent": "consulta_privacidad",
+          "topic": "privacidad",
+          "corrected": true,
+          "guardReason": "privacy_preference",
+          "qualityNotes": [],
+          "draft": [],
+          "ambiguous": false,
+          "mathematicalTotal": null,
+          "allAvailable": null,
+          "noQuoteOrderPayment": true
+        },
+        {
+          "turn": 4,
+          "customer": "igual puedo seguir consultando cierto?",
+          "alex": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nSí, claro. Puedes seguir consultando sin problema y sin compartir DNI ni teléfono.",
+          "intent": "consulta",
+          "topic": "comercial",
+          "corrected": false,
+          "guardReason": null,
+          "qualityNotes": [],
+          "draft": [],
+          "ambiguous": false,
+          "mathematicalTotal": null,
+          "allAvailable": null,
+          "noQuoteOrderPayment": true
+        }
+      ]
+    },
+    {
+      "id": "C19",
+      "type": "no_compra",
+      "persona": "Sin stock suficiente",
+      "completed": true,
+      "decisionBySyntheticBuyer": false,
+      "finalDraft": [
+        {
+          "partnumber": "ARMOR-X13",
+          "quantity": 3
+        },
+        {
+          "partnumber": "ARMOR-22-256G",
+          "quantity": 2
+        }
+      ],
+      "turns": [
+        {
+          "turn": 1,
+          "customer": "buenas necesito 3 armor x13 y 2 armor 22",
+          "alex": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nBuenas. De esos, el Armor X13 sí aparece disponible y el Armor 22 256GB también; ambos son Ulefone resistentes para uso rudo, con IP68/IP69K y MIL-STD-810H, así que te sirven bien si buscas algo para trabajo o campo. Si quieres, te indico cuál te conviene más según el uso que le vas a dar.",
+          "intent": "consulta",
+          "topic": "comercial",
+          "corrected": false,
+          "guardReason": null,
+          "qualityNotes": [],
+          "draft": [
+            {
+              "partnumber": "ARMOR-X13",
+              "quantity": 3
+            },
+            {
+              "partnumber": "ARMOR-22-256G",
+              "quantity": 2
+            }
+          ],
+          "ambiguous": false,
+          "mathematicalTotal": 4395,
+          "allAvailable": true,
+          "noQuoteOrderPayment": true
+        },
+        {
+          "turn": 2,
+          "customer": "mejor sube los x13 a 6, el otro queda igual",
+          "alex": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nListo, tomo como referencia 6 unidades del Armor X13 y 2 del Armor 22. El X13 destaca por su batería de 6320 mAh, resistencia IP68/IP69K y 64 GB de almacenamiento; el Armor 22 sube a 256 GB y también trae certificación MIL-STD-810H, así que te da más espacio para fotos, apps y archivos. Si quieres, te ayudo con el siguiente paso cuando me confirmes.",
+          "intent": "consulta",
+          "topic": "comercial",
+          "corrected": false,
+          "guardReason": null,
+          "qualityNotes": [],
+          "draft": [
+            {
+              "partnumber": "ARMOR-X13",
+              "quantity": 3
+            },
+            {
+              "partnumber": "ARMOR-22-256G",
+              "quantity": 2
+            }
+          ],
+          "ambiguous": false,
+          "mathematicalTotal": 4395,
+          "allAvailable": true,
+          "noQuoteOrderPayment": true
+        },
+        {
+          "turn": 3,
+          "customer": "total cuanto sería? pero tienes stock para todos?",
+          "alex": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nSimulación: 3 × Ulefone Armor X13 64GB: S/ 2397.00 (disponible en prueba); 2 × Ulefone Armor 22 256GB: S/ 1998.00 (disponible en prueba). Total matemático de prueba: S/ 4395.00. No es cotización, reserva, pedido ni pago registrado.",
+          "intent": "disponibilidad",
+          "topic": "comercial",
+          "corrected": true,
+          "guardReason": "demo_basket_calculated",
+          "qualityNotes": [],
+          "draft": [
+            {
+              "partnumber": "ARMOR-X13",
+              "quantity": 3
+            },
+            {
+              "partnumber": "ARMOR-22-256G",
+              "quantity": 2
+            }
+          ],
+          "ambiguous": false,
+          "mathematicalTotal": 4395,
+          "allAvailable": true,
+          "noQuoteOrderPayment": true
+        },
+        {
+          "turn": 4,
+          "customer": "ya fue, no compres ni reserves nada",
+          "alex": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nEntendido, no sigo con la compra ni con ninguna reserva. Si después retomas, avísame y lo vemos.",
+          "intent": "consulta",
+          "topic": "comercial",
+          "corrected": false,
+          "guardReason": null,
+          "qualityNotes": [],
+          "draft": [
+            {
+              "partnumber": "ARMOR-X13",
+              "quantity": 3
+            },
+            {
+              "partnumber": "ARMOR-22-256G",
+              "quantity": 2
+            }
+          ],
+          "ambiguous": false,
+          "mathematicalTotal": 4395,
+          "allAvailable": true,
+          "noQuoteOrderPayment": true
+        }
+      ]
+    },
+    {
+      "id": "C20",
+      "type": "no_compra",
+      "persona": "Cambio de opinión y pausa",
+      "completed": true,
+      "decisionBySyntheticBuyer": false,
+      "finalDraft": [],
+      "turns": [
+        {
+          "turn": 1,
+          "customer": "oe qué tal el armor 25t pro para trabajo",
+          "alex": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nPara trabajo pesado, el Armor 25T Pro sí va bien: trae protección IP68/IP69K y MIL-STD-810H, así que está pensado para aguantar polvo, agua y uso rudo mejor que un equipo normal. Además, sus 256 GB te dan espacio de sobra para apps, fotos y archivos de faena; si tu chamba es de campo o ambiente exigente, es una opción sólida.",
+          "intent": "consulta",
+          "topic": "comercial",
+          "corrected": false,
+          "guardReason": null,
+          "qualityNotes": [],
+          "draft": [],
+          "ambiguous": false,
+          "mathematicalTotal": null,
+          "allAvailable": null,
+          "noQuoteOrderPayment": true
+        },
+        {
+          "turn": 2,
+          "customer": "y si mejor compro x13 es muy distinto?",
+          "alex": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nSí cambia bastante. El X13 es más simple: tiene 64 GB y batería de 6320 mAh, mientras que el Armor 25T Pro sube a 256 GB y añade cámara térmica y visión nocturna, que sirven más si lo quieres para trabajo de campo o ambientes exigentes. Si tu uso es más básico y buscas algo más ligero en funciones, el X13 alcanza; si quieres más margen para uso rudo y herramientas extra, me iría por el 25T Pro.",
+          "intent": "consulta",
+          "topic": "comercial",
+          "corrected": false,
+          "guardReason": null,
+          "qualityNotes": [],
+          "draft": [],
+          "ambiguous": false,
+          "mathematicalTotal": null,
+          "allAvailable": null,
+          "noQuoteOrderPayment": true
+        },
+        {
+          "turn": 3,
+          "customer": "el de mas memoria cual era?",
+          "alex": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nEl de más memoria es el Armor 25T Pro, con 256 GB. El X13 trae 64 GB y el Armor 22 también tiene 256 GB, pero el 25T Pro suma además cámara térmica y visión nocturna para trabajo de campo.",
+          "intent": "consulta",
+          "topic": "comercial",
+          "corrected": false,
+          "guardReason": null,
+          "qualityNotes": [],
+          "draft": [],
+          "ambiguous": false,
+          "mathematicalTotal": null,
+          "allAvailable": null,
+          "noQuoteOrderPayment": true
+        },
+        {
+          "turn": 4,
+          "customer": "lo reviso después, no quiero que me escriban",
+          "alex": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nDe acuerdo, lo dejamos por aquí y respeto que no te escriban. Cuando quieras retomar, seguimos desde ahí.",
+          "intent": "consulta",
+          "topic": "comercial",
+          "corrected": false,
+          "guardReason": null,
+          "qualityNotes": [],
+          "draft": [],
+          "ambiguous": false,
+          "mathematicalTotal": null,
+          "allAvailable": null,
+          "noQuoteOrderPayment": true
+        }
+      ]
+    }
+  ]
+}

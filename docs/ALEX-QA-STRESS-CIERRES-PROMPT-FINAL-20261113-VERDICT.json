@@ -1,0 +1,101 @@
+{
+  "generatedAt": "2026-11-13T21:54:08.392Z",
+  "metrics": {
+    "scenarios": 3,
+    "completed": 3,
+    "memoryCorrect": 3,
+    "memoryIncorrect": 0,
+    "redFlags": 0,
+    "buyerDecisions": 3,
+    "buyerDecisionNextStep": 3,
+    "apiErrors": 0,
+    "noExternalActions": true
+  },
+  "judgments": [
+    {
+      "id": "S01",
+      "kind": "decision",
+      "label": "Laptop + monitors, correct only monitors",
+      "completed": true,
+      "memoryCorrect": true,
+      "expected": [
+        [
+          "QA-LEN-T14-16",
+          2
+        ],
+        [
+          "QA-LG-27MR400",
+          1
+        ]
+      ],
+      "observed": [
+        [
+          "QA-LEN-T14-16",
+          2
+        ],
+        [
+          "QA-LG-27MR400",
+          1
+        ]
+      ],
+      "redFlags": [],
+      "finalGuard": null,
+      "finalReply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nPerfecto, queda como interés en 2 Lenovo ThinkPad T14 16 GB RAM / 512 GB SSD y 1 LG 27MR400. En este punto falta validar precio vigente, stock y условия de entrega; por ahora no hay pedido ni cobro registrado.",
+      "purchaseCloseUseful": true
+    },
+    {
+      "id": "S02",
+      "kind": "decision",
+      "label": "Two Logitech SKU and explicit correction",
+      "completed": true,
+      "memoryCorrect": true,
+      "expected": [
+        [
+          "QA-LOG-H390",
+          3
+        ],
+        [
+          "QA-LOG-H570E",
+          1
+        ]
+      ],
+      "observed": [
+        [
+          "QA-LOG-H390",
+          3
+        ],
+        [
+          "QA-LOG-H570E",
+          1
+        ]
+      ],
+      "redFlags": [],
+      "finalGuard": null,
+      "finalReply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nPerfecto, queda como 3 Logitech H390 y 1 Logitech H570e. El siguiente paso real es validar internamente precio, stock y condiciones de entrega; por ahora no hay pedido ni cobro registrado.",
+      "purchaseCloseUseful": true
+    },
+    {
+      "id": "S04",
+      "kind": "decision",
+      "label": "Unavailable printer and available alternative",
+      "completed": true,
+      "memoryCorrect": true,
+      "expected": [
+        [
+          "QA-EPS-L1250",
+          1
+        ]
+      ],
+      "observed": [
+        [
+          "QA-EPS-L1250",
+          1
+        ]
+      ],
+      "redFlags": [],
+      "finalGuard": null,
+      "finalReply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nPerfecto, quedaría 1 Epson EcoTank L1250. Ahora solo falta validar internamente precio, stock y condiciones de entrega; todavía no hay pedido ni cobro realizado.",
+      "purchaseCloseUseful": true
+    }
+  ]
+}

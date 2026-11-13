@@ -1,0 +1,70 @@
+{
+  "generatedAt": "2026-11-13T22:00:40.184Z",
+  "metrics": {
+    "scenarios": 2,
+    "completed": 2,
+    "memoryCorrect": 2,
+    "memoryIncorrect": 0,
+    "redFlags": 0,
+    "buyerDecisions": 0,
+    "buyerDecisionNextStep": 0,
+    "apiErrors": 0,
+    "noExternalActions": true
+  },
+  "judgments": [
+    {
+      "id": "S10",
+      "kind": "consultation",
+      "label": "Ambiguous correction asks product",
+      "completed": true,
+      "memoryCorrect": true,
+      "expected": [
+        [
+          "QA-EPS-L1250",
+          2
+        ],
+        [
+          "QA-LOG-H390",
+          3
+        ]
+      ],
+      "observed": [
+        [
+          "QA-EPS-L1250",
+          2
+        ],
+        [
+          "QA-LOG-H390",
+          3
+        ]
+      ],
+      "redFlags": [],
+      "finalGuard": null,
+      "finalReply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nListo, queda tal cual al inicio: 2 Epson L1250 y 3 Logitech H390. El siguiente paso sería validar internamente precio, stock y condiciones antes de avanzar, sin pedido ni cobro aún.",
+      "purchaseCloseUseful": null
+    },
+    {
+      "id": "S18",
+      "kind": "consultation",
+      "label": "Two routers compare and remove",
+      "completed": true,
+      "memoryCorrect": true,
+      "expected": [
+        [
+          "QA-TPL-AX23",
+          2
+        ]
+      ],
+      "observed": [
+        [
+          "QA-TPL-AX23",
+          2
+        ]
+      ],
+      "redFlags": [],
+      "finalGuard": "demo_single_line_price",
+      "finalReply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nSimulación: 2 × TP-Link Archer AX23 router Wi-Fi 6 (prueba): S/ 458.00 (disponible solo en prueba). Es un cálculo de laboratorio, no una cotización, pedido ni pago.",
+      "purchaseCloseUseful": null
+    }
+  ]
+}

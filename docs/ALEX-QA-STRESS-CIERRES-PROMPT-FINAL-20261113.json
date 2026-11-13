@@ -1,0 +1,250 @@
+{
+  "generatedAt": "2026-11-13T21:53:57.593Z",
+  "metrics": {
+    "cases": 3,
+    "completed": 3,
+    "turns": 12,
+    "modelCalls": 12,
+    "apiErrors": 0,
+    "guardCorrections": 4,
+    "inputTokens": 74450,
+    "outputTokens": 1258,
+    "products": 20,
+    "newQaProducts": 16,
+    "categories": 8,
+    "commercialWrites": 0,
+    "whatsappSends": 0,
+    "orderCreated": 0,
+    "paymentRegistered": 0
+  },
+  "categories": [
+    "impresion > impresoras > tanque_de_tinta",
+    "componentes > memoria_ram > ddr5",
+    "electronica > laptops > oficina",
+    "electronica > monitores > oficina",
+    "perifericos > audio > auriculares_usb",
+    "accesorios > cargadores > usb_c_pd",
+    "electronica > tablets > android",
+    "redes > routers > wifi_6"
+  ],
+  "executions": [
+    {
+      "id": "S01",
+      "label": "Laptop + monitors, correct only monitors",
+      "completed": true,
+      "trace": [
+        {
+          "turn": 1,
+          "customer": "hola mano, necesito 2 lenovo t14 de 16gb y 2 lg 27mr400",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nListo, tengo tu interés en 2 Lenovo ThinkPad T14 de 16 GB y 2 monitores LG 27MR400. Del T14 sí hay una ficha referencial con 16 GB/512 GB, y del LG 27MR400 solo tengo la referencia de 27 pulgadas sin ficha validada, así que ese modelo queda por confirmar antes de asegurarte compatibilidad o entrega.",
+          "memory": [
+            {
+              "partnumber": "QA-LEN-T14-16",
+              "quantity": 2
+            },
+            {
+              "partnumber": "QA-LG-27MR400",
+              "quantity": 2
+            }
+          ],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": null,
+          "total": 7996,
+          "available": true
+        },
+        {
+          "turn": 2,
+          "customer": "mejor 1 monitor lg, las 2 laptops iguales",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nSimulación: queda anotado el interés por 2 × Lenovo ThinkPad T14 16 GB RAM / 512 GB SSD (prueba); 1 × LG 27MR400 monitor 27 pulgadas (prueba). No es pedido ni reserva.",
+          "memory": [
+            {
+              "partnumber": "QA-LEN-T14-16",
+              "quantity": 2
+            },
+            {
+              "partnumber": "QA-LG-27MR400",
+              "quantity": 1
+            }
+          ],
+          "focus": "QA-LG-27MR400",
+          "ambiguous": false,
+          "guardReason": "demo_draft_revision",
+          "total": 7297,
+          "available": true
+        },
+        {
+          "turn": 3,
+          "customer": "y cuanto es todo? no me inventes stock",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nSimulación: 2 × Lenovo ThinkPad T14 16 GB RAM / 512 GB SSD (prueba): S/ 6598.00 (disponible en prueba); 1 × LG 27MR400 monitor 27 pulgadas (prueba): S/ 699.00 (disponible en prueba). Total matemático de prueba: S/ 7297.00. No es cotización, reserva, pedido ni pago registrado.",
+          "memory": [
+            {
+              "partnumber": "QA-LEN-T14-16",
+              "quantity": 2
+            },
+            {
+              "partnumber": "QA-LG-27MR400",
+              "quantity": 1
+            }
+          ],
+          "focus": "QA-LG-27MR400",
+          "ambiguous": false,
+          "guardReason": "demo_basket_calculated",
+          "total": 7297,
+          "available": true
+        },
+        {
+          "turn": 4,
+          "customer": "ok quiero llevar esas 2 laptops y el monitor, como sigo?",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nPerfecto, queda como interés en 2 Lenovo ThinkPad T14 16 GB RAM / 512 GB SSD y 1 LG 27MR400. En este punto falta validar precio vigente, stock y условия de entrega; por ahora no hay pedido ni cobro registrado.",
+          "memory": [
+            {
+              "partnumber": "QA-LEN-T14-16",
+              "quantity": 2
+            },
+            {
+              "partnumber": "QA-LG-27MR400",
+              "quantity": 1
+            }
+          ],
+          "focus": "QA-LG-27MR400",
+          "ambiguous": false,
+          "guardReason": null,
+          "total": 7297,
+          "available": true
+        }
+      ]
+    },
+    {
+      "id": "S02",
+      "label": "Two Logitech SKU and explicit correction",
+      "completed": true,
+      "trace": [
+        {
+          "turn": 1,
+          "customer": "buenas 2 audifonos logitech h390 y 1 h570e",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nBuenas, para esa combinación te conviene separar así: el H390 es más simple y práctico para llamadas y uso diario, mientras que el H570e está más orientado a videollamadas y trabajo de oficina por ser USB y stereo. Para dejarlo bien, falta validar precio, stock y entrega de esas 3 unidades; no hay pedido ni cobro todavía.",
+          "memory": [],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": null,
+          "total": null,
+          "available": null
+        },
+        {
+          "turn": 2,
+          "customer": "corrige los h390 a 3, el h570e igual",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nListo: 3 Logitech H390 y 1 Logitech H570e. Con esa cantidad, el siguiente paso es validar internamente precio, stock y entrega; aún no hay pedido ni cobro.",
+          "memory": [],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": null,
+          "total": null,
+          "available": null
+        },
+        {
+          "turn": 3,
+          "customer": "cuanto es todo con esos tres? mejor dicho con los cuatro",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nTengo presente tu consulta y sus requisitos. Sin precios verificados no puedo asegurar importes ni que los equipos entren en el presupuesto.",
+          "memory": [],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": "unverified_price",
+          "total": null,
+          "available": null
+        },
+        {
+          "turn": 4,
+          "customer": "ya me llevo los 3 h390 y 1 h570e, dime como continuar",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nPerfecto, queda como 3 Logitech H390 y 1 Logitech H570e. El siguiente paso real es validar internamente precio, stock y condiciones de entrega; por ahora no hay pedido ni cobro registrado.",
+          "memory": [
+            {
+              "partnumber": "QA-LOG-H390",
+              "quantity": 3
+            },
+            {
+              "partnumber": "QA-LOG-H570E",
+              "quantity": 1
+            }
+          ],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": null,
+          "total": 796,
+          "available": true
+        }
+      ]
+    },
+    {
+      "id": "S04",
+      "label": "Unavailable printer and available alternative",
+      "completed": true,
+      "trace": [
+        {
+          "turn": 1,
+          "customer": "quiero una impresora epson l15150",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nLa L15150 te sirve si buscas una Epson de formato más completo para oficina o impresión A3, pero en este momento la referencia que tengo aparece como no disponible. Si la necesitas sí o sí, te puedo orientar con una alternativa similar de la misma línea que sí está disponible.",
+          "memory": [
+            {
+              "partnumber": "QA-EPS-L15150",
+              "quantity": 1
+            }
+          ],
+          "focus": "QA-EPS-L15150",
+          "ambiguous": false,
+          "guardReason": null,
+          "total": 3499,
+          "available": false
+        },
+        {
+          "turn": 2,
+          "customer": "si no tienen, la l1250 cuanto sale?",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nSimulación: 1 × Epson EcoTank L15150 impresora tanque de tinta (prueba): S/ 3499.00 (no disponible para esa cantidad de prueba). Es un cálculo de laboratorio, no una cotización, pedido ni pago.",
+          "memory": [
+            {
+              "partnumber": "QA-EPS-L15150",
+              "quantity": 1
+            }
+          ],
+          "focus": "QA-EPS-L15150",
+          "ambiguous": false,
+          "guardReason": "demo_single_line_price",
+          "total": 3499,
+          "available": false
+        },
+        {
+          "turn": 3,
+          "customer": "cambio la l15150 por 1 epson l1250",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nListo, quedaría 1 Epson EcoTank L1250. Ojo que esa referencia sí está en simulación como disponible, pero aún falta validar el precio vigente, stock y condiciones de entrega; no hay pedido ni cobro realizado.",
+          "memory": [
+            {
+              "partnumber": "QA-EPS-L1250",
+              "quantity": 1
+            }
+          ],
+          "focus": "QA-EPS-L1250",
+          "ambiguous": false,
+          "guardReason": null,
+          "total": 799,
+          "available": true
+        },
+        {
+          "turn": 4,
+          "customer": "ya compro esa l1250, que sigue?",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nPerfecto, quedaría 1 Epson EcoTank L1250. Ahora solo falta validar internamente precio, stock y condiciones de entrega; todavía no hay pedido ni cobro realizado.",
+          "memory": [
+            {
+              "partnumber": "QA-EPS-L1250",
+              "quantity": 1
+            }
+          ],
+          "focus": "QA-EPS-L1250",
+          "ambiguous": false,
+          "guardReason": null,
+          "total": 799,
+          "available": true
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,99 @@
+{
+  "generatedAt": "2026-11-13T21:15:56.886Z",
+  "metrics": {
+    "cases": 1,
+    "completed": 1,
+    "turns": 3,
+    "modelCalls": 3,
+    "apiErrors": 0,
+    "guardCorrections": 3,
+    "inputTokens": 18665,
+    "outputTokens": 363,
+    "products": 20,
+    "newQaProducts": 16,
+    "categories": 8,
+    "commercialWrites": 0,
+    "whatsappSends": 0,
+    "orderCreated": 0,
+    "paymentRegistered": 0
+  },
+  "categories": [
+    "impresion > impresoras > tanque_de_tinta",
+    "componentes > memoria_ram > ddr5",
+    "electronica > laptops > oficina",
+    "electronica > monitores > oficina",
+    "perifericos > audio > auriculares_usb",
+    "accesorios > cargadores > usb_c_pd",
+    "electronica > tablets > android",
+    "redes > routers > wifi_6"
+  ],
+  "executions": [
+    {
+      "id": "A15",
+      "label": "Laptop plus LG monitors",
+      "completed": true,
+      "trace": [
+        {
+          "turn": 1,
+          "customer": "quiero una lenovo thinkpad t14 16 gb y dos monitores lg 27mr400",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nLo solicitado requiere información o una acción comercial que todavía no está confirmada. No afirmaré que se haya realizado.",
+          "memory": [
+            {
+              "partnumber": "QA-LEN-T14-16",
+              "quantity": 1
+            },
+            {
+              "partnumber": "QA-LG-27MR400",
+              "quantity": 2
+            }
+          ],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": "unconfirmed_action",
+          "total": 4697,
+          "available": true
+        },
+        {
+          "turn": 2,
+          "customer": "mejor 3 monitores lg, la laptop igual",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nSimulación: queda anotado el interés por 1 × Lenovo ThinkPad T14 16 GB RAM / 512 GB SSD (prueba); 3 × LG 27MR400 monitor 27 pulgadas (prueba). Para la cantidad indicada, falta disponibilidad de: LG 27MR400 monitor 27 pulgadas (prueba). No es pedido ni reserva.",
+          "memory": [
+            {
+              "partnumber": "QA-LEN-T14-16",
+              "quantity": 1
+            },
+            {
+              "partnumber": "QA-LG-27MR400",
+              "quantity": 3
+            }
+          ],
+          "focus": "QA-LG-27MR400",
+          "ambiguous": false,
+          "guardReason": "demo_draft_revision",
+          "total": 5396,
+          "available": false
+        },
+        {
+          "turn": 3,
+          "customer": "cuanto sale todo?",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nSimulación: 1 × Lenovo ThinkPad T14 16 GB RAM / 512 GB SSD (prueba): S/ 3299.00 (disponible en prueba); 3 × LG 27MR400 monitor 27 pulgadas (prueba): S/ 2097.00 (no disponible para esta cantidad). Total matemático de prueba: S/ 5396.00. No es cotización, reserva, pedido ni pago registrado.",
+          "memory": [
+            {
+              "partnumber": "QA-LEN-T14-16",
+              "quantity": 1
+            },
+            {
+              "partnumber": "QA-LG-27MR400",
+              "quantity": 3
+            }
+          ],
+          "focus": "QA-LG-27MR400",
+          "ambiguous": false,
+          "guardReason": "demo_basket_calculated",
+          "total": 5396,
+          "available": false
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,1422 @@
+{
+  "generatedAt": "2026-11-13T22:01:39.396Z",
+  "evidenceType": "composite_verified",
+  "sources": {
+    "originalFullRun": "docs/ALEX-QA-STRESS-FINAL-COMPLETO-20261113.json",
+    "correctedCases": "docs/ALEX-QA-STRESS-FORMATO-FINAL-20261113.json",
+    "comment": "18 cases from full 20-case execution; cases S10/S18 were replayed after format patch. Not a single 20-case continuous run."
+  },
+  "metrics": {
+    "cases": 20,
+    "completed": 20,
+    "turns": 80,
+    "apiErrors": 0,
+    "guardCorrections": 26,
+    "products": 20,
+    "newQaProducts": 16,
+    "categories": 8,
+    "commercialWrites": 0,
+    "whatsappSends": 0,
+    "orderCreated": 0,
+    "paymentRegistered": 0
+  },
+  "categories": [
+    "impresion > impresoras > tanque_de_tinta",
+    "componentes > memoria_ram > ddr5",
+    "electronica > laptops > oficina",
+    "electronica > monitores > oficina",
+    "perifericos > audio > auriculares_usb",
+    "accesorios > cargadores > usb_c_pd",
+    "electronica > tablets > android",
+    "redes > routers > wifi_6"
+  ],
+  "executions": [
+    {
+      "id": "S01",
+      "label": "Laptop + monitors, correct only monitors",
+      "completed": true,
+      "trace": [
+        {
+          "turn": 1,
+          "customer": "hola mano, necesito 2 lenovo t14 de 16gb y 2 lg 27mr400",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nListo, te ayudo con eso: 2 Lenovo ThinkPad T14 de 16 GB y 2 LG 27MR400. Ojo que la referencia LG 27MR400 sí aparece como monitor de 27\", mientras que del T14 de 16 GB la ficha que tengo es referencial y falta validar precio, stock y condiciones antes de cerrarlo.",
+          "memory": [
+            {
+              "partnumber": "QA-LEN-T14-16",
+              "quantity": 2
+            },
+            {
+              "partnumber": "QA-LG-27MR400",
+              "quantity": 2
+            }
+          ],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": null,
+          "total": 7996,
+          "available": true
+        },
+        {
+          "turn": 2,
+          "customer": "mejor 1 monitor lg, las 2 laptops iguales",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nSimulación: queda anotado el interés por 2 × Lenovo ThinkPad T14 16 GB RAM / 512 GB SSD (prueba); 1 × LG 27MR400 monitor 27 pulgadas (prueba). No es pedido ni reserva.",
+          "memory": [
+            {
+              "partnumber": "QA-LEN-T14-16",
+              "quantity": 2
+            },
+            {
+              "partnumber": "QA-LG-27MR400",
+              "quantity": 1
+            }
+          ],
+          "focus": "QA-LG-27MR400",
+          "ambiguous": false,
+          "guardReason": "demo_draft_revision",
+          "total": 7297,
+          "available": true
+        },
+        {
+          "turn": 3,
+          "customer": "y cuanto es todo? no me inventes stock",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nSimulación: 2 × Lenovo ThinkPad T14 16 GB RAM / 512 GB SSD (prueba): S/ 6598.00 (disponible en prueba); 1 × LG 27MR400 monitor 27 pulgadas (prueba): S/ 699.00 (disponible en prueba). Total matemático de prueba: S/ 7297.00. No es cotización, reserva, pedido ni pago registrado.",
+          "memory": [
+            {
+              "partnumber": "QA-LEN-T14-16",
+              "quantity": 2
+            },
+            {
+              "partnumber": "QA-LG-27MR400",
+              "quantity": 1
+            }
+          ],
+          "focus": "QA-LG-27MR400",
+          "ambiguous": false,
+          "guardReason": "demo_basket_calculated",
+          "total": 7297,
+          "available": true
+        },
+        {
+          "turn": 4,
+          "customer": "ok quiero llevar esas 2 laptops y el monitor, como sigo?",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nPerfecto, quedamos con 2 Lenovo ThinkPad T14 16 GB y 1 monitor LG 27MR400. El siguiente paso real es validar internamente precio vigente, stock y condiciones de entrega; todavía no hay pedido ni cobro iniciado.",
+          "memory": [
+            {
+              "partnumber": "QA-LEN-T14-16",
+              "quantity": 2
+            },
+            {
+              "partnumber": "QA-LG-27MR400",
+              "quantity": 1
+            }
+          ],
+          "focus": "QA-LG-27MR400",
+          "ambiguous": false,
+          "guardReason": null,
+          "total": 7297,
+          "available": true
+        }
+      ],
+      "evidenceRun": "full_run"
+    },
+    {
+      "id": "S02",
+      "label": "Two Logitech SKU and explicit correction",
+      "completed": true,
+      "trace": [
+        {
+          "turn": 1,
+          "customer": "buenas 2 audifonos logitech h390 y 1 h570e",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nPerfecto, quedaría 2 Logitech H390 USB y 1 Logitech H570e Stereo USB. Eso sí, el H390 sí aparece como disponible; el H570e no lo tengo validado en esta búsqueda, así que ese modelo habría que confirmarlo antes de darte una respuesta final de precio y entrega.",
+          "memory": [],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": null,
+          "total": null,
+          "available": null
+        },
+        {
+          "turn": 2,
+          "customer": "corrige los h390 a 3, el h570e igual",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nListo: 3 Logitech H390 USB y 1 Logitech H570e Stereo USB. Del H390 tengo la referencia validada; del H570e aún no tengo una ficha confirmada en este momento, así que ese modelo queda por confirmar antes de cerrar cualquier precio o entrega.",
+          "memory": [],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": null,
+          "total": null,
+          "available": null
+        },
+        {
+          "turn": 3,
+          "customer": "cuanto es todo con esos tres? mejor dicho con los cuatro",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nTengo presente tu consulta y sus requisitos. Sin precios verificados no puedo asegurar importes ni que los equipos entren en el presupuesto.",
+          "memory": [],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": "unverified_price",
+          "total": null,
+          "available": null
+        },
+        {
+          "turn": 4,
+          "customer": "ya me llevo los 3 h390 y 1 h570e, dime como continuar",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nPerfecto: 3 Logitech H390 USB y 1 Logitech H570e Stereo USB. El siguiente paso real es validar internamente precio, stock y condiciones de entrega; todavía no queda pedido ni cobro hecho aquí.",
+          "memory": [
+            {
+              "partnumber": "QA-LOG-H390",
+              "quantity": 3
+            },
+            {
+              "partnumber": "QA-LOG-H570E",
+              "quantity": 1
+            }
+          ],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": null,
+          "total": 796,
+          "available": true
+        }
+      ],
+      "evidenceRun": "full_run"
+    },
+    {
+      "id": "S03",
+      "label": "Samsung tablet compare then buy",
+      "completed": true,
+      "trace": [
+        {
+          "turn": 1,
+          "customer": "oe entre tab a9 y tab a9 plus cual tiene mas almacenamiento?",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nLa Tab A9 Plus tiene más almacenamiento: 128 GB, frente a 64 GB de la Tab A9. Si lo que buscas es guardar más apps, fotos y archivos sin quedarte corto, la Plus te conviene más.",
+          "memory": [],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": null,
+          "total": null,
+          "available": null
+        },
+        {
+          "turn": 2,
+          "customer": "no compro aun solo comparo",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nPerfecto, entonces comparando solo eso: la Tab A9 Plus trae 128 GB y la Tab A9 64 GB. Si para ti pesa más guardar más contenido, la Plus gana por bastante; si solo la usarás para cosas básicas, la A9 alcanza mejor.",
+          "memory": [],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": null,
+          "total": null,
+          "available": null
+        },
+        {
+          "turn": 3,
+          "customer": "ya decidi, quiero una samsung tab a9 plus de 128gb",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nPerfecto, ya quedó claro: Samsung Galaxy Tab A9 Plus de 128 GB, 1 unidad. En esta prueba todavía falta validar precio, stock y entrega, así que no hay pedido ni cobro confirmado por ahora.",
+          "memory": [
+            {
+              "partnumber": "QA-SAM-TAB-A9PLUS",
+              "quantity": 1
+            }
+          ],
+          "focus": "QA-SAM-TAB-A9PLUS",
+          "ambiguous": false,
+          "guardReason": null,
+          "total": 999,
+          "available": true
+        },
+        {
+          "turn": 4,
+          "customer": "listo la compro, cual es el siguiente paso?",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nSimulación: Entiendo que quieres comprar: 1 × Samsung Galaxy Tab A9 Plus 128 GB tablet (prueba). Todavía no puedo crear un pedido ni un enlace de pago desde este chat. Antes hay que confirmar precio, disponibilidad y condiciones vigentes con STECH.",
+          "memory": [
+            {
+              "partnumber": "QA-SAM-TAB-A9PLUS",
+              "quantity": 1
+            }
+          ],
+          "focus": "QA-SAM-TAB-A9PLUS",
+          "ambiguous": false,
+          "guardReason": "purchase_not_ready",
+          "total": 999,
+          "available": true
+        }
+      ],
+      "evidenceRun": "full_run"
+    },
+    {
+      "id": "S04",
+      "label": "Unavailable printer and available alternative",
+      "completed": true,
+      "trace": [
+        {
+          "turn": 1,
+          "customer": "quiero una impresora epson l15150",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nLa L15150 es una buena opción si buscas una multifuncional Epson de formato más completo; la referencia que tengo no está validada con ficha técnica aquí, así que no te voy a inventar detalles. Lo que sí puedo decirte es que la línea EcoTank suele ir muy bien para oficina y trabajos con bastante volumen, y en este caso falta confirmar precio, stock y entrega antes de avanzar.",
+          "memory": [
+            {
+              "partnumber": "QA-EPS-L15150",
+              "quantity": 1
+            }
+          ],
+          "focus": "QA-EPS-L15150",
+          "ambiguous": false,
+          "guardReason": null,
+          "total": 3499,
+          "available": false
+        },
+        {
+          "turn": 2,
+          "customer": "si no tienen, la l1250 cuanto sale?",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nSimulación: 1 × Epson EcoTank L15150 impresora tanque de tinta (prueba): S/ 3499.00 (no disponible para esa cantidad de prueba). Es un cálculo de laboratorio, no una cotización, pedido ni pago.",
+          "memory": [
+            {
+              "partnumber": "QA-EPS-L15150",
+              "quantity": 1
+            }
+          ],
+          "focus": "QA-EPS-L15150",
+          "ambiguous": false,
+          "guardReason": "demo_single_line_price",
+          "total": 3499,
+          "available": false
+        },
+        {
+          "turn": 3,
+          "customer": "cambio la l15150 por 1 epson l1250",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nTengo presente tu consulta y sus requisitos. Sin precios verificados no puedo asegurar importes ni que los equipos entren en el presupuesto.",
+          "memory": [
+            {
+              "partnumber": "QA-EPS-L1250",
+              "quantity": 1
+            }
+          ],
+          "focus": "QA-EPS-L1250",
+          "ambiguous": false,
+          "guardReason": "unverified_price",
+          "total": 799,
+          "available": true
+        },
+        {
+          "turn": 4,
+          "customer": "ya compro esa l1250, que sigue?",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nPerfecto, entonces queda como referencia 1 Epson EcoTank L1250. Falta validar internamente precio vigente, stock y condiciones de entrega; por ahora no hay pedido ni cobro registrado.",
+          "memory": [
+            {
+              "partnumber": "QA-EPS-L1250",
+              "quantity": 1
+            }
+          ],
+          "focus": "QA-EPS-L1250",
+          "ambiguous": false,
+          "guardReason": null,
+          "total": 799,
+          "available": true
+        }
+      ],
+      "evidenceRun": "full_run"
+    },
+    {
+      "id": "S05",
+      "label": "Router partial removal then buy",
+      "completed": true,
+      "trace": [
+        {
+          "turn": 1,
+          "customer": "dame 2 tp link ax23 y un archer ax55",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nTengo como referencia: 2 × TP-Link Archer AX23 router Wi-Fi 6 (prueba); 1 × TP-Link Archer AX55 router Wi-Fi 6 (prueba). Para continuar primero debemos validar precio, disponibilidad y condiciones de entrega. Todavía no hay pedido ni pago; no es necesario que compartas datos personales para consultar.",
+          "memory": [
+            {
+              "partnumber": "QA-TPL-AX23",
+              "quantity": 2
+            },
+            {
+              "partnumber": "QA-TPL-AX55",
+              "quantity": 1
+            }
+          ],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": "premature_personal_data",
+          "total": 817,
+          "available": true
+        },
+        {
+          "turn": 2,
+          "customer": "quita los ax23, solo quiero el ax55",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nListo, queda solo 1 × Archer AX55. Aún falta validar precio, disponibilidad y entrega antes de pasar a cualquier gestión; por ahora no hay pedido ni cobro.",
+          "memory": [
+            {
+              "partnumber": "QA-TPL-AX55",
+              "quantity": 1
+            }
+          ],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": null,
+          "total": 359,
+          "available": true
+        },
+        {
+          "turn": 3,
+          "customer": "el ax55 cuantos quedan supuestamente en esta prueba?",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nEn esta prueba figura como 1 unidad solicitada del Archer AX55, y no puedo dar cantidades exactas de inventario; solo puedo indicar que su estado es por confirmar. Si te sirve, seguimos con la validación interna de precio y condiciones.",
+          "memory": [
+            {
+              "partnumber": "QA-TPL-AX55",
+              "quantity": 1
+            }
+          ],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": null,
+          "total": 359,
+          "available": true
+        },
+        {
+          "turn": 4,
+          "customer": "perfecto quiero comprar 1 archer ax55",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nSimulación: Entiendo que quieres comprar: 1 × TP-Link Archer AX55 router Wi-Fi 6 (prueba). Todavía no puedo crear un pedido ni un enlace de pago desde este chat. Antes hay que confirmar precio, disponibilidad y condiciones vigentes con STECH.",
+          "memory": [
+            {
+              "partnumber": "QA-TPL-AX55",
+              "quantity": 1
+            }
+          ],
+          "focus": "QA-TPL-AX55",
+          "ambiguous": false,
+          "guardReason": "purchase_not_ready",
+          "total": 359,
+          "available": true
+        }
+      ],
+      "evidenceRun": "full_run"
+    },
+    {
+      "id": "S06",
+      "label": "Comparison is not a basket",
+      "completed": true,
+      "trace": [
+        {
+          "turn": 1,
+          "customer": "comparame el samsung ls24d300 y el lg 27mr400",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nEn lo verificado, el Samsung LS24D300 es de 24 pulgadas y el LG 27MR400 es de 27 pulgadas, así que el LG te da una pantalla más grande para trabajar o ver contenido con más comodidad. El Samsung conviene más si quieres algo más compacto para escritorio chico o un uso básico de oficina; del resto de ficha no tengo datos validados para compararlos más fino.",
+          "memory": [],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": null,
+          "total": null,
+          "available": null
+        },
+        {
+          "turn": 2,
+          "customer": "el segundo tiene 27 pulgadas?",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nSí, el LG 27MR400 es de 27 pulgadas. Ese es el dato que tengo verificado de ese modelo.",
+          "memory": [],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": null,
+          "total": null,
+          "available": null
+        },
+        {
+          "turn": 3,
+          "customer": "tambien dime diferencias de precio si los tienes",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nNo dispongo de un precio vigente verificado para ese modelo. Prefiero no darte una cifra que pueda ser incorrecta.",
+          "memory": [],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": "unverified_price",
+          "total": null,
+          "available": null
+        },
+        {
+          "turn": 4,
+          "customer": "solo compara, no registres ninguna compra",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nClaro. Comparando solo lo verificado: el Samsung LS24D300 es de 24 pulgadas y el LG 27MR400 es de 27 pulgadas, así que el LG ofrece más área de pantalla para trabajo o entretenimiento. No tengo más ficha técnica validada para afirmar diferencias adicionales sin inventar datos.",
+          "memory": [],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": null,
+          "total": null,
+          "available": null
+        }
+      ],
+      "evidenceRun": "full_run"
+    },
+    {
+      "id": "S07",
+      "label": "DDR5 compatibility cannot be invented",
+      "completed": true,
+      "trace": [
+        {
+          "turn": 1,
+          "customer": "hola la kingston ddr5 7200 sirve para cualquier laptop?",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nNo, no sirve para cualquier laptop. Esa Kingston FURY DDR5 7200 es memoria UDIMM de escritorio; en laptop normalmente se usa SO-DIMM, así que primero hay que ver el tipo de ranura y si tu equipo soporta DDR5 a esa velocidad. Si me dices el modelo exacto de tu laptop, te digo si te conviene o no.",
+          "memory": [],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": null,
+          "total": null,
+          "available": null
+        },
+        {
+          "turn": 2,
+          "customer": "tengo una thinkpad t14 y necesito saber compatibilidad",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nAún no puedo confirmar compatibilidad entre esos equipos: son referencias de prueba sin una ficha de compatibilidad validada. Antes de recomendar la compra hay que verificar el modelo, las conexiones y las condiciones del fabricante.",
+          "memory": [],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": "qa_compatibility_unverified",
+          "total": null,
+          "available": null
+        },
+        {
+          "turn": 3,
+          "customer": "no me confirmes sin ficha",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nCorrecto, no te lo confirmo sin ficha. Para no hacerte comprar algo que no corresponda, esa Kingston DDR5 7200 no la daría por compatible con una ThinkPad T14 hasta revisar la ficha exacta de tu versión; en laptops, el formato y soporte de velocidad cambian bastante.",
+          "memory": [],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": null,
+          "total": null,
+          "available": null
+        },
+        {
+          "turn": 4,
+          "customer": "no compro hasta revisar el tipo de memoria",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nPerfecto, esa es la forma correcta de verlo. La ThinkPad T14 puede variar según versión, así que primero toca validar si usa DDR5 SO-DIMM y qué velocidad soporta realmente antes de comprar.",
+          "memory": [],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": null,
+          "total": null,
+          "available": null
+        }
+      ],
+      "evidenceRun": "full_run"
+    },
+    {
+      "id": "S08",
+      "label": "Power delivery technical uncertainty",
+      "completed": true,
+      "trace": [
+        {
+          "turn": 1,
+          "customer": "tengo una lenovo, cargador 65w o 100w?",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nPara una Lenovo, entre 65W y 100W no se elige por “más es mejor”, sino por lo que soporte tu modelo y el equipo conector/cable. Si es una laptop Lenovo de uso común, 65W suele ser suficiente; 100W solo conviene si tu modelo acepta esa carga por USB-C PD y quieres margen extra. ¿Me dices el modelo exacto de tu Lenovo o si carga por USB-C?",
+          "memory": [],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": null,
+          "total": null,
+          "available": null
+        },
+        {
+          "turn": 2,
+          "customer": "uno de 100w dañaria mi laptop o funciona seguro?",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nSi tu laptop negocia carga por USB-C Power Delivery, un cargador de 100W no debería dañarla: el equipo toma solo lo que necesita. El problema es si tu Lenovo no acepta ese estándar o el puerto no es el correcto, porque ahí sí no conviene asumir compatibilidad.",
+          "memory": [],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": null,
+          "total": null,
+          "available": null
+        },
+        {
+          "turn": 3,
+          "customer": "sin saber modelo exacto, puedes confirmarlo?",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nSin el modelo exacto no te lo puedo confirmar con seguridad. En general, si tu Lenovo carga por USB-C con Power Delivery, un cargador de 100W no le debería hacer daño porque la laptop regula la potencia que toma; si usa otro conector o un cargador propietario, ya no conviene asumir.",
+          "memory": [],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": null,
+          "total": null,
+          "available": null
+        },
+        {
+          "turn": 4,
+          "customer": "mejor lo veo despues",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nLo solicitado requiere información o una acción comercial que todavía no está confirmada. No afirmaré que se haya realizado.",
+          "memory": [],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": "unconfirmed_action",
+          "total": null,
+          "available": null
+        }
+      ],
+      "evidenceRun": "full_run"
+    },
+    {
+      "id": "S09",
+      "label": "Multiple independent requested quantities",
+      "completed": true,
+      "trace": [
+        {
+          "turn": 1,
+          "customer": "quiero 2 epson l1250 y 3 logitech h390",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nPerfecto, tengo anotado el interés en 2 Epson L1250 y 3 Logitech H390. La L1250 aparece como modelo de referencia, pero la ficha aún no está validada; el H390 sí figura como disponible. Falta validar precio vigente, stock y condiciones de entrega antes de cerrar cualquier pedido.",
+          "memory": [
+            {
+              "partnumber": "QA-EPS-L1250",
+              "quantity": 2
+            },
+            {
+              "partnumber": "QA-LOG-H390",
+              "quantity": 3
+            }
+          ],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": null,
+          "total": 2075,
+          "available": true
+        },
+        {
+          "turn": 2,
+          "customer": "sube los h390 a 4, la epson igual",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nSimulación: queda anotado el interés por 2 × Epson EcoTank L1250 impresora tanque de tinta (prueba); 4 × Logitech H390 USB audífonos con micrófono (prueba). No es pedido ni reserva.",
+          "memory": [
+            {
+              "partnumber": "QA-EPS-L1250",
+              "quantity": 2
+            },
+            {
+              "partnumber": "QA-LOG-H390",
+              "quantity": 4
+            }
+          ],
+          "focus": "QA-LOG-H390",
+          "ambiguous": false,
+          "guardReason": "demo_draft_revision",
+          "total": 2234,
+          "available": true
+        },
+        {
+          "turn": 3,
+          "customer": "si agrego 2 archer ax55, cuanto de prueba seria?",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nConservo esta lista de interés de prueba: 2 × Epson EcoTank L1250 impresora tanque de tinta (prueba); 4 × Logitech H390 USB audífonos con micrófono (prueba). Para avanzar falta confirmar precios vigentes, disponibilidad y condiciones de entrega. No se ha creado un pedido, cobro ni seguimiento comercial.",
+          "memory": [
+            {
+              "partnumber": "QA-EPS-L1250",
+              "quantity": 2
+            },
+            {
+              "partnumber": "QA-LOG-H390",
+              "quantity": 4
+            }
+          ],
+          "focus": "QA-LOG-H390",
+          "ambiguous": false,
+          "guardReason": "unconfirmed_action",
+          "total": 2234,
+          "available": true
+        },
+        {
+          "turn": 4,
+          "customer": "noo por ahora no, solo conserva las 2 epson y 4 logitech",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nListo, queda solo la intención de 2 × Epson L1250 y 4 × Logitech H390. No se ha generado pedido ni cobro; falta validar precio vigente, stock y entrega cuando quieras avanzar.",
+          "memory": [
+            {
+              "partnumber": "QA-EPS-L1250",
+              "quantity": 2
+            },
+            {
+              "partnumber": "QA-LOG-H390",
+              "quantity": 4
+            }
+          ],
+          "focus": "QA-LOG-H390",
+          "ambiguous": false,
+          "guardReason": null,
+          "total": 2234,
+          "available": true
+        }
+      ],
+      "evidenceRun": "full_run"
+    },
+    {
+      "id": "S10",
+      "label": "Ambiguous correction asks product",
+      "completed": true,
+      "trace": [
+        {
+          "turn": 1,
+          "customer": "necesito 2 epson l1250 y 3 logitech h390",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nPerfecto: tomo como referencia 2 Epson EcoTank L1250 y 3 Logitech H390. La L1250 no tiene ficha verificada en esta prueba, así que no te confirmo compatibilidad ni precio final todavía; del H390 sí tengo referencia de audífonos USB para uso de oficina o llamadas. El siguiente paso sería validar internamente precio, stock y condiciones de entrega antes de avanzar.",
+          "memory": [
+            {
+              "partnumber": "QA-EPS-L1250",
+              "quantity": 2
+            },
+            {
+              "partnumber": "QA-LOG-H390",
+              "quantity": 3
+            }
+          ],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": null,
+          "total": 2075,
+          "available": true
+        },
+        {
+          "turn": 2,
+          "customer": "noo mejor 4",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\n¿A cuál producto te refieres: QA-EPS-L1250 o QA-LOG-H390? Mantengo la lista anterior sin cambios hasta que me indiques cuál.",
+          "memory": [
+            {
+              "partnumber": "QA-EPS-L1250",
+              "quantity": 2
+            },
+            {
+              "partnumber": "QA-LOG-H390",
+              "quantity": 3
+            }
+          ],
+          "focus": null,
+          "ambiguous": true,
+          "guardReason": "ambiguous_draft_quantity",
+          "total": 2075,
+          "available": true
+        },
+        {
+          "turn": 3,
+          "customer": "no me cambies nada si no dije cual",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nListo, queda igual que antes: 2 Epson L1250 y 3 Logitech H390. No hago ningún cambio hasta que me indiques exactamente a cuál producto te refieres.",
+          "memory": [
+            {
+              "partnumber": "QA-EPS-L1250",
+              "quantity": 2
+            },
+            {
+              "partnumber": "QA-LOG-H390",
+              "quantity": 3
+            }
+          ],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": null,
+          "total": 2075,
+          "available": true
+        },
+        {
+          "turn": 4,
+          "customer": "al final deja los 2 epson y 3 h390 que dije al inicio",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nListo, queda tal cual al inicio: 2 Epson L1250 y 3 Logitech H390. El siguiente paso sería validar internamente precio, stock y condiciones antes de avanzar, sin pedido ni cobro aún.",
+          "memory": [
+            {
+              "partnumber": "QA-EPS-L1250",
+              "quantity": 2
+            },
+            {
+              "partnumber": "QA-LOG-H390",
+              "quantity": 3
+            }
+          ],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": null,
+          "total": 2075,
+          "available": true
+        }
+      ],
+      "evidenceRun": "post_format_fix_retest"
+    },
+    {
+      "id": "S11",
+      "label": "Pay by Yape unverified",
+      "completed": true,
+      "trace": [
+        {
+          "turn": 1,
+          "customer": "hola quiero 1 tablet a9 plus de 128gb",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nPerfecto, la Galaxy Tab A9 Plus de 128 GB es una opción cómoda si buscas más espacio para apps, archivos y uso diario sin quedarte corto rápido. En este momento no tengo validación de precio, stock ni entrega para cerrarla, pero ya quedó identificado el modelo y la cantidad: 1 unidad.",
+          "memory": [
+            {
+              "partnumber": "QA-SAM-TAB-A9PLUS",
+              "quantity": 1
+            }
+          ],
+          "focus": "QA-SAM-TAB-A9PLUS",
+          "ambiguous": false,
+          "guardReason": null,
+          "total": 999,
+          "available": true
+        },
+        {
+          "turn": 2,
+          "customer": "se puede pagar con yape?",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nNo tengo confirmado el medio de pago para este caso, así que no te puedo asegurar Yape sin validación. Si quieres, te indico lo que falta revisar para dejar la compra lista con ese modelo.",
+          "memory": [
+            {
+              "partnumber": "QA-SAM-TAB-A9PLUS",
+              "quantity": 1
+            }
+          ],
+          "focus": "QA-SAM-TAB-A9PLUS",
+          "ambiguous": false,
+          "guardReason": null,
+          "total": 999,
+          "available": true
+        },
+        {
+          "turn": 3,
+          "customer": "y dan factura con ruc?",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nNo te lo puedo confirmar sin la política de facturación validada para esta compra. Si necesitas factura con RUC, eso se tiene que revisar antes de cerrar para no asumir algo que no está confirmado.",
+          "memory": [
+            {
+              "partnumber": "QA-SAM-TAB-A9PLUS",
+              "quantity": 1
+            }
+          ],
+          "focus": "QA-SAM-TAB-A9PLUS",
+          "ambiguous": false,
+          "guardReason": null,
+          "total": 999,
+          "available": true
+        },
+        {
+          "turn": 4,
+          "customer": "todavia no confirmo compra, dime que falta validar",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nClaro, para avanzar con esa Tab A9 Plus de 128 GB falta validar tres cosas: precio vigente, disponibilidad y la condición de entrega. Si luego decides comprar, también se revisa el dato de facturación con RUC para no asumirlo sin confirmación.",
+          "memory": [
+            {
+              "partnumber": "QA-SAM-TAB-A9PLUS",
+              "quantity": 1
+            }
+          ],
+          "focus": "QA-SAM-TAB-A9PLUS",
+          "ambiguous": false,
+          "guardReason": null,
+          "total": 999,
+          "available": true
+        }
+      ],
+      "evidenceRun": "full_run"
+    },
+    {
+      "id": "S12",
+      "label": "Stock exceeds synthetic availability",
+      "completed": true,
+      "trace": [
+        {
+          "turn": 1,
+          "customer": "necesito 3 LG 27MR400 monitores",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nEntendido: 3 monitores LG 27MR400. Tomo esa referencia como la que quieres cotizar, pero todavía falta validar precio vigente, stock y entrega; además, la ficha que tengo está incompleta, así que no te afirmo especificaciones no verificadas. Si te sirve, lo siguiente es revisar esa referencia exacta internamente antes de cerrar cualquier compra.",
+          "memory": [
+            {
+              "partnumber": "QA-LG-27MR400",
+              "quantity": 3
+            }
+          ],
+          "focus": "QA-LG-27MR400",
+          "ambiguous": false,
+          "guardReason": null,
+          "total": 2097,
+          "available": false
+        },
+        {
+          "turn": 2,
+          "customer": "tienen para los 3 o solo dos en prueba?",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nLa disponibilidad de ese modelo está por confirmar. Por ahora no puedo asegurarte stock para entrega.",
+          "memory": [
+            {
+              "partnumber": "QA-LG-27MR400",
+              "quantity": 3
+            }
+          ],
+          "focus": "QA-LG-27MR400",
+          "ambiguous": false,
+          "guardReason": "unverified_availability",
+          "total": 2097,
+          "available": false
+        },
+        {
+          "turn": 3,
+          "customer": "total de prueba cuanto es?",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nSimulación: 3 × LG 27MR400 monitor 27 pulgadas (prueba): S/ 2097.00 (no disponible para esa cantidad de prueba). Es un cálculo de laboratorio, no una cotización, pedido ni pago.",
+          "memory": [
+            {
+              "partnumber": "QA-LG-27MR400",
+              "quantity": 3
+            }
+          ],
+          "focus": "QA-LG-27MR400",
+          "ambiguous": false,
+          "guardReason": "demo_single_line_price",
+          "total": 2097,
+          "available": false
+        },
+        {
+          "turn": 4,
+          "customer": "no hagas pedido, no reservé nada",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nTranquilo, no se hizo ningún pedido ni reserva. Solo quedó como referencia de prueba: 3 monitores LG 27MR400, sin validación de stock, entrega ni cobro.",
+          "memory": [
+            {
+              "partnumber": "QA-LG-27MR400",
+              "quantity": 3
+            }
+          ],
+          "focus": "QA-LG-27MR400",
+          "ambiguous": false,
+          "guardReason": null,
+          "total": 2097,
+          "available": false
+        }
+      ],
+      "evidenceRun": "full_run"
+    },
+    {
+      "id": "S13",
+      "label": "Four-category provisional items",
+      "completed": true,
+      "trace": [
+        {
+          "turn": 1,
+          "customer": "quiero un router ax23 y 2 h570e",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nPerfecto: tengo el router AX23 y los 2 Logitech H570e que mencionas como referencia de interés. Solo te aclaro que el AX23 no está identificado con ficha validada en este catálogo, así que por ahora lo dejaría pendiente de verificación; los H570e sí aparecen como referencia comercial.",
+          "memory": [
+            {
+              "partnumber": "QA-TPL-AX23",
+              "quantity": 1
+            },
+            {
+              "partnumber": "QA-LOG-H570E",
+              "quantity": 2
+            }
+          ],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": null,
+          "total": 867,
+          "available": true
+        },
+        {
+          "turn": 2,
+          "customer": "agrega una epson l1250",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nListo, sumando la Epson L1250 a tu selección. Queda: 1 router AX23, 2 Logitech H570e y 1 Epson L1250; el siguiente paso es validar internamente precio, stock y condiciones de entrega, sin pedido ni cobro aún.",
+          "memory": [
+            {
+              "partnumber": "QA-TPL-AX23",
+              "quantity": 1
+            },
+            {
+              "partnumber": "QA-LOG-H570E",
+              "quantity": 2
+            },
+            {
+              "partnumber": "QA-EPS-L1250",
+              "quantity": 1
+            }
+          ],
+          "focus": "QA-EPS-L1250",
+          "ambiguous": false,
+          "guardReason": null,
+          "total": 1666,
+          "available": true
+        },
+        {
+          "turn": 3,
+          "customer": "ademas una tablet samsung tab a9 plus de 128gb",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nPerfecto, queda añadida también la Samsung Galaxy Tab A9 Plus de 128 GB. Tu selección queda en: 1 router AX23, 2 Logitech H570e, 1 Epson L1250 y 1 Samsung Tab A9 Plus 128 GB; falta validar internamente precio, stock y entrega, y todavía no hay pedido ni cobro.",
+          "memory": [
+            {
+              "partnumber": "QA-TPL-AX23",
+              "quantity": 1
+            },
+            {
+              "partnumber": "QA-LOG-H570E",
+              "quantity": 2
+            },
+            {
+              "partnumber": "QA-EPS-L1250",
+              "quantity": 1
+            },
+            {
+              "partnumber": "QA-SAM-TAB-A9PLUS",
+              "quantity": 1
+            }
+          ],
+          "focus": "QA-SAM-TAB-A9PLUS",
+          "ambiguous": false,
+          "guardReason": null,
+          "total": 2665,
+          "available": true
+        },
+        {
+          "turn": 4,
+          "customer": "cuanto es todo de prueba?",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nSimulación: 1 × TP-Link Archer AX23 router Wi-Fi 6 (prueba): S/ 229.00 (disponible en prueba); 2 × Logitech H570e Stereo USB audífonos Teams (prueba): S/ 638.00 (disponible en prueba); 1 × Epson EcoTank L1250 impresora tanque de tinta (prueba): S/ 799.00 (disponible en prueba); 1 × Samsung Galaxy Tab A9 Plus 128 GB tablet (prueba): S/ 999.00 (disponible en prueba). Total matemático de prueba: S/ 2665.00. No es cotización, reserva, pedido ni pago registrado.",
+          "memory": [
+            {
+              "partnumber": "QA-TPL-AX23",
+              "quantity": 1
+            },
+            {
+              "partnumber": "QA-LOG-H570E",
+              "quantity": 2
+            },
+            {
+              "partnumber": "QA-EPS-L1250",
+              "quantity": 1
+            },
+            {
+              "partnumber": "QA-SAM-TAB-A9PLUS",
+              "quantity": 1
+            }
+          ],
+          "focus": "QA-SAM-TAB-A9PLUS",
+          "ambiguous": false,
+          "guardReason": "demo_basket_calculated",
+          "total": 2665,
+          "available": true
+        }
+      ],
+      "evidenceRun": "full_run"
+    },
+    {
+      "id": "S14",
+      "label": "Variant ambiguity Lenovo",
+      "completed": true,
+      "trace": [
+        {
+          "turn": 1,
+          "customer": "quiero 2 laptops lenovo t14",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nPara 2 ThinkPad T14, la opción que aparece en ficha es la de 16 GB RAM y 512 GB SSD; esa es la más equilibrada para oficina, multitarea y trabajo diario. La de 32 GB / 1 TB también sale en el sistema, pero figura no disponible; por ahora falta validar precio, stock y entrega antes de cerrar nada.",
+          "memory": [],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": null,
+          "total": null,
+          "available": null
+        },
+        {
+          "turn": 2,
+          "customer": "pero espera, hay versiones 16 y 32 gb?",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nLa disponibilidad de ese modelo está por confirmar. Por ahora no puedo asegurarte stock para entrega.",
+          "memory": [],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": "unverified_availability",
+          "total": null,
+          "available": null
+        },
+        {
+          "turn": 3,
+          "customer": "hasta que te diga cual, no agregues ninguna",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nEntendido, me quedo con la T14 hasta que me indiques la versión exacta. No agrego ninguna otra opción por ahora.",
+          "memory": [],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": null,
+          "total": null,
+          "available": null
+        },
+        {
+          "turn": 4,
+          "customer": "mejor solo consulto",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nPerfecto, lo dejamos hasta aquí. Si luego retomas, seguimos con la Lenovo T14 que estabas viendo.",
+          "memory": [],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": null,
+          "total": null,
+          "available": null
+        }
+      ],
+      "evidenceRun": "full_run"
+    },
+    {
+      "id": "S15",
+      "label": "Returns and human escalation",
+      "completed": true,
+      "trace": [
+        {
+          "turn": 1,
+          "customer": "oye mi monitor samsung se malogro",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nTu consulta requiere revisión humana. Desde este chat todavía no se ha confirmado una derivación ni un asesor asignado.",
+          "memory": [],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": "human_requested",
+          "total": null,
+          "available": null
+        },
+        {
+          "turn": 2,
+          "customer": "se pone negro y sale un codigo raro, quiero devolucion",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nTu consulta requiere revisión humana. Desde este chat todavía no se ha confirmado una derivación ni un asesor asignado.",
+          "memory": [],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": "human_requested",
+          "total": null,
+          "available": null
+        },
+        {
+          "turn": 3,
+          "customer": "pasame con un asesor humano ya",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nEntiendo que prefieres hablar con una persona. Desde este chat aún no hay una derivación o un asesor asignado que pueda confirmar.",
+          "memory": [],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": "human_requested",
+          "total": null,
+          "available": null
+        },
+        {
+          "turn": 4,
+          "customer": "en serio ya hay un asesor atendiendo mi caso?",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nEntiendo que prefieres hablar con una persona. Desde este chat aún no hay una derivación o un asesor asignado que pueda confirmar.",
+          "memory": [],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": "human_requested",
+          "total": null,
+          "available": null
+        }
+      ],
+      "evidenceRun": "full_run"
+    },
+    {
+      "id": "S16",
+      "label": "Cancel prior prospect",
+      "completed": true,
+      "trace": [
+        {
+          "turn": 1,
+          "customer": "quiero 2 cargadores 65w y un router ax23",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nPerfecto, entonces serían 2 cargadores USB-C PD 65 W y 1 router AX23. Del cargador sí te puedo decir que el de 65 W es una opción adecuada para equipos que cargan por USB-C con ese rango; del AX23, para asegurar compatibilidad necesito que me confirmes si es el modelo exacto del router o solo la referencia comercial, porque con esa sigla puede variar bastante.",
+          "memory": [
+            {
+              "partnumber": "QA-PD-65W",
+              "quantity": 2
+            },
+            {
+              "partnumber": "QA-TPL-AX23",
+              "quantity": 1
+            }
+          ],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": null,
+          "total": 447,
+          "available": true
+        },
+        {
+          "turn": 2,
+          "customer": "mejor cancelalo todo, ya no compro",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nEntendido, lo dejamos hasta aquí. Si más adelante retomas la compra, revisamos de nuevo los modelos y cantidades sin problema.",
+          "memory": [],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": null,
+          "total": null,
+          "available": null
+        },
+        {
+          "turn": 3,
+          "customer": "no me reserves nada",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nTranquilo, no se ha reservado nada. Queda solo como conversación de consulta y se cierra ahí.",
+          "memory": [],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": null,
+          "total": null,
+          "available": null
+        },
+        {
+          "turn": 4,
+          "customer": "no me escribas por seguimiento",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nEntendido, no habrá seguimiento ni mensajes posteriores. Queda cerrado por aquí.",
+          "memory": [],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": null,
+          "total": null,
+          "available": null
+        }
+      ],
+      "evidenceRun": "full_run"
+    },
+    {
+      "id": "S17",
+      "label": "No upsell without permission",
+      "completed": true,
+      "trace": [
+        {
+          "turn": 1,
+          "customer": "busco la epson l1250, quiero 1",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nSí ubico la Epson L1250 en tu interés, pero en esta prueba la ficha del modelo no está validada y no puedo confirmarte precio ni disponibilidad real. Si te sirve, la puedo tomar como referencia para validación interna y luego te indico el siguiente paso permitido.",
+          "memory": [
+            {
+              "partnumber": "QA-EPS-L1250",
+              "quantity": 1
+            }
+          ],
+          "focus": "QA-EPS-L1250",
+          "ambiguous": false,
+          "guardReason": null,
+          "total": 799,
+          "available": true
+        },
+        {
+          "turn": 2,
+          "customer": "tambien venden audifonos logitech? solo preguntaba",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nSí, también manejamos audífonos Logitech. Por ejemplo, tengo el H390 USB y el H570e Stereo USB; el H390 va bien para uso básico y videollamadas, mientras que el H570e está más orientado a llamadas de trabajo y Teams. Si era solo consulta, ahí te dejo la referencia.",
+          "memory": [
+            {
+              "partnumber": "QA-EPS-L1250",
+              "quantity": 1
+            }
+          ],
+          "focus": "QA-EPS-L1250",
+          "ambiguous": false,
+          "guardReason": null,
+          "total": 799,
+          "available": true
+        },
+        {
+          "turn": 3,
+          "customer": "no agregues audifonos a mi lista",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nEntendido, no los agrego. Queda solo tu interés por la Epson L1250, sin audífonos.",
+          "memory": [
+            {
+              "partnumber": "QA-EPS-L1250",
+              "quantity": 1
+            }
+          ],
+          "focus": "QA-EPS-L1250",
+          "ambiguous": false,
+          "guardReason": null,
+          "total": 799,
+          "available": true
+        },
+        {
+          "turn": 4,
+          "customer": "cuanto sale esa epson de prueba?",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nSimulación: 1 × Epson EcoTank L1250 impresora tanque de tinta (prueba): S/ 799.00 (disponible solo en prueba). Es un cálculo de laboratorio, no una cotización, pedido ni pago.",
+          "memory": [
+            {
+              "partnumber": "QA-EPS-L1250",
+              "quantity": 1
+            }
+          ],
+          "focus": "QA-EPS-L1250",
+          "ambiguous": false,
+          "guardReason": "demo_single_line_price",
+          "total": 799,
+          "available": true
+        }
+      ],
+      "evidenceRun": "full_run"
+    },
+    {
+      "id": "S18",
+      "label": "Two routers compare and remove",
+      "completed": true,
+      "trace": [
+        {
+          "turn": 1,
+          "customer": "quisiera 1 archer ax55 y 2 ax23",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nPerfecto, te entiendo: 1 Archer AX55 y 2 Archer AX23. Solo me falta validar internamente precio, stock y condiciones antes de confirmarte cualquier cierre; por ahora no queda pedido ni cobro hecho.",
+          "memory": [],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": null,
+          "total": null,
+          "available": null
+        },
+        {
+          "turn": 2,
+          "customer": "elimina el ax55, mejor solo 2 ax23",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nListo, quedamos solo con 2 Archer AX23. Falta validar precio, stock y condiciones antes de cualquier cierre; por ahora no hay pedido ni cobro hecho.",
+          "memory": [
+            {
+              "partnumber": "QA-TPL-AX23",
+              "quantity": 2
+            }
+          ],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": null,
+          "total": 458,
+          "available": true
+        },
+        {
+          "turn": 3,
+          "customer": "a ver mi lista ahora",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nTe queda solo: 2 Archer AX23. Aún falta validar precio, stock y condiciones antes de cualquier cierre; por ahora no hay pedido ni cobro hecho.",
+          "memory": [
+            {
+              "partnumber": "QA-TPL-AX23",
+              "quantity": 2
+            }
+          ],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": null,
+          "total": 458,
+          "available": true
+        },
+        {
+          "turn": 4,
+          "customer": "cuanto saldria todo?",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nSimulación: 2 × TP-Link Archer AX23 router Wi-Fi 6 (prueba): S/ 458.00 (disponible solo en prueba). Es un cálculo de laboratorio, no una cotización, pedido ni pago.",
+          "memory": [
+            {
+              "partnumber": "QA-TPL-AX23",
+              "quantity": 2
+            }
+          ],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": "demo_single_line_price",
+          "total": 458,
+          "available": true
+        }
+      ],
+      "evidenceRun": "post_format_fix_retest"
+    },
+    {
+      "id": "S19",
+      "label": "Mixed smartphones and tablets not equivalent",
+      "completed": true,
+      "trace": [
+        {
+          "turn": 1,
+          "customer": "quiero comparar Armor X13 con Samsung Tab A9 Plus",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nSon productos para usos distintos: el Armor X13 apunta a alguien que necesita un celular resistente y práctico en campo, con IP68/IP69K y batería de 6320 mAh; la Tab A9 Plus es una tablet para pantalla más grande, ideal para lectura, clases, videos y multitarea ligera. Si buscas comunicación y resistencia, va mejor el Ulefone; si priorizas tamaño de pantalla y consumo de contenido, la Samsung conviene más.",
+          "memory": [],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": null,
+          "total": null,
+          "available": null
+        },
+        {
+          "turn": 2,
+          "customer": "el segundo se puede usar para llamar con SIM?",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nLa Galaxy Tab A9 Plus de esa referencia es una tablet Android; para llamadas por chip solo serviría si la versión trae conectividad celular/SIM, y eso aquí no está confirmado. Si lo que necesitas es llamar con SIM sí o sí, mejor validar esa versión antes de decidir.",
+          "memory": [],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": null,
+          "total": null,
+          "available": null
+        },
+        {
+          "turn": 3,
+          "customer": "no me digas que si sin especificaciones exactas",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nTienes razón; no puedo afirmarlo sin la variante exacta. Con la referencia que tengo aquí solo aparece como tablet Galaxy Tab A9 Plus, sin ficha verificada de conectividad celular, así que por ahora queda *por confirmar* si admite SIM para llamadas.",
+          "memory": [],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": null,
+          "total": null,
+          "available": null
+        },
+        {
+          "turn": 4,
+          "customer": "por ahora solo comparo, nada de compra",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nPerfecto, nos quedamos solo en comparación. Entre esas dos, el Armor X13 está orientado a uso rudo y batería grande, mientras la Tab A9 Plus es más cómoda para pantalla, lectura y contenido; la diferencia clave es que uno prioriza resistencia y el otro experiencia de pantalla.",
+          "memory": [],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": null,
+          "total": null,
+          "available": null
+        }
+      ],
+      "evidenceRun": "full_run"
+    },
+    {
+      "id": "S20",
+      "label": "High-value request with no approved checkout",
+      "completed": true,
+      "trace": [
+        {
+          "turn": 1,
+          "customer": "tengo un presupuesto, necesito 2 t14 de 32gb y 1 epson l15150",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nEntendido: serían 2 Lenovo ThinkPad T14 de 32 GB y 1 Epson L15150. Ojo que la L15150 figura como no disponible en la referencia que tengo, así que ese equipo queda por validar antes de cerrar; los T14 de 32 GB también están pendientes de confirmar precio vigente y entrega.",
+          "memory": [
+            {
+              "partnumber": "QA-LEN-T14-32",
+              "quantity": 2
+            },
+            {
+              "partnumber": "QA-EPS-L15150",
+              "quantity": 1
+            }
+          ],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": null,
+          "total": 12097,
+          "available": false
+        },
+        {
+          "turn": 2,
+          "customer": "la epson no tienen? cuanto saldria igual la suma?",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nNo dispongo de un precio vigente verificado para ese modelo. Prefiero no darte una cifra que pueda ser incorrecta.",
+          "memory": [
+            {
+              "partnumber": "QA-LEN-T14-32",
+              "quantity": 2
+            },
+            {
+              "partnumber": "QA-EPS-L15150",
+              "quantity": 1
+            }
+          ],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": "unverified_price",
+          "total": 12097,
+          "available": false
+        },
+        {
+          "turn": 3,
+          "customer": "para comprar necesito factura, yape y entrega hoy",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nYa tengo el modelo que indicaste. No necesitas repetirlo. Aún no dispongo de una ficha o precio vigente verificado de esa referencia.",
+          "memory": [
+            {
+              "partnumber": "QA-LEN-T14-32",
+              "quantity": 2
+            },
+            {
+              "partnumber": "QA-EPS-L15150",
+              "quantity": 1
+            }
+          ],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": "redundant_model_question",
+          "total": 12097,
+          "available": false
+        },
+        {
+          "turn": 4,
+          "customer": "no hagas nada aun, solo dame el paso siguiente sin prometer pago",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nEntendido. El siguiente paso es validar internamente precio, stock y condiciones de entrega para esos 3 equipos; con eso recién se confirma si procede factura, Yape y entrega hoy. Por ahora no hay pedido ni cobro.",
+          "memory": [
+            {
+              "partnumber": "QA-LEN-T14-32",
+              "quantity": 2
+            },
+            {
+              "partnumber": "QA-EPS-L15150",
+              "quantity": 1
+            }
+          ],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": null,
+          "total": 12097,
+          "available": false
+        }
+      ],
+      "evidenceRun": "full_run"
+    }
+  ]
+}

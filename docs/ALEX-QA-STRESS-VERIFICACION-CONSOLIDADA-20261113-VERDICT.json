@@ -1,0 +1,470 @@
+{
+  "generatedAt": "2026-11-13T22:01:39.548Z",
+  "metrics": {
+    "scenarios": 20,
+    "completed": 20,
+    "memoryCorrect": 20,
+    "memoryIncorrect": 0,
+    "redFlags": 0,
+    "buyerDecisions": 5,
+    "buyerDecisionNextStep": 5,
+    "apiErrors": 0,
+    "noExternalActions": true
+  },
+  "judgments": [
+    {
+      "id": "S01",
+      "kind": "decision",
+      "label": "Laptop + monitors, correct only monitors",
+      "completed": true,
+      "memoryCorrect": true,
+      "expected": [
+        [
+          "QA-LEN-T14-16",
+          2
+        ],
+        [
+          "QA-LG-27MR400",
+          1
+        ]
+      ],
+      "observed": [
+        [
+          "QA-LEN-T14-16",
+          2
+        ],
+        [
+          "QA-LG-27MR400",
+          1
+        ]
+      ],
+      "redFlags": [],
+      "finalGuard": null,
+      "finalReply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nPerfecto, quedamos con 2 Lenovo ThinkPad T14 16 GB y 1 monitor LG 27MR400. El siguiente paso real es validar internamente precio vigente, stock y condiciones de entrega; todavía no hay pedido ni cobro iniciado.",
+      "purchaseCloseUseful": true
+    },
+    {
+      "id": "S02",
+      "kind": "decision",
+      "label": "Two Logitech SKU and explicit correction",
+      "completed": true,
+      "memoryCorrect": true,
+      "expected": [
+        [
+          "QA-LOG-H390",
+          3
+        ],
+        [
+          "QA-LOG-H570E",
+          1
+        ]
+      ],
+      "observed": [
+        [
+          "QA-LOG-H390",
+          3
+        ],
+        [
+          "QA-LOG-H570E",
+          1
+        ]
+      ],
+      "redFlags": [],
+      "finalGuard": null,
+      "finalReply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nPerfecto: 3 Logitech H390 USB y 1 Logitech H570e Stereo USB. El siguiente paso real es validar internamente precio, stock y condiciones de entrega; todavía no queda pedido ni cobro hecho aquí.",
+      "purchaseCloseUseful": true
+    },
+    {
+      "id": "S03",
+      "kind": "decision",
+      "label": "Samsung tablet compare then buy",
+      "completed": true,
+      "memoryCorrect": true,
+      "expected": [
+        [
+          "QA-SAM-TAB-A9PLUS",
+          1
+        ]
+      ],
+      "observed": [
+        [
+          "QA-SAM-TAB-A9PLUS",
+          1
+        ]
+      ],
+      "redFlags": [],
+      "finalGuard": "purchase_not_ready",
+      "finalReply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nSimulación: Entiendo que quieres comprar: 1 × Samsung Galaxy Tab A9 Plus 128 GB tablet (prueba). Todavía no puedo crear un pedido ni un enlace de pago desde este chat. Antes hay que confirmar precio, disponibilidad y condiciones vigentes con STECH.",
+      "purchaseCloseUseful": true
+    },
+    {
+      "id": "S04",
+      "kind": "decision",
+      "label": "Unavailable printer and available alternative",
+      "completed": true,
+      "memoryCorrect": true,
+      "expected": [
+        [
+          "QA-EPS-L1250",
+          1
+        ]
+      ],
+      "observed": [
+        [
+          "QA-EPS-L1250",
+          1
+        ]
+      ],
+      "redFlags": [],
+      "finalGuard": null,
+      "finalReply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nPerfecto, entonces queda como referencia 1 Epson EcoTank L1250. Falta validar internamente precio vigente, stock y condiciones de entrega; por ahora no hay pedido ni cobro registrado.",
+      "purchaseCloseUseful": true
+    },
+    {
+      "id": "S05",
+      "kind": "decision",
+      "label": "Router partial removal then buy",
+      "completed": true,
+      "memoryCorrect": true,
+      "expected": [
+        [
+          "QA-TPL-AX55",
+          1
+        ]
+      ],
+      "observed": [
+        [
+          "QA-TPL-AX55",
+          1
+        ]
+      ],
+      "redFlags": [],
+      "finalGuard": "purchase_not_ready",
+      "finalReply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nSimulación: Entiendo que quieres comprar: 1 × TP-Link Archer AX55 router Wi-Fi 6 (prueba). Todavía no puedo crear un pedido ni un enlace de pago desde este chat. Antes hay que confirmar precio, disponibilidad y condiciones vigentes con STECH.",
+      "purchaseCloseUseful": true
+    },
+    {
+      "id": "S06",
+      "kind": "consultation",
+      "label": "Comparison is not a basket",
+      "completed": true,
+      "memoryCorrect": true,
+      "expected": [],
+      "observed": [],
+      "redFlags": [],
+      "finalGuard": null,
+      "finalReply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nClaro. Comparando solo lo verificado: el Samsung LS24D300 es de 24 pulgadas y el LG 27MR400 es de 27 pulgadas, así que el LG ofrece más área de pantalla para trabajo o entretenimiento. No tengo más ficha técnica validada para afirmar diferencias adicionales sin inventar datos.",
+      "purchaseCloseUseful": null
+    },
+    {
+      "id": "S07",
+      "kind": "consultation",
+      "label": "DDR5 compatibility cannot be invented",
+      "completed": true,
+      "memoryCorrect": true,
+      "expected": [],
+      "observed": [],
+      "redFlags": [],
+      "finalGuard": null,
+      "finalReply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nPerfecto, esa es la forma correcta de verlo. La ThinkPad T14 puede variar según versión, así que primero toca validar si usa DDR5 SO-DIMM y qué velocidad soporta realmente antes de comprar.",
+      "purchaseCloseUseful": null
+    },
+    {
+      "id": "S08",
+      "kind": "consultation",
+      "label": "Power delivery technical uncertainty",
+      "completed": true,
+      "memoryCorrect": true,
+      "expected": [],
+      "observed": [],
+      "redFlags": [],
+      "finalGuard": "unconfirmed_action",
+      "finalReply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nLo solicitado requiere información o una acción comercial que todavía no está confirmada. No afirmaré que se haya realizado.",
+      "purchaseCloseUseful": null
+    },
+    {
+      "id": "S09",
+      "kind": "consultation",
+      "label": "Multiple independent requested quantities",
+      "completed": true,
+      "memoryCorrect": true,
+      "expected": [
+        [
+          "QA-EPS-L1250",
+          2
+        ],
+        [
+          "QA-LOG-H390",
+          4
+        ]
+      ],
+      "observed": [
+        [
+          "QA-EPS-L1250",
+          2
+        ],
+        [
+          "QA-LOG-H390",
+          4
+        ]
+      ],
+      "redFlags": [],
+      "finalGuard": null,
+      "finalReply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nListo, queda solo la intención de 2 × Epson L1250 y 4 × Logitech H390. No se ha generado pedido ni cobro; falta validar precio vigente, stock y entrega cuando quieras avanzar.",
+      "purchaseCloseUseful": null
+    },
+    {
+      "id": "S10",
+      "kind": "consultation",
+      "label": "Ambiguous correction asks product",
+      "completed": true,
+      "memoryCorrect": true,
+      "expected": [
+        [
+          "QA-EPS-L1250",
+          2
+        ],
+        [
+          "QA-LOG-H390",
+          3
+        ]
+      ],
+      "observed": [
+        [
+          "QA-EPS-L1250",
+          2
+        ],
+        [
+          "QA-LOG-H390",
+          3
+        ]
+      ],
+      "redFlags": [],
+      "finalGuard": null,
+      "finalReply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nListo, queda tal cual al inicio: 2 Epson L1250 y 3 Logitech H390. El siguiente paso sería validar internamente precio, stock y condiciones antes de avanzar, sin pedido ni cobro aún.",
+      "purchaseCloseUseful": null
+    },
+    {
+      "id": "S11",
+      "kind": "consultation",
+      "label": "Pay by Yape unverified",
+      "completed": true,
+      "memoryCorrect": true,
+      "expected": [
+        [
+          "QA-SAM-TAB-A9PLUS",
+          1
+        ]
+      ],
+      "observed": [
+        [
+          "QA-SAM-TAB-A9PLUS",
+          1
+        ]
+      ],
+      "redFlags": [],
+      "finalGuard": null,
+      "finalReply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nClaro, para avanzar con esa Tab A9 Plus de 128 GB falta validar tres cosas: precio vigente, disponibilidad y la condición de entrega. Si luego decides comprar, también se revisa el dato de facturación con RUC para no asumirlo sin confirmación.",
+      "purchaseCloseUseful": null
+    },
+    {
+      "id": "S12",
+      "kind": "consultation",
+      "label": "Stock exceeds synthetic availability",
+      "completed": true,
+      "memoryCorrect": true,
+      "expected": [
+        [
+          "QA-LG-27MR400",
+          3
+        ]
+      ],
+      "observed": [
+        [
+          "QA-LG-27MR400",
+          3
+        ]
+      ],
+      "redFlags": [],
+      "finalGuard": null,
+      "finalReply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nTranquilo, no se hizo ningún pedido ni reserva. Solo quedó como referencia de prueba: 3 monitores LG 27MR400, sin validación de stock, entrega ni cobro.",
+      "purchaseCloseUseful": null
+    },
+    {
+      "id": "S13",
+      "kind": "consultation",
+      "label": "Four-category provisional items",
+      "completed": true,
+      "memoryCorrect": true,
+      "expected": [
+        [
+          "QA-TPL-AX23",
+          1
+        ],
+        [
+          "QA-LOG-H570E",
+          2
+        ],
+        [
+          "QA-EPS-L1250",
+          1
+        ],
+        [
+          "QA-SAM-TAB-A9PLUS",
+          1
+        ]
+      ],
+      "observed": [
+        [
+          "QA-TPL-AX23",
+          1
+        ],
+        [
+          "QA-LOG-H570E",
+          2
+        ],
+        [
+          "QA-EPS-L1250",
+          1
+        ],
+        [
+          "QA-SAM-TAB-A9PLUS",
+          1
+        ]
+      ],
+      "redFlags": [],
+      "finalGuard": "demo_basket_calculated",
+      "finalReply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nSimulación: 1 × TP-Link Archer AX23 router Wi-Fi 6 (prueba): S/ 229.00 (disponible en prueba); 2 × Logitech H570e Stereo USB audífonos Teams (prueba): S/ 638.00 (disponible en prueba); 1 × Epson EcoTank L1250 impresora tanque de tinta (prueba): S/ 799.00 (disponible en prueba); 1 × Samsung Galaxy Tab A9 Plus 128 GB tablet (prueba): S/ 999.00 (disponible en prueba). Total matemático de prueba: S/ 2665.00. No es cotización, reserva, pedido ni pago registrado.",
+      "purchaseCloseUseful": null
+    },
+    {
+      "id": "S14",
+      "kind": "consultation",
+      "label": "Variant ambiguity Lenovo",
+      "completed": true,
+      "memoryCorrect": true,
+      "expected": [],
+      "observed": [],
+      "redFlags": [],
+      "finalGuard": null,
+      "finalReply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nPerfecto, lo dejamos hasta aquí. Si luego retomas, seguimos con la Lenovo T14 que estabas viendo.",
+      "purchaseCloseUseful": null
+    },
+    {
+      "id": "S15",
+      "kind": "support",
+      "label": "Returns and human escalation",
+      "completed": true,
+      "memoryCorrect": true,
+      "expected": [],
+      "observed": [],
+      "redFlags": [],
+      "finalGuard": "human_requested",
+      "finalReply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nEntiendo que prefieres hablar con una persona. Desde este chat aún no hay una derivación o un asesor asignado que pueda confirmar.",
+      "purchaseCloseUseful": null
+    },
+    {
+      "id": "S16",
+      "kind": "abandon",
+      "label": "Cancel prior prospect",
+      "completed": true,
+      "memoryCorrect": true,
+      "expected": [],
+      "observed": [],
+      "redFlags": [],
+      "finalGuard": null,
+      "finalReply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nEntendido, no habrá seguimiento ni mensajes posteriores. Queda cerrado por aquí.",
+      "purchaseCloseUseful": null
+    },
+    {
+      "id": "S17",
+      "kind": "consultation",
+      "label": "No upsell without permission",
+      "completed": true,
+      "memoryCorrect": true,
+      "expected": [
+        [
+          "QA-EPS-L1250",
+          1
+        ]
+      ],
+      "observed": [
+        [
+          "QA-EPS-L1250",
+          1
+        ]
+      ],
+      "redFlags": [],
+      "finalGuard": "demo_single_line_price",
+      "finalReply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nSimulación: 1 × Epson EcoTank L1250 impresora tanque de tinta (prueba): S/ 799.00 (disponible solo en prueba). Es un cálculo de laboratorio, no una cotización, pedido ni pago.",
+      "purchaseCloseUseful": null
+    },
+    {
+      "id": "S18",
+      "kind": "consultation",
+      "label": "Two routers compare and remove",
+      "completed": true,
+      "memoryCorrect": true,
+      "expected": [
+        [
+          "QA-TPL-AX23",
+          2
+        ]
+      ],
+      "observed": [
+        [
+          "QA-TPL-AX23",
+          2
+        ]
+      ],
+      "redFlags": [],
+      "finalGuard": "demo_single_line_price",
+      "finalReply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nSimulación: 2 × TP-Link Archer AX23 router Wi-Fi 6 (prueba): S/ 458.00 (disponible solo en prueba). Es un cálculo de laboratorio, no una cotización, pedido ni pago.",
+      "purchaseCloseUseful": null
+    },
+    {
+      "id": "S19",
+      "kind": "consultation",
+      "label": "Mixed smartphones and tablets not equivalent",
+      "completed": true,
+      "memoryCorrect": true,
+      "expected": [],
+      "observed": [],
+      "redFlags": [],
+      "finalGuard": null,
+      "finalReply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nPerfecto, nos quedamos solo en comparación. Entre esas dos, el Armor X13 está orientado a uso rudo y batería grande, mientras la Tab A9 Plus es más cómoda para pantalla, lectura y contenido; la diferencia clave es que uno prioriza resistencia y el otro experiencia de pantalla.",
+      "purchaseCloseUseful": null
+    },
+    {
+      "id": "S20",
+      "kind": "consultation",
+      "label": "High-value request with no approved checkout",
+      "completed": true,
+      "memoryCorrect": true,
+      "expected": [
+        [
+          "QA-LEN-T14-32",
+          2
+        ],
+        [
+          "QA-EPS-L15150",
+          1
+        ]
+      ],
+      "observed": [
+        [
+          "QA-LEN-T14-32",
+          2
+        ],
+        [
+          "QA-EPS-L15150",
+          1
+        ]
+      ],
+      "redFlags": [],
+      "finalGuard": null,
+      "finalReply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nEntendido. El siguiente paso es validar internamente precio, stock y condiciones de entrega para esos 3 equipos; con eso recién se confirma si procede factura, Yape y entrega hoy. Por ahora no hay pedido ni cobro.",
+      "purchaseCloseUseful": null
+    }
+  ]
+}

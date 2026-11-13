@@ -1,0 +1,89 @@
+import {describe,it,expect} from "vitest";
+import {enrichCatalog} from "./product-knowledge.mjs";
+import {normalizedPhone,consentInLastMessage,validateBookingProposal} from "./followup-automation.mjs";
+const catalog=[{partnumber:"ARMOR-22-256G",title:"Armor 22",brand:"ULEFONE",verified_at:null,price_pen:null,stock_erp:null,attributes:{}}];
+describe("ventas y escenarios aislados",()=>{
+ it("no expone ofertas falsas en modo real",()=>{
+  const v=enrichCatalog(catalog,false)[0];expect(v.precio_soles).toBe(null);expect(v.disponibilidad).toBe("por confirmar");
+  expect(v.especificaciones_fabricante.certifications).toContain("IP68");
+ });
+ it("oferta simulada solo activada explícitamente en pruebas",()=>{
+  const v=enrichCatalog(catalog,true,[{partnumber:"ARMOR-22-256G",price_pen:999,stock_status:"disponible",stock_units_demo:8,is_test_data:true}])[0];expect(v.precio_soles).toBe(999);expect(v.disponibilidad).toBe("disponible");expect(v.oferta_simulada).toBe(true);
+ });
+ it("demo stock is quantity-aware without exposing units in the model catalog",()=>{
+  const offers=[{partnumber:"ARMOR-22-256G",price_pen:999,stock_status:"disponible",
+    stock_units_demo:8,is_test_data:true}];
+  const enough=enrichCatalog(catalog,true,offers,{requestedQuantity:8})[0];
+  const insufficient=enrichCatalog(catalog,true,offers,{requestedQuantity:9})[0];
+  expect(enough).toMatchObject({precio_soles:999,disponibilidad:"disponible",oferta_simulada:true});
+  expect(insufficient).toMatchObject({precio_soles:999,disponibilidad:"no disponible",oferta_simulada:true});
+  expect(JSON.stringify(enough)).not.toContain("stock_units_demo");
+  expect(JSON.stringify(enough)).not.toContain("8 unidades");
+ });
+ it("demo out of stock is not offered even if the price exists",()=>{
+  const offer=[{partnumber:"ARMOR-22-256G",price_pen:999,stock_status:"no disponible",
+    stock_units_demo:0,is_test_data:true}];
+  expect(enrichCatalog(catalog,true,offer)[0].disponibilidad).toBe("no disponible");
+ });
+ it("demo never invents stock if quantitative test inventory is missing",()=>{
+  const record={partnumber:"ARMOR-22-256G",price_pen:999,stock_status:"disponible",is_test_data:true};
+  expect(enrichCatalog(catalog,true,[record])[0].disponibilidad).toBe("por confirmar");
+ });
+ it("real mode ignores assumed prices and stock even when demo row is populated",()=>{
+  const record={partnumber:"ARMOR-22-256G",price_pen:999,stock_status:"disponible",
+    stock_units_demo:100,is_test_data:true};
+  const item=enrichCatalog(catalog,false,[record])[0];
+  expect(item).toMatchObject({precio_soles:null,disponibilidad:"por confirmar",oferta_simulada:false});
+ });
+ it("simulación sin registro verificado no inventa precios",()=>{
+  const v=enrichCatalog(catalog,true,[])[0];
+  expect(v.precio_soles).toBe(null);
+  expect(v.disponibilidad).toBe("por confirmar");
+ });
+ it("descarta ofertas sin bandera de simulación y mantiene cotización real aislada",()=>{
+  const record={partnumber:"ARMOR-22-256G",price_pen:999,stock_status:"disponible",stock_units_demo:8,is_test_data:false};
+  expect(enrichCatalog(catalog,true,[record])[0].precio_soles).toBe(null);
+  expect(enrichCatalog(catalog,false,[{...record,is_test_data:true}])[0].precio_soles).toBe(null);
+ });
+ it("never promotes physical stock to availability for clients",()=>{
+  const v=enrichCatalog([{...catalog[0],stock_erp:12,price_pen:999,verified_at:"2026-11-05T19:00:00Z"}],false,[],
+    {now:Date.parse("2026-11-05T19:10:00Z")})[0];
+  // A recent arm_products.verified_at no longer approves a customer price.
+  expect(v.precio_soles).toBe(null);
+  expect(v.disponibilidad).toBe("por confirmar");
+ });
+ it("real approved price stays independent of verified quantity",()=>{
+  const real=[{...catalog[0],workspace_id:"ws",stock_erp:12,price_pen:999}];
+  const review={priceVerified:true,pricePen:999,saleableStock:true,availableToPromiseUnits:2};
+  const three=enrichCatalog(real,false,[],{commercialByPn:{"ARMOR-22-256G":review},requestedQuantity:3})[0];
+  expect(three.precio_soles).toBe(999);
+  expect(three.disponibilidad).toBe("por confirmar");
+  expect(three.origen_stock).toBe("stock_no_verificado");
+  const two=enrichCatalog(real,false,[],{commercialByPn:{"ARMOR-22-256G":review},requestedQuantity:2})[0];
+  expect(two.disponibilidad).toBe("disponible");
+  expect(two.origen_stock).toBe("stock_vendible_verificado");
+ });
+ it("treats an old verified price as expired",()=>{
+  const v=enrichCatalog([{...catalog[0],price_pen:999,stock_erp:12,verified_at:"2026-10-15T19:00:00Z"}],false,[],
+    {now:Date.parse("2026-11-05T19:10:00Z")})[0];
+  expect(v.precio_soles).toBe(null);
+  expect(v.disponibilidad).toBe("por confirmar");
+  expect(v.origen_datos).toBe("precio_no_verificado");
+ });
+ it("valida teléfono peruano",()=>{expect(normalizedPhone("+51 987654321")).toBe("987654321");expect(normalizedPhone("12345")).toBe(null);});
+ it("no infiere consentimiento desde pedir un horario",()=>{
+  expect(consentInLastMessage("Mejor el viernes a las 4, ya me agendaste?")).toBe(false);
+  expect(consentInLastMessage("Sí, agéndame el viernes a las 4")).toBe(true);
+ });
+ it("agenda solo con nombre completo, celular, fecha y consentimiento explícito",()=>{
+  const p={requested:true,full_name:"Ana Torres",phone:"987654321",date_local:"2026-11-06",time_local:"16:00",explicit_consent:true};
+  const turns=["Soy Ana Torres, mi número es 987654321. Viernes a las 4pm.","Sí, agéndame por favor el viernes a las 4pm"];
+  const action=validateBookingProposal(p,turns,turns.at(-1),new Date("2026-11-02T17:00:00Z"));
+  expect(action?.phone).toBe("987654321");
+  expect(action?.dueAt).toBe("2026-11-06T21:00:00.000Z");
+ });
+ it("rechaza agendar si falta teléfono o consentimiento",()=>{
+  const p={requested:true,full_name:"Ana Torres",phone:null,date_local:"2026-11-06",time_local:"16:00",explicit_consent:true};
+  expect(validateBookingProposal(p,["Soy Ana Torres, viernes 4pm"],"sí agéndame",new Date("2026-11-02T17:00:00Z"))).toBe(null);
+ });
+});

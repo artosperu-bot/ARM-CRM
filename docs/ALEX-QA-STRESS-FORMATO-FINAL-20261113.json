@@ -1,0 +1,185 @@
+{
+  "generatedAt": "2026-11-13T22:00:17.377Z",
+  "metrics": {
+    "cases": 2,
+    "completed": 2,
+    "turns": 8,
+    "modelCalls": 8,
+    "apiErrors": 0,
+    "guardCorrections": 2,
+    "inputTokens": 49106,
+    "outputTokens": 765,
+    "products": 20,
+    "newQaProducts": 16,
+    "categories": 8,
+    "commercialWrites": 0,
+    "whatsappSends": 0,
+    "orderCreated": 0,
+    "paymentRegistered": 0
+  },
+  "categories": [
+    "impresion > impresoras > tanque_de_tinta",
+    "componentes > memoria_ram > ddr5",
+    "electronica > laptops > oficina",
+    "electronica > monitores > oficina",
+    "perifericos > audio > auriculares_usb",
+    "accesorios > cargadores > usb_c_pd",
+    "electronica > tablets > android",
+    "redes > routers > wifi_6"
+  ],
+  "executions": [
+    {
+      "id": "S10",
+      "label": "Ambiguous correction asks product",
+      "completed": true,
+      "trace": [
+        {
+          "turn": 1,
+          "customer": "necesito 2 epson l1250 y 3 logitech h390",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nPerfecto: tomo como referencia 2 Epson EcoTank L1250 y 3 Logitech H390. La L1250 no tiene ficha verificada en esta prueba, así que no te confirmo compatibilidad ni precio final todavía; del H390 sí tengo referencia de audífonos USB para uso de oficina o llamadas. El siguiente paso sería validar internamente precio, stock y condiciones de entrega antes de avanzar.",
+          "memory": [
+            {
+              "partnumber": "QA-EPS-L1250",
+              "quantity": 2
+            },
+            {
+              "partnumber": "QA-LOG-H390",
+              "quantity": 3
+            }
+          ],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": null,
+          "total": 2075,
+          "available": true
+        },
+        {
+          "turn": 2,
+          "customer": "noo mejor 4",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\n¿A cuál producto te refieres: QA-EPS-L1250 o QA-LOG-H390? Mantengo la lista anterior sin cambios hasta que me indiques cuál.",
+          "memory": [
+            {
+              "partnumber": "QA-EPS-L1250",
+              "quantity": 2
+            },
+            {
+              "partnumber": "QA-LOG-H390",
+              "quantity": 3
+            }
+          ],
+          "focus": null,
+          "ambiguous": true,
+          "guardReason": "ambiguous_draft_quantity",
+          "total": 2075,
+          "available": true
+        },
+        {
+          "turn": 3,
+          "customer": "no me cambies nada si no dije cual",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nListo, queda igual que antes: 2 Epson L1250 y 3 Logitech H390. No hago ningún cambio hasta que me indiques exactamente a cuál producto te refieres.",
+          "memory": [
+            {
+              "partnumber": "QA-EPS-L1250",
+              "quantity": 2
+            },
+            {
+              "partnumber": "QA-LOG-H390",
+              "quantity": 3
+            }
+          ],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": null,
+          "total": 2075,
+          "available": true
+        },
+        {
+          "turn": 4,
+          "customer": "al final deja los 2 epson y 3 h390 que dije al inicio",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nListo, queda tal cual al inicio: 2 Epson L1250 y 3 Logitech H390. El siguiente paso sería validar internamente precio, stock y condiciones antes de avanzar, sin pedido ni cobro aún.",
+          "memory": [
+            {
+              "partnumber": "QA-EPS-L1250",
+              "quantity": 2
+            },
+            {
+              "partnumber": "QA-LOG-H390",
+              "quantity": 3
+            }
+          ],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": null,
+          "total": 2075,
+          "available": true
+        }
+      ]
+    },
+    {
+      "id": "S18",
+      "label": "Two routers compare and remove",
+      "completed": true,
+      "trace": [
+        {
+          "turn": 1,
+          "customer": "quisiera 1 archer ax55 y 2 ax23",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nPerfecto, te entiendo: 1 Archer AX55 y 2 Archer AX23. Solo me falta validar internamente precio, stock y condiciones antes de confirmarte cualquier cierre; por ahora no queda pedido ni cobro hecho.",
+          "memory": [],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": null,
+          "total": null,
+          "available": null
+        },
+        {
+          "turn": 2,
+          "customer": "elimina el ax55, mejor solo 2 ax23",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nListo, quedamos solo con 2 Archer AX23. Falta validar precio, stock y condiciones antes de cualquier cierre; por ahora no hay pedido ni cobro hecho.",
+          "memory": [
+            {
+              "partnumber": "QA-TPL-AX23",
+              "quantity": 2
+            }
+          ],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": null,
+          "total": 458,
+          "available": true
+        },
+        {
+          "turn": 3,
+          "customer": "a ver mi lista ahora",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nTe queda solo: 2 Archer AX23. Aún falta validar precio, stock y condiciones antes de cualquier cierre; por ahora no hay pedido ni cobro hecho.",
+          "memory": [
+            {
+              "partnumber": "QA-TPL-AX23",
+              "quantity": 2
+            }
+          ],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": null,
+          "total": 458,
+          "available": true
+        },
+        {
+          "turn": 4,
+          "customer": "cuanto saldria todo?",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nSimulación: 2 × TP-Link Archer AX23 router Wi-Fi 6 (prueba): S/ 458.00 (disponible solo en prueba). Es un cálculo de laboratorio, no una cotización, pedido ni pago.",
+          "memory": [
+            {
+              "partnumber": "QA-TPL-AX23",
+              "quantity": 2
+            }
+          ],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": "demo_single_line_price",
+          "total": 458,
+          "available": true
+        }
+      ]
+    }
+  ]
+}

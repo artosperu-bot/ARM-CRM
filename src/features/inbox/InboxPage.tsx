@@ -1,0 +1,206 @@
+import { useEffect,useMemo,useState,type FormEvent } from "react";
+import { CheckCircle2,Clock3,Inbox,MessageSquare,RefreshCw,Search,Send,ShieldCheck,UserRoundCheck } from "lucide-react";
+import { useInbox,type ThreadStatus,type HumanAction,type ManualReplyAccess } from "./useInbox";
+import {parseAgentPhotoMessage} from "../agent/photoMessage";
+import "./inbox.css";
+
+const channels:Record<string,string>={whatsapp:"WhatsApp",facebook:"Messenger",instagram:"Instagram",web:"Web"};
+const statusLabels:Record<ThreadStatus,string>={pending:"Pendiente",human:"Atención humana",bot:"Agente IA",closed:"Cerrada"};
+const leadNames:Record<string,string>={consulta_general:"Consulta",consulta_producto:"Producto",comparacion:"Comparación",cotizacion:"Cotización",compra:"Compra",objecion:"Objeción",atencion_humana:"Asesor",no_contactar:"No contactar"};
+const priorityNames:Record<string,string>={alta:"Alta",media:"Media",baja:"Baja",sin_contacto:"No contactar"};
+const dates=(date:string)=>new Date(date).toLocaleString("es-PE",{month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"});
+
+export default function InboxPage({workspaceId}:{workspaceId:string}){
+ const inbox=useInbox(workspaceId);
+ const [filter,setFilter]=useState("all");const [leadFilter,setLeadFilter]=useState("all");const [query,setQuery]=useState("");const [busy,setBusy]=useState(false);const [notice,setNotice]=useState("");
+ const [draft,setDraft]=useState("");const [sendAttemptId,setSendAttemptId]=useState<string|null>(null);const [sending,setSending]=useState(false);
+ const [manualAccess,setManualAccess]=useState<ManualReplyAccess|null>(null);
+ const [manualLoading,setManualLoading]=useState(false);
+ const contactsById=useMemo(()=>new Map(inbox.contacts.map(c=>[c.id,c])),[inbox.contacts]);
+ const leadByThread=useMemo(()=>new Map(inbox.insights.map(x=>[x.thread_id,x])),[inbox.insights]);
+ const filtered=useMemo(()=>inbox.threads.filter(t=>{
+   const lead=leadByThread.get(t.id);
+   const text=query.toLocaleLowerCase("es").trim();
+   const matchesText=!text||Boolean(contactsById.get(t.contact_id)?.display_name.toLocaleLowerCase("es").includes(text)
+     ||t.external_sender_id.toLocaleLowerCase("es").includes(text));
+   const matchesLead=leadFilter==="all"||
+     (leadFilter==="alta"&&lead?.priority==="alta")||
+     (leadFilter==="b2b"&&lead?.is_b2b===true)||
+     (leadFilter==="cotizacion"&&["cotizacion","compra"].includes(lead?.intent||""))||
+     (leadFilter==="humano"&&(t.status==="human"||lead?.requires_human===true))||
+     (leadFilter==="sin_contacto"&&(lead?.opt_out===true||t.status==="closed"));
+   return (filter==="all"||t.channel===filter)&&matchesText&&matchesLead;
+ }),[inbox.threads,filter,leadFilter,query,contactsById,leadByThread]);
+ const selected=inbox.threads.find(t=>t.id===inbox.selectedId);
+ const selectedLead=selected?leadByThread.get(selected.id):null;
+ const person=selected?contactsById.get(selected.contact_id):null;
+ const isMine=Boolean(selected?.assigned_to&&selected.assigned_to===inbox.userId);
+ const unassigned=inbox.threads.filter(t=>t.status==="human"&&!t.assigned_to).length;
+ useEffect(()=>{
+  let active=true;
+  setDraft("");setSendAttemptId(null);setManualAccess(null);
+  if(!selected||!isMine||selected.status!=="human"||selected.channel!=="whatsapp")return;
+  setManualLoading(true);
+  const verify=()=>inbox.manualStatus(selected.id)
+   .then(status=>{if(active)setManualAccess(status);})
+   .catch(error=>{if(active)setManualAccess({
+    allowed:false,reason:"service_unavailable",
+    description:error instanceof Error?error.message:"Servicio de WhatsApp no disponible.",
+    windowEndsAt:null
+   });})
+   .finally(()=>{if(active)setManualLoading(false);});
+  void verify();
+  const timer=setInterval(()=>{if(!document.hidden)void verify();},60000);
+  return ()=>{active=false;clearInterval(timer);};
+ },[selected?.id,selected?.status,selected?.assigned_to,isMine]);
+ async function sendReply(event:FormEvent<HTMLFormElement>){
+  event.preventDefault();
+  if(!selected||!isMine||!manualAccess?.allowed||sending||!draft.trim())return;
+  const content=draft.trim();const requestId=sendAttemptId||crypto.randomUUID();
+  setSendAttemptId(requestId);setSending(true);setNotice("");
+  try{
+   const result=await inbox.sendManualMessage(selected.id,content,requestId);
+   if(result.acceptedByMeta){
+    setDraft("");setSendAttemptId(null);setNotice(result.notice);
+    setManualAccess(await inbox.manualStatus(selected.id));
+   }
+  }catch(error){
+   setNotice("No se pudo enviar: "+(error instanceof Error?error.message:"Error desconocido."));
+  }finally{setSending(false);}
+ }
+ const assignmentLabel=(t:typeof selected)=>{
+   if(!t)return "";
+   if(t.status!=="human")return statusLabels[t.status];
+   if(!t.assigned_to)return "En cola · sin asesor";
+   return t.assigned_to===inbox.userId?"Atendida por mí":"Con asesor asignado";
+ };
+ async function runAction(action:HumanAction){
+   if(!selected)return;
+   setBusy(true);setNotice("");
+   try{
+     const result=await inbox.humanAction(selected.id,action);
+     const label:Record<HumanAction,string>={
+       queue:"Conversación en cola para atención humana; nadie asignado todavía.",
+       claim:"Has tomado esta conversación. La asignación quedó registrada.",
+       release:"Conversación liberada y disponible para otro asesor.",
+       close:"Conversación marcada como resuelta en el CRM.",
+       reopen:"Conversación reabierta en cola, sin asesor asignado."
+     };
+     setNotice(result.action===action?label[action]:"Gestión no confirmada.");
+   }catch(error){setNotice("No se pudo gestionar: "+(error instanceof Error?error.message:"Error de acceso."));}
+   finally{setBusy(false);}
+ }
+ return <div className="crm-inbox">
+   <div className="inbox-summary">
+     <div><strong>{inbox.threads.length}</strong><span>Conversaciones recibidas</span></div>
+     <div><strong>{inbox.threads.filter(t=>t.status==="pending").length}</strong><span>Pendientes</span></div>
+     <div><strong>{unassigned}</strong><span>En cola · sin asesor</span></div>
+     <div><strong>{inbox.threads.filter(t=>t.status==="human"&&t.assigned_to).length}</strong><span>Con asesor asignado</span></div>
+     <button className="secondary-button" onClick={()=>void inbox.refresh()} disabled={inbox.loading}><RefreshCw size={16}/> Actualizar</button>
+   </div>
+   {inbox.error&&<div role="alert" className="auth-error">{inbox.error}</div>}
+   {notice&&<div role="status" className="notice">{notice}</div>}
+   <div className="inbox-workspace">
+     <section className="inbox-conversations">
+       <div className="inbox-list-title"><div><h2>Bandeja de entrada</h2><p>Mensajes reales de los canales autorizados</p></div><Inbox size={19}/></div>
+       <label className="inbox-search"><Search size={16}/><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Buscar contacto o ID" aria-label="Buscar conversaciones"/></label>
+       <div className="inbox-filter-tabs">
+         {["all","whatsapp","instagram","facebook"].map(c=><button key={c} className={filter===c?"selected":""} onClick={()=>setFilter(c)}>{c==="all"?"Todos":channels[c]}</button>)}
+       </div>
+       <div className="inbox-lead-filter" aria-label="Filtros de prioridad comercial">
+         {[
+           ["all","Todas"],["alta","Alta prioridad"],["b2b","Empresas / 2+"],
+           ["cotizacion","Cotización / compra"],["humano","Asesor"],["sin_contacto","No contactar"]
+         ].map(([key,name])=><button key={key} className={leadFilter===key?"selected":""}
+            onClick={()=>setLeadFilter(key)}>{name}</button>)}
+       </div>
+       <p className="inbox-lead-note">Prioridad orientativa por señales del chat, no probabilidad de compra. Las pruebas nunca generan seguimientos automáticos.</p>
+       {inbox.loading&&<div className="inbox-placeholder">Cargando conversaciones…</div>}
+       {!inbox.loading&&!filtered.length&&<div className="inbox-placeholder"><MessageSquare size={25}/><strong>Sin conversaciones</strong><p>No se han recibido mensajes nuevos por este canal.</p></div>}
+       <div className="inbox-thread-list">{filtered.map(t=><button className={"inbox-thread "+(t.id===inbox.selectedId?"active":"")} key={t.id} onClick={()=>inbox.setSelectedId(t.id)}>
+         <span className="inbox-avatar">{(contactsById.get(t.contact_id)?.display_name||"C").slice(0,1).toUpperCase()}</span>
+         <span className="inbox-thread-meta"><strong>{contactsById.get(t.contact_id)?.display_name||"Contacto"}</strong>
+           <small>{channels[t.channel]} · {assignmentLabel(t)}</small>
+           {leadByThread.has(t.id)&&<small className="inbox-lead-meta">
+             <span className={"inbox-lead-rank "+leadByThread.get(t.id)?.priority}>{priorityNames[leadByThread.get(t.id)?.priority||"baja"]}</span>
+             {leadByThread.get(t.id)?.is_b2b?" · B2B":""} · {leadNames[leadByThread.get(t.id)?.intent||"consulta_general"]}
+             {leadByThread.get(t.id)?.source_mode==="sandbox"?" · PRUEBA":""}
+           </small>}
+         </span><time>{dates(t.last_activity_at)}</time>
+       </button>)}</div>
+     </section>
+     <section className="inbox-chat">
+       {selected?<><header className="inbox-chat-header"><div className="inbox-avatar large">{(person?.display_name||"C")[0].toUpperCase()}</div><div className="inbox-chat-name"><strong>{person?.display_name||"Contacto"}</strong><span>{channels[selected.channel]} · {person?.phone||"Identificador externo registrado"}</span></div><span className="inbox-status">{assignmentLabel(selected)}</span></header>
+         {selectedLead&&<section className="inbox-intelligence" aria-label="Análisis comercial de la conversación">
+           <div className="inbox-intelligence-title"><strong>Lectura comercial sugerida</strong>
+             <span>{priorityNames[selectedLead.priority]} · {leadNames[selectedLead.intent]}
+             {selectedLead.is_b2b?" · Posible B2B":""}</span>
+           </div>
+           <p>{selectedLead.next_action}</p>
+           {selectedLead.quantity_min!==null&&<small>Equipos mencionados: {selectedLead.quantity_min} (sin validar)</small>}
+           {selectedLead.opt_out&&<strong className="inbox-intelligence-stop">No contactar: el cliente solicitó detener comunicaciones.</strong>}
+           {selectedLead.requires_human&&<small>Requiere revisión de un asesor. ALEX no debe responder.</small>}
+           {selectedLead.source_mode==="sandbox"&&<small>PRUEBA: no convertir automáticamente a venta ni programar mensajes.</small>}
+           <small>Seguimientos automáticos bloqueados. Un asesor asignado puede responder manualmente solo a números de WhatsApp autorizados.</small>
+         </section>}
+         <div className="inbox-assignment-info" role="status">
+           {selected.status==="human"&&!selected.assigned_to&&<>En cola para atención humana. Ningún asesor la ha tomado todavía.{selected.human_queued_at&&<> Desde {dates(selected.human_queued_at)}.</>}</>}
+           {selected.status==="human"&&selected.assigned_to&&<>Esta conversación ya tiene responsable.{selected.human_assigned_at&&<> Asignada el {dates(selected.human_assigned_at)}.</>}</>}
+           {selected.status==="pending"&&<>Sin asignación humana. ALEX puede responder únicamente bajo las reglas del piloto.</>}
+           {selected.status==="closed"&&<>Conversación cerrada. No se enviarán nuevas respuestas automáticas mientras permanezca cerrada.</>}
+         </div>
+         <div className="inbox-timeline">
+           {inbox.messageLoading&&<div className="inbox-placeholder">Cargando mensajes…</div>}
+           {!inbox.messageLoading&&!inbox.messages.length&&<div className="inbox-placeholder">Sin mensajes registrados en esta conversación.</div>}
+           {inbox.messages.map(m=>{
+             const media=m.message_type==="image"&&m.direction==="outbound"?
+               parseAgentPhotoMessage(m.content||""):null;
+             return <div key={m.id} className={"inbox-message "+(m.direction==="outbound"?"out":"in")}>
+               <p>{media?.body||m.content||"Adjunto: "+m.message_type}</p>
+               {media?.photoUrl&&<figure className="inbox-product-photo">
+                 <img src={media.photoUrl} loading="lazy" alt={"Imagen del producto enviada: "+media.body}/>
+                 <figcaption>Foto referencial oficial enviada por ALEX</figcaption>
+               </figure>}
+               <small>{m.direction==="inbound"?"Cliente":"STECH"} · {dates(m.created_at)}</small>
+             </div>;
+           })}
+         </div>
+         <div className="inbox-actions">
+           {selected.status==="pending"&&<button className="secondary-button" disabled={busy} onClick={()=>void runAction("queue")}><UserRoundCheck size={16}/> Pasar a cola humana</button>}
+           {selected.status==="human"&&!selected.assigned_to&&<button className="secondary-button" disabled={busy} onClick={()=>void runAction("claim")}><UserRoundCheck size={16}/> Tomar conversación</button>}
+           {selected.status==="human"&&isMine&&<>
+             <button className="secondary-button" disabled={busy} onClick={()=>void runAction("release")}><Clock3 size={16}/> Liberar</button>
+             <button className="secondary-button" disabled={busy} onClick={()=>void runAction("close")}><CheckCircle2 size={16}/> Marcar resuelta</button>
+           </>}
+           {selected.status==="human"&&selected.assigned_to&&!isMine&&<span className="inbox-action-note">Ya la recibió otro asesor. No puedes apropiarte de esta conversación.</span>}
+           {selected.status==="closed"&&<button className="secondary-button" disabled={busy} onClick={()=>void runAction("reopen")}><Clock3 size={16}/> Reabrir (administrador)</button>}
+         </div>
+         {selected.channel==="whatsapp"&&selected.status==="human"&&isMine?
+          <form className="inbox-composer" onSubmit={e=>void sendReply(e)}>
+           <label htmlFor="inbox-human-message">Tu respuesta como asesor</label>
+           <textarea id="inbox-human-message" rows={3} maxLength={800} value={draft}
+            onChange={e=>{setDraft(e.target.value);setSendAttemptId(null);}}
+            disabled={!manualAccess?.allowed||sending||manualLoading}
+            placeholder={manualAccess?.allowed?"Escribe tu mensaje de WhatsApp…":"Verificando autorización para responder…"}
+            aria-describedby="inbox-reply-status"/>
+           <div className="inbox-composer-footer">
+            <span id="inbox-reply-status" role="status">
+             {manualLoading?"Verificando canal y ventana de WhatsApp…":
+               manualAccess?.allowed?"Número de prueba autorizado · "+
+                (manualAccess.windowEndsAt?"Ventana hasta "+new Date(manualAccess.windowEndsAt).toLocaleString("es-PE",{hour:"2-digit",minute:"2-digit",day:"2-digit",month:"short"}):"24 horas vigentes"):
+                manualAccess?.description||"El envío manual está pendiente de autorización."}
+            </span>
+            <button type="submit" className="inbox-send-button" disabled={!manualAccess?.allowed||sending||!draft.trim()}>
+             <Send size={15}/>{sending?"Enviando…":"Enviar por WhatsApp"}
+            </button>
+           </div>
+           {manualAccess?.allowed&&<small className="inbox-composer-hint">Se enviará al número de prueba seleccionado. Meta acepta el envío antes de confirmar la entrega.</small>}
+          </form>:
+          <div className="inbox-disabled"><ShieldCheck size={16}/> {selected.channel!=="whatsapp"?
+           "Por ahora las respuestas manuales solo están habilitadas para WhatsApp de prueba.":
+           "Toma una conversación de WhatsApp para escribir. ALEX no responderá mientras esté asignada a un asesor."}</div>}
+       </>:<div className="inbox-no-selection"><MessageSquare size={40}/><h2>No hay conversaciones nuevas</h2><p>Cuando se active una integración verificada, los mensajes entrantes aparecerán aquí sin importar historiales antiguos.</p></div>}
+     </section>
+   </div>
+ </div>;
+}
