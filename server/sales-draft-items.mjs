@@ -9,11 +9,11 @@ const words={un:1,una:1,uno:1,dos:2,tres:3,cuatro:4,cinco:5,seis:6,siete:7,ocho:
 const numToken="(?:\\d{1,3}|un|una|uno|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez)";
 const quantityAtEnd=new RegExp("\\b("+numToken+")(?:\\s+(?:unidades?|equipos?|celulares?|telefonos?|laptops?|impresoras?|tablets?|productos?|modelos?|del?|los?|las?|de)){0,4}\\s*$","u");
 const quantityAtStart=new RegExp("^\\s*(?:(?:para|de|los|las|por)\\s+)?("+numToken+")(?:\\s+(?:unidades?|equipos?|celulares?|telefonos?|laptops?|impresoras?|tablets?|productos?|del?|los?|las?|de)){0,4}\\b","u");
-const quantityAfter=new RegExp("^\\s*(?:x\\s*|por\\s+|son\\s+|serian\\s+)("+numToken+")\\b","u");
+const quantityAfter=new RegExp("^\\s*(?:x\\s*|por\\s+|son\\s+|serian\\s+|a\\s+|en\\s+)("+numToken+")\\b","u");
 const parseQty=s=>Object.hasOwn(words,s)?words[s]:/^\d{1,3}$/u.test(s)?Number(s):null;
-const itemPattern=/\b(?:quiero|necesito|dame|agrega(?:me)?|anade(?:me)?|ponme|sumame|sumale|incluye|cotizame|cotiza|llev[oa]|comprar|comprame|pedido de|me llevo|voy a comprar|pido|para llevar)\b/u;
+const itemPattern=/\b(?:quiero|necesito|dame|agrega(?:me)?|anade(?:me)?|ponme|sumame|sumale|incluye|cotizame|cotiza|llev[oa]|comprar|comprame|pedido de|me llevo|me quedo con|voy a comprar|pido|para llevar)\b/u;
 const removePattern=/\b(?:quita(?:me)?|saca(?:me)?|elimina|borra|retira|ya no quiero|sacale)\b/u;
-const correctionPattern=/\b(?:noo?\s+era(?:n)?|mejor|quise decir|me equivoque|ahora son|dejalo en|dejalos en|corrige(?:lo)? a|en vez de|serian)\b/u;
+const correctionPattern=/\b(?:noo?\s+era(?:n)?|mejor|quise decir|me equivoque|ahora son|dejalo en|dejalos en|corrige(?:lo)? a|en vez de|serian|sube|aumenta)\b/u;
 const changePattern=/\b(?:mejor quiero|en vez de|cambia(?:me)?|reemplaza(?:me)?)\b/u;
 const cancelPattern=/\b(?:ya no quiero comprar|no quiero comprar|no comprare|cancela (?:la compra|todo)|olvida (?:la compra|el pedido)|mejor ya no compro|no quiero ninguno)\b/u;
 const allowedSku=s=>typeof s==="string"&&/^[A-Z0-9][A-Z0-9._-]{3,79}$/iu.test(s)&&!/^\d+$/u.test(s);
@@ -134,11 +134,24 @@ export function advanceDraftItems(previous,text,catalog=[],{focus=null}={}){
  }
  if(multiple)last=null; // "mejor 4" after a two-item message needs clarification
  if(!explicit.length){
+  // Explicit positional reference is safe only with a stable ordered draft.
+  // "el primero" means the first listed SKU; never guess on "ese otro".
+  const positional=raw.match(/\b(?:el|la)\s+(primero|primera|segundo|segunda|tercero|tercera)\b/u);
+  const index=positional?(/primer/u.test(positional[1])?0:/segund/u.test(positional[1])?1:2):-1;
+  const positioned= index>=0 ? starting[index]?.partnumber : null;
+  const positionQty=raw.match(new RegExp("(?:dejalo|dejala|dejalos|dejala?\s+en|ponlo|ponla|sube|aumenta|cambia|corrige)\\s*(?:en|a)?\\s*("+numToken+")\\b","u"));
+  const newQuantity=parseQty(positionQty?.[1]);
+  if(positioned&&newQuantity!==null){
+   if(items.get(positioned)!==newQuantity){items.set(positioned,newQuantity);changed=true;}
+   last=positioned;
+   ambiguous=false;
+  }else{
   const n=parseBareCorrection(raw);
   if(n!==null){
    const target=last&&items.has(last)?last:items.size===1?[...items.keys()][0]:null;
    if(target){if(items.get(target)!==n){items.set(target,n);changed=true;} last=target;}
    else if(items.size>1)ambiguous=true;
+  }
   }
  }
  return {items:normalizeDraftItems([...items].map(([partnumber,quantity])=>({partnumber,quantity}))),
