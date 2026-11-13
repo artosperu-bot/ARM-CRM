@@ -55,7 +55,7 @@ function findLineProduct(segment,catalog){
  if(ranked[1]&&ranked[0].hit.weight+ranked[0].hit.name.length<=ranked[1].hit.weight+ranked[1].hit.name.length)
   return null;
  return {partnumber:ranked[0].row.partnumber,alias:ranked[0].hit.name,
-  index:padded.indexOf(" "+ranked[0].hit.name+" ")-1};
+  index:padded.indexOf(" "+ranked[0].hit.name+" ")};
 }
 /** Resolve explicitly named models, without implying purchase or stock. */
 export function explicitlyMentionedCatalogProducts(message,catalog=[]){
@@ -136,7 +136,7 @@ export function advanceDraftItems(previous,text,catalog=[],{focus=null}={}){
  if(!explicit.length){
   // Explicit positional reference is safe only with a stable ordered draft.
   // "el primero" means the first listed SKU; never guess on "ese otro".
-  const positional=raw.match(/\b(?:el|la)\s+(primero|primera|segundo|segunda|tercero|tercera)\b/u);
+  const positional=raw.match(/\b(?:el|la)\s+(?:(?:que\s+(?:dije|mencione|nombre)\s+))?(primero|primera|segundo|segunda|tercero|tercera)\b/u);
   const index=positional?(/primer/u.test(positional[1])?0:/segund/u.test(positional[1])?1:2):-1;
   const positioned= index>=0 ? starting[index]?.partnumber : null;
   const positionQty=raw.match(new RegExp("(?:dejalo|dejala|dejalos|dejala?\s+en|ponlo|ponla|sube|aumenta|cambia|corrige)\\s*(?:en|a)?\\s*("+numToken+")\\b","u"));
