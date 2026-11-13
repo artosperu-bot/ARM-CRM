@@ -11,11 +11,11 @@ const quantityAtEnd=new RegExp("\\b("+numToken+")(?:\\s+(?:unidades?|equipos?|ce
 const quantityAtStart=new RegExp("^\\s*(?:(?:quiero|necesito|dame|agrega(?:me)?|anade(?:me)?|incluye|cotiza(?:me)?|llevo|me llevo|me quedo con|mejor|para|de|los|las|por)\\s+)?("+numToken+")(?:\\s+(?:unidades?|equipos?|celulares?|telefonos?|laptops?|impresoras?|tablets?|productos?|del?|los?|las?|de)){0,4}\\b","u");
 const quantityAfter=new RegExp("^\\s*(?:x\\s*|por\\s+|son\\s+|serian\\s+|a\\s+|en\\s+)("+numToken+")\\b","u");
 const parseQty=s=>Object.hasOwn(words,s)?words[s]:/^\d{1,3}$/u.test(s)?Number(s):null;
-const itemPattern=/\b(?:quiero|necesito|dame|agrega(?:me)?|anade(?:me)?|ponme|sumame|sumale|incluye|cotizame|cotiza|llev[oa]|comprar|comprame|pedido de|me llevo|me quedo con|voy a comprar|pido|para llevar)\b/u;
+const itemPattern=/\b(?:quiero|necesito|dame|agrega(?:me)?|anade(?:me)?|ponme|sumame|sumale|incluye|cotizame|cotiza|llev[oa]|comprar|comprame|pedido de|me llevo|me quedo con|voy a comprar|pido|para llevar|ademas)\b/u;
 const removePattern=/\b(?:quita(?:me)?|saca(?:me)?|elimina|borra|retira|ya no quiero|sacale)\b/u;
 const correctionPattern=/\b(?:noo?\s+era(?:n)?|mejor|quise decir|me equivoque|ahora son|dejalo en|dejalos en|corrige(?:lo)? a|en vez de|serian|sube|aumenta)\b/u;
 const changePattern=/\b(?:mejor quiero|en vez de|cambia(?:me)?|reemplaza(?:me)?)\b/u;
-const cancelPattern=/\b(?:ya no quiero comprar|no quiero comprar|no comprare|cancela (?:la compra|todo)|olvida (?:la compra|el pedido)|mejor ya no compro|no quiero ninguno)\b/u;
+const cancelPattern=/\b(?:ya no quiero comprar|no quiero comprar|no comprare|ya no compro|cancela(?:lo)? (?:la compra|todo)|cancelalo todo|olvida (?:la compra|el pedido)|mejor ya no compro|no quiero ninguno)\b/u;
 const allowedSku=s=>typeof s==="string"&&/^[A-Z0-9][A-Z0-9._-]{3,79}$/iu.test(s)&&!/^\d+$/u.test(s);
 export function normalizeDraftItems(items){
  if(!Array.isArray(items))return [];
@@ -116,6 +116,24 @@ export function advanceDraftItems(previous,text,catalog=[],{focus=null}={}){
  const raw=clean(text);
  if(!raw)return {items:starting,focus:items.has(focus)?focus:null,ambiguous:false,changed:false};
  if(cancelPattern.test(raw))return {items:[],focus:null,ambiguous:false,changed:items.size>0};
+ // Replace a *named* existing SKU with another named SKU only on explicit
+ // "cambio [old] por [new]" intent. Merely asking the alternative price
+ // must never replace or append an item to a purchase-interest draft.
+ const switching=raw.match(/\b(?:cambio|cambia|reemplazo|reemplaza|sustituyo|sustituye)\s+(.+?)\s+(?:por|a)\s+(.+)$/u);
+ if(switching){
+  const previousProduct=findLineProduct(switching[1],catalog);
+  const nextProduct=findLineProduct(switching[2],catalog);
+  if(previousProduct&&nextProduct&&previousProduct.partnumber!==nextProduct.partnumber&&
+     items.has(previousProduct.partnumber)){
+   if(items.has(nextProduct.partnumber))
+    return {items:starting,focus:items.has(focus)?focus:null,ambiguous:true,changed:false};
+   const quantity=quantityFor(switching[2],nextProduct)??items.get(previousProduct.partnumber);
+   const revised=starting.map(x=>x.partnumber===previousProduct.partnumber?
+     {partnumber:nextProduct.partnumber,quantity}:x);
+   return {items:normalizeDraftItems(revised),focus:nextProduct.partnumber,
+    ambiguous:false,changed:true};
+  }
+ }
  let last=items.has(focus)?focus:null,ambiguous=false,changed=false;
  // Preserve punctuation until after splitting. clean() removes commas, which
  // previously merged "mejor 3 H390, el H570e igual" into a single wrong SKU.
@@ -129,14 +147,19 @@ export function advanceDraftItems(previous,text,catalog=[],{focus=null}={}){
   !/\b(?:cotizame|cotiza|agrega|anade|ponme|llevo|comprar|compro|comprame|dame|pido)\b/u.test(raw);
  const supportIssue=/\b(?:devolucion|reembolso|reclamo|reclamacion|se malogro|no prende|no funciona|me llego mal|me llego roto|quiero cambiar (?:mi|el|la))\b/u.test(raw);
  const hasGlobalAdd=itemPattern.test(raw)&&!exploratoryOnly&&!supportIssue;
+ // The buyer may name a product in one clause and give the quantity in the
+ // next: "busco Epson L1250, quiero 1". This never applies to comparisons.
+ const separatedQuantity=explicit.length===1&&hasGlobalAdd?
+   raw.match(new RegExp("\\b(?:quiero|necesito|dame|llevo|compro)\\s+("+numToken+")\\b","u")):null;
+ const addedSeparately=parseQty(separatedQuantity?.[1]);
  for(const {part,found} of matches){
   if(!found)continue;
-  const sku=found.partnumber,qty=quantityFor(part,found);
+  const sku=found.partnumber,qty=quantityFor(part,found)??addedSeparately;
   const localRemove=removePattern.test(part)||
    /\bsin\s+(?:el|la|los|las)\s+/u.test(part)||
    /^(?:no\s+con\s+(?:el|la|los|las)?|no\s+(?:el|la)|sin\s+(?:el|la))\b/u.test(part);
   const localAdd=!exploratoryOnly&&!supportIssue&&
-   (itemPattern.test(part)||(hasGlobalAdd&&multiple));
+   (itemPattern.test(part)||(hasGlobalAdd&&(multiple||addedSeparately!==null)));
   const localCorrection=(correctionPattern.test(part)&&qty!==null)||
    /\b(?:mejor quiero|mejor dame|en vez de|reemplaza|cambia(?:me)?)\b/u.test(part);
   // "¿Cuál es mejor?" compares products: it is never a correction to the draft.
@@ -182,7 +205,7 @@ export function advanceDraftItems(previous,text,catalog=[],{focus=null}={}){
    // Resolve "mejor 3 monitores LG" only when the existing draft has
    // exactly one matching category/brand. Never guess between two monitors.
    const type=[
-    [/\bmonitores?\b/u,"monitor"],[/\blaptops?\b/u,"laptop"],
+    [/\bmonitor(?:es)?\b/u,"monitor"],[/\blaptops?\b/u,"laptop"],
     [/\bimpresoras?\b/u,"impresora"],[/\baudifonos?\b/u,"audifon"],
     [/\brouters?\b/u,"router"],[/\bcargadores?\b/u,"cargador"],
     [/\btablets?\b/u,"tablet"],[/\bcelulares?\b/u,"celular"]

@@ -32,7 +32,9 @@ export function formatWhatsAppReply(raw,{simulated=false,maxChars=1300}={}){
    .trim();
  // Avoid repeating simulation headers when the model supplies one despite prompt.
  if(simulated){
-   text=text.replace(/^\s*(?:🧪|📌|📝|✏️)?\s*\*?PRUEBA STECH\*?[^\n]*\n*/iu,"").trimStart();
+   // Remove only the synthetic heading, not the answer on that same line.
+   // Previously [^\n]* swallowed "PRUEBA STECH: Sí, quedan..." entirely.
+   text=text.replace(/^\s*(?:🧪|📌|📝|✏️)?\s*\*?PRUEBA STECH\*?(?:\s*\([^\n)]{0,100}\))?\s*(?::|[-–—])?\s*/iu,"").trimStart();
  }
  text=hideExactStockUnits(text);
  const header=simulated?"🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\n":"";

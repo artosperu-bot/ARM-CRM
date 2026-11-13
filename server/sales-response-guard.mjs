@@ -101,10 +101,19 @@ export function protectSalesResponse(reply,{catalog=[],buyer=null,simulated=fals
    return {reply:"Sí, puedes consultar productos y recibir orientación sin dar tu DNI ni otros datos personales.",blocked:true,reason:"privacy_preference"};
  // Without a confirmed checkout or human workflow, asking for personal data
  // to "register" a simulated interest is premature even if the model offers.
- if(/\b(?:env[ií]ame|p[aá]same|dame|comp[aá]rteme|m[aá]ndame|ind[ií]came)\b.{0,85}\b(?:nombre|celular|tel[eé]fono|direcci[oó]n|dni|ruc)\b/iu.test(text)&&
-    !/\b(?:no\s+(?:me\s+)?(?:env[ií]es|pases|mandes|compartas))\b/iu.test(text))
-  return {reply:"Tengo presente lo que necesitas. Primero hay que confirmar el producto, la disponibilidad y las condiciones. No necesitas compartir datos personales para consultar.",
+ const directPersonalAsk=/\b(?:necesit[oa]|necesitamos|falta|faltaria|requiero|requerimos|pide|pediria|solicito|compartas|indicame|mandame|pasame|dime|dame)\b.{0,90}\b(?:tu|tus|su|sus)\s+(?:nombre|apellido|celular|tel[eé]fono|n[uú]mero|dni|ruc|direcci[oó]n|datos\s+de\s+contacto)\b/iu.test(text);
+ const personalRequest=/\b(?:env[ií]ame|env[ií]es|p[aá]same|pases|pasas|dame|comp[aá]rteme|compartas|m[aá]ndame|m[aá]ndes|ind[ií]came|indiques|facilites|te\s+tom[oe]|tomar\s+tus\s+datos|necesito\s+que\s+me\s+pases)\b.{0,110}\b(?:nombre|apellido|celular|tel[eé]fono|direcci[oó]n|dni|ruc|datos\s+de\s+contacto)\b/iu.test(text);
+ const collectedContact=/\b(?:dejar|dar|compartir|enviar|pasar|facilitar|indicar|registrar|tomar|dejes)\b.{0,85}\b(?:datos\s+de\s+contacto|nombre\s+completo|nombre\s+y\s+apellido|celular|tel[eé]fono|dni|ruc)\b/iu.test(text);
+ if((directPersonalAsk||personalRequest||collectedContact)&&
+    !/\b(?:no\s+(?:me\s+)?(?:env[ií]es|pases|mandes|compartas)|no\s+(?:necesito|necesitamos|es\s+necesario|hace\s+falta))\b/iu.test(text)){
+  const items=(buyer?.draft_items||[]).map(x=>{
+   const p=(Array.isArray(catalog)?catalog:[]).find(z=>z.partnumber===x.partnumber);
+   return x.quantity+" × "+String(p?.titulo||p?.title||x.partnumber).slice(0,80);
+  });
+  const intro=items.length?"Tengo como referencia: "+items.join("; ")+". ":"Tengo presente lo que necesitas. ";
+  return {reply:intro+"Para continuar primero debemos validar precio, disponibilidad y condiciones de entrega. Todavía no hay pedido ni pago; no es necesario que compartas datos personales para consultar.",
    blocked:true,reason:"premature_personal_data"};
+ }
  // Test fixtures have no approved compatibility claims. Never let the AI
  // assert a charger/device, RAM/motherboard, or Teams combination by guess.
  const lastQuestion=String(buyer?.last_message||"");
@@ -134,6 +143,27 @@ export function protectSalesResponse(reply,{catalog=[],buyer=null,simulated=fals
  // "¿Cuánto es todo?" and "total yape aceptan" also refer to the draft.
  // Deterministic arithmetic only; never infer an order or payment.
  const askedWholeBasket=/\b(?:cuanto\s+(?:es|seria)\s+todo|total\s+(?:de\s+todo|de\s+la\s+lista|cuanto|yape|plin|tarjeta)|y\s+total)\b/u.test(buyerText);
+ // A single SKU is also a basket. Use the same read-only simulated math
+ // when the buyer asks a price, instead of returning "no verified price".
+ const asksOnePrice=/(?:\bcuanto\s+(?:me\s+)?(?:sale|cuesta|saldria|seria)\b|\bprecio\b|\bcuanto\s+es\s+todo\b)/u.test(buyerText);
+ if(simulated&&(askedAll||askedWholeBasket||asksOnePrice)&&
+    !buyer?.cancelled_purchase&&Array.isArray(buyer?.draft_items)&&
+    buyer.draft_items.length===1&&
+    String(buyer.draft_items[0]?.partnumber||"").startsWith("QA-")&&
+    buyer?.draft_ambiguous!==true){
+  const basket=assessCommercialReadiness(buyer,{catalog,simulated:true}).demoBasket;
+  const line=basket?.lines?.[0];
+  if(line&&line.subtotalPen!==null){
+   const availability=line.availability==="disponible"?"disponible solo en prueba":
+    line.availability==="no disponible"?"no disponible para esa cantidad de prueba":
+    "disponibilidad de prueba por confirmar";
+   return {reply:"Simulación: "+line.quantity+" × "+
+    String(line.title||line.partnumber).slice(0,90)+": S/ "+
+    line.subtotalPen.toFixed(2)+" ("+availability+
+    "). Es un cálculo de laboratorio, no una cotización, pedido ni pago.",
+    blocked:true,reason:"demo_single_line_price"};
+  }
+ }
  // Deterministic private calculation: the AI is not allowed to invent a
  // basket total. This does not create anything in Supabase or checkout.
  if(simulated&&(askedAll||askedWholeBasket)&&["comercial","facturacion_pago"].includes(buyer?.current_topic)&&
@@ -402,6 +432,19 @@ export function protectSalesResponse(reply,{catalog=[],buyer=null,simulated=fals
   unapproved_discount:"No tengo un descuento aprobado para confirmarte. Puedo ayudarte a comparar opciones y preparar una consulta comercial.",
   delivery_promise:"Para confirmarte una fecha de entrega primero hay que verificar disponibilidad y condiciones de despacho."
  }[reason];
+ // For private multi-category cases, a blocked commercial action should
+ // still give a useful, grounded next step instead of a generic refusal.
+ if(simulated&&reason==="unconfirmed_action"&&
+    (buyer?.draft_items||[]).some(x=>String(x.partnumber).startsWith("QA-"))){
+  const lines=(buyer?.draft_items||[]).map(x=>{
+   const p=(Array.isArray(catalog)?catalog:[]).find(z=>z.partnumber===x.partnumber);
+   return x.quantity+" × "+String(p?.titulo||p?.title||x.partnumber).slice(0,85);
+  });
+  return {reply:"Conservo esta lista de interés de prueba: "+lines.join("; ")+
+   ". Para avanzar falta confirmar precios vigentes, disponibilidad y condiciones de entrega. "+
+   "No se ha creado un pedido, cobro ni seguimiento comercial.",
+   blocked:true,reason};
+ }
  return {reply:fallback,blocked:true,reason};
 }
 /** Remove claims about exact units of warehouse stock without changing
