@@ -44,7 +44,11 @@ const scenarios=[
  {id:"end",turns:["ya no quiero comprar gracias por todo"]},
  {id:"warranty",turns:["si el x13 se moja, la garantia cubre?"]},
  {id:"new_category",turns:["necesito una laptop Lenovo para mi oficina, recomiendame una buena pero no me interrogues"]},
- {id:"several_needs",turns:["quiero dos armor x13 y saber el precio, stock y si aceptan yape"]}
+ {id:"several_needs",turns:["quiero dos armor x13 y saber el precio, stock y si aceptan yape"]},
+ {id:"multi_cart_total",turns:["oe quiero 3 armor x13 y 2 armor 22","mejor 4 del armor x13","y el total? aceptan yape?"]},
+ {id:"multi_cart_insufficient",turns:["quiero 3 armor x13 y 2 armor 22","mejor 6 del armor x13","cuanto sale todo?"]},
+ {id:"multi_cart_ambiguous",turns:["quiero 3 armor x13 y 2 armor 22","noo mejor 4"]},
+ {id:"multi_price_question_only",turns:["quiero comparar el x13 y el armor 22, cuánto cuesta cada uno?"]}
 ];
 const selectedIds=new Set(String(process.env.ARM_QA_CASES||"").split(",").filter(Boolean));
 const selectedScenarios=selectedIds.size?scenarios.filter(s=>selectedIds.has(s.id)):scenarios;
@@ -52,7 +56,8 @@ let completed=0,blocked=0,errors=0,items=[];
 for(const c of selectedScenarios){
  let preliminary=enrichCatalog(rows,true,offers);
  let b=buildBuyerContext(c.turns,{catalog:preliminary});
- let catalog=enrichCatalog(rows,true,offers,{requestedQuantity:b.quantity||1});
+ let catalog=enrichCatalog(rows,true,offers,{requestedQuantity:b.quantity||1,
+  requestedQuantitiesByPn:Object.fromEntries(b.draft_items.map(x=>[x.partnumber,x.quantity]))});
  b=buildBuyerContext(c.turns,{catalog});
  const plan=analyzeConversationTurn(b,catalog);
  try{
@@ -76,6 +81,7 @@ for(const c of selectedScenarios){
   completed++;if(checked.blocked)blocked++;
   items.push({id:c.id,focus:plan.focus,axes:plan.axes.join("+"),
     buyer_quantity:b.quantity,sku:b.matched_partnumber,
+    draft:b.draft_items,ambiguous:b.draft_ambiguous,
     guarded:checked.blocked,reason:checked.reason,
     answer:String(checked.reply).replace(/\s+/g," ").slice(0,330),
     ...(selectedIds.size?{raw:String(raw).replace(/\s+/g," ").slice(0,350)}:{})});

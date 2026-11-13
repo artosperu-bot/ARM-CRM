@@ -23,7 +23,7 @@ export const specsByPn = Object.freeze({
  }
 });
 /** Real offers are never filled from laboratory records. For simulations only use saved Supabase test offers. */
-export function enrichCatalog(rows, simulated=false, testOffers=[],{now=Date.now(),factsByPn={},commercialByPn={},requestedQuantity=1}={}) {
+export function enrichCatalog(rows, simulated=false, testOffers=[],{now=Date.now(),factsByPn={},commercialByPn={},requestedQuantity=1,requestedQuantitiesByPn={}}={}) {
  const offers = new Map((testOffers||[]).filter(o=>o.is_test_data===true).map(o=>[String(o.partnumber).toLowerCase(),o]));
  return (rows||[]).map(row=>{
   const demo=simulated?offers.get(String(row.partnumber).toLowerCase()):null;
@@ -34,7 +34,9 @@ export function enrichCatalog(rows, simulated=false, testOffers=[],{now=Date.now
     Number.isFinite(Number(evidence.pricePen))&&Number(evidence.pricePen)>0;
   const price=simulated?(demo&&Number.isFinite(Number(demo.price_pen))?Number(demo.price_pen):null):
     trustedPrice?Number(evidence.pricePen):null;
-  const qty=Number.isInteger(requestedQuantity)&&requestedQuantity>0?requestedQuantity:1;
+  const requestedForSku=requestedQuantitiesByPn?.[row.partnumber];
+  const qty=Number.isInteger(requestedForSku)&&requestedForSku>0?requestedForSku:
+    Number.isInteger(requestedQuantity)&&requestedQuantity>0?requestedQuantity:1;
   const saleable=!simulated&&evidence?.saleableStock===true&&
     Number.isInteger(evidence.availableToPromiseUnits)&&evidence.availableToPromiseUnits>=qty;
   // Private stock units are assumed values, never a real inventory or order.

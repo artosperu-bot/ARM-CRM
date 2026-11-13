@@ -41,6 +41,12 @@ describe("catalog queries: future products without category-specific code",()=>{
   expect(catalogQueries(["Presupuesto S/ 2500 para un cargador Anker 737"])[0])
      .not.toContain("2500");
  });
+ it("splits multi-product requests into independent SKU searches",()=>{
+  const q=catalogQueries(["quiero 3 Armor X13 y 2 Armor 22"]);
+  expect(q).toHaveLength(2);
+  expect(q[0]).toMatch(/armor x13/);
+  expect(q[1]).toMatch(/armor 22/);
+ });
  it("avoids product lookup when customer cancels or says goodbye",()=>{
   expect(catalogQueries(["Quiero una laptop","Gracias por todo"])).toEqual([]);
   expect(catalogQueries(["Quiero un celular","Stop"])).toEqual([]);
@@ -73,6 +79,29 @@ describe("bounded SKU retrieval with workspace isolation",()=>{
   const db=fakeDb([row("T14-16-512",90),row("T14-32-1TB",80)]);
   const result=await retrieveSalesCatalog(db.client,workspace,["Lenovo ThinkPad T14 32 GB"]);
   expect(result.products.map(x=>x.partnumber)).toEqual(["T14-16-512","T14-32-1TB"]);
+ });
+ it("keeps both requested models even when one has a much higher search score",async()=>{
+  const db=fakeDb(params=>params.p_query.includes("x13")?
+    [row("ARMOR-X13",250)]:[row("ARMOR-22-256G",30)]);
+  const result=await retrieveSalesCatalog(db.client,workspace,["quiero 3 Armor X13 y 2 Armor 22"]);
+  expect(result.products.map(x=>x.partnumber)).toContain("ARMOR-X13");
+  expect(result.products.map(x=>x.partnumber)).toContain("ARMOR-22-256G");
+ });
+ it("gets saved draft SKUs by scoped Supabase lookup when the buyer asks only for the total",async()=>{
+  const calls=[];
+  const products=[row("ARMOR-X13"),row("ARMOR-22-256G")];
+  const db={
+   async rpc(name,args){calls.push(args);return {data:[],error:null};},
+   from(table){
+    const q={select(){return q;},eq(){return q;},in(){return q;},
+     async limit(){return {data:table==="arm_products"?products:[],error:null};}};
+    return q;
+   }
+  };
+  const result=await retrieveSalesCatalog(db,workspace,["cuanto sale todo"],{
+   requiredPartnumbers:["ARMOR-X13","ARMOR-22-256G"]});
+  expect(result.products.map(p=>p.partnumber)).toEqual(["ARMOR-22-256G","ARMOR-X13"]);
+  expect(calls.length).toBeLessThanOrEqual(2);
  });
  it("no query means no arbitrary first 25 products",async()=>{
   const db=fakeDb([row("SKU")]);

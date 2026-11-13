@@ -5,6 +5,27 @@
  * originate from freshly checked catalogue records.
  */
 export function assessCommercialReadiness(buyer,{catalog=[],simulated=false}={}){
+ const all=Array.isArray(catalog)?catalog:[];
+ const draftLines=(Array.isArray(buyer?.draft_items)?buyer.draft_items:[]).slice(0,12).map(x=>{
+  const product=all.find(p=>p.partnumber===x.partnumber);
+  return {partnumber:x.partnumber,quantity:x.quantity,
+   title:product?String(product.titulo||product.title||x.partnumber).slice(0,130):null,
+   inCurrentCatalog:Boolean(product)};
+ });
+ const demoLines=simulated?draftLines.map(x=>{
+  const p=all.find(z=>z.partnumber===x.partnumber);
+  const valid=p?.oferta_simulada===true&&p?.origen_datos==="simulacion_solo_pruebas";
+  const price=valid&&p.precio_soles!==null&&Number.isFinite(Number(p.precio_soles))&&Number(p.precio_soles)>0?Number(p.precio_soles):null;
+  const cents=price!==null?Math.round(price*100)*x.quantity:null;
+  return {...x,unitPricePen:price,subtotalPen:cents!==null?cents/100:null,
+   availability:valid?p.disponibilidad:"por confirmar"};
+ }):[];
+ const basketTotal=demoLines.length&&demoLines.every(x=>x.subtotalPen!==null)?
+  Math.round(demoLines.reduce((sum,x)=>sum+Math.round(x.subtotalPen*100),0))/100:null;
+ const demoBasket=simulated&&demoLines.length>0?{testOnly:true,
+  lines:demoLines,totalPen:basketTotal,allPriced:basketTotal!==null,
+  allAvailable:demoLines.every(x=>x.availability==="disponible"),
+  ambiguousQuantity:buyer?.draft_ambiguous===true}:null;
  const quantity=Number.isInteger(buyer?.quantity)&&buyer.quantity>=1&&buyer.quantity<=999?
    buyer.quantity:null;
  const requestedSku=typeof buyer?.matched_partnumber==="string"?buyer.matched_partnumber:null;
@@ -45,6 +66,8 @@ export function assessCommercialReadiness(buyer,{catalog=[],simulated=false}={})
   priceEvidence,
   saleableStock,
   demoEstimate,
+  draftLines,
+  demoBasket,
   blockers:missing,
   quoteCreated:false,orderCreated:false,paymentRegistered:false,
   advisorAssigned:false,

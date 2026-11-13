@@ -2,6 +2,8 @@ import {matchCustomerProduct} from "./catalog-matching.mjs";
 import {polishCommercialReply} from "./commercial-voice.mjs";
 import {humanHandoffUnconfirmedReply} from "./human-handoff-phrasing.mjs";
 import {analyzeConversationTurn} from "./conversation-turn-plan.mjs";
+import {assessCommercialReadiness} from "./commercial-readiness.mjs";
+import {explicitlyMentionedCatalogProducts} from "./sales-draft-items.mjs";
 import {asksFormalComplaintReplyDeadline,lawfulComplaintDeadlineReply,lawfulComplaintBookReply} from "./peru-consumer-knowledge.mjs";
 /**
  * Final deterministic safety check for AI-generated commercial text.
@@ -98,9 +100,52 @@ export function protectSalesResponse(reply,{catalog=[],buyer=null,simulated=fals
  if(/\bno quiero (?:dar|compartir) (?:mi )?(?:dni|ruc|tel[eé]fono|n[uú]mero)\b/iu.test(buyer?.last_message||""))
    return {reply:"Sí, puedes consultar productos y recibir orientación sin dar tu DNI ni otros datos personales.",blocked:true,reason:"privacy_preference"};
 
+ if(buyer?.draft_ambiguous===true&&Array.isArray(buyer?.draft_items)&&
+   buyer.draft_items.length>1&&["comercial","facturacion_pago"].includes(buyer?.current_topic||"comercial")){
+  const options=buyer.draft_items.slice(0,5).map(x=>String(x.partnumber).slice(0,80)).join(" o ");
+  return {reply:"¿A cuál producto te refieres: "+options+
+   "? Mantengo la lista anterior sin cambios hasta que me indiques cuál.",
+   blocked:true,reason:"ambiguous_draft_quantity"};
+ }
+ const buyerText=String(buyer?.last_message||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase();
+ const askedAll=/(?:\b(?:cuanto(?: me)? (?:sale|cuesta|salen|saldria)|calcula|dame|pasame|precio|cotiza\w*)\b.{0,60}\b(?:total|todo|todos|los dos|ambos)\b|\b(?:total|todo)\b.{0,35}\b(?:cuanto|precio|cotiza\w*)\b|\b(?:y\s+)?el\s+total\b|^(?:y\s+)?(?:el\s+)?total\s*\??$)/u.test(buyerText);
+ // Deterministic private calculation: the AI is not allowed to invent a
+ // basket total. This does not create anything in Supabase or checkout.
+ if(simulated&&askedAll&&["comercial","facturacion_pago"].includes(buyer?.current_topic)&&
+   !buyer?.cancelled_purchase&&Array.isArray(buyer?.draft_items)&&buyer.draft_items.length>1){
+  const basket=assessCommercialReadiness(buyer,{catalog,simulated:true}).demoBasket;
+  if(basket?.lines?.length>1){
+   const lineText=basket.lines.map(line=>{
+    const name=String(line.title||line.partnumber).slice(0,90);
+    const cost=line.subtotalPen===null?"importe pendiente":"S/ "+line.subtotalPen.toFixed(2);
+    const state=line.availability==="disponible"?"disponible en prueba":
+      line.availability==="no disponible"?"no disponible para esta cantidad":"disponibilidad por confirmar";
+    return line.quantity+" × "+name+": "+cost+" ("+state+")";
+   }).join("; ");
+   const total=basket.totalPen===null?
+    "No puedo calcular un total porque falta verificar al menos un precio.":
+    "Total matemático de prueba: S/ "+basket.totalPen.toFixed(2)+".";
+   const additional=turnPlan.asksDelivery?" La fecha de entrega no está confirmada.":"";
+   const billing=buyerText.match(/\b(?:yape|plin|tarjeta|visa|pago)\b/u)?
+    " Los medios de pago deben confirmarse.":"";
+   const discount=turnPlan.asksDiscount?" No hay descuento aprobado.":"";
+   return {reply:"Simulación: "+lineText+". "+total+additional+billing+discount+
+    " No es cotización, reserva, pedido ni pago registrado.",
+    blocked:true,reason:"demo_basket_calculated"};
+  }
+ }
  const askedCommercialPrice=turnPlan.asksPrice||["consultar_precio","cotizar","comparar","objecion","comprar"].includes(intent);
  const available=(Array.isArray(catalog)?catalog:[]).filter(p=>p?.precio_soles!==null&&
    p?.precio_soles!==undefined&&Number.isFinite(Number(p.precio_soles))&&Number(p.precio_soles)>0);
+ const mentionedSkuList=turnPlan.asksPrice?
+   explicitlyMentionedCatalogProducts(buyer?.last_message,catalog):[];
+ const multiPricesRequested=simulated&&mentionedSkuList.length>=2&&
+   ["comercial","facturacion_pago"].includes(buyer?.current_topic||"comercial");
+ const multiProductPrices=new Map(multiPricesRequested?
+   mentionedSkuList.map(pn=>{
+    const item=available.find(x=>x.partnumber===pn&&x.oferta_simulada===true);
+    return [pn,item?Number(item.precio_soles):null];
+   }):[]);
  const replyProduct=matchCustomerProduct(text,catalog);
  // A new, unverified customer reference outranks an old matched SKU, the AI's
  // proposed product and any sole priced catalogue item. Never transfer a price.
@@ -113,6 +158,9 @@ export function protectSalesResponse(reply,{catalog=[],buyer=null,simulated=fals
    (available.length===1?available[0].partnumber:null);
  const pricedItems=intendedPn?available.filter(p=>p.partnumber===intendedPn):[];
  const priceValues=new Set(pricedItems.map(p=>Number(p.precio_soles)));
+ if(multiPricesRequested)for(const value of multiProductPrices.values()){
+  if(value!==null)priceValues.add(value);
+ }
  const wrongProduct=Boolean(buyer?.matched_partnumber&&replyProduct?.partnumber&&
    buyer.matched_partnumber!==replyProduct.partnumber&&moneyRe.test(text));
  moneyRe.lastIndex=0;
@@ -127,6 +175,33 @@ export function protectSalesResponse(reply,{catalog=[],buyer=null,simulated=fals
     /\b(?:tu|su|el|un|de|con|presupuesto|monto|m[aá]ximo|inversi[oó]n)\b.{0,40}\b(?:presupuesto|monto|l[ií]mite|inversi[oó]n)\b|\bpresupuesto.{0,50}$/iu.test(window);
   const approvedPrice=!isUsd&&askedCommercialPrice&&priceValues.has(value);
   if(!approvedPrice&&!(isRestatedBudget&&!isUsd)){moneyViolation=true;break;}
+ }
+ if(multiPricesRequested){
+  const mapped=new Set();
+  let valid=true;
+  const stated=[...text.matchAll(moneyRe)];
+  moneyRe.lastIndex=0;
+  for(const match of stated){
+   const preceding=text.slice(Math.max(0,(match.index||0)-115),match.index||0);
+   const nearby=explicitlyMentionedCatalogProducts(preceding,catalog).at(-1);
+   const amount=number(String(match.slice(1).find(v=>v!==undefined)||"").replace(/[.,]+$/u,""));
+   if(!nearby||!multiProductPrices.has(nearby)||multiProductPrices.get(nearby)!==amount){
+    valid=false;break;
+   }
+   mapped.add(nearby);
+  }
+  if(!valid||!mentionedSkuList.every(sku=>
+   multiProductPrices.get(sku)===null||mapped.has(sku))){
+   const descriptions=mentionedSkuList.slice(0,5).map(sku=>{
+    const product=(Array.isArray(catalog)?catalog:[]).find(p=>p.partnumber===sku);
+    const amount=multiProductPrices.get(sku);
+    return String(product?.titulo||product?.title||sku).slice(0,90)+": "+
+     (amount===null?"precio por confirmar":"S/ "+amount.toFixed(2));
+   });
+   return {reply:"Precios del piloto (simulados): "+descriptions.join("; ")+
+    ". Esto no es una cotización emitida ni un pedido. Para comparar otras características, usaré solo datos de las fichas verificadas.",
+    blocked:true,reason:"multi_price_fact_correction"};
+  }
  }
  const unsupportedPolicyClaim=unsupportedSupportClaim.test(text)||(unexecutedSupportOffer.test(text)&&!explicitlyNegatedOffer.test(text))||
    (buyer?.current_topic==="facturacion_pago"&&unsupportedBillingClaim.test(text))||
@@ -219,6 +294,7 @@ export function protectSalesResponse(reply,{catalog=[],buyer=null,simulated=fals
    (selected&&available.some(p=>p.partnumber===selected.partnumber))||
    // Sandbox prices are synthetic: a single priced test product remains valid
    // without a stored buyer SKU. Never relax this condition for real sales.
+   (multiPricesRequested&&mentionedSkuList.every(sku=>multiProductPrices.get(sku)!==null))||
    (simulated&&((replyProduct&&available.some(p=>p.partnumber===replyProduct.partnumber))||
      available.length===1))
   );

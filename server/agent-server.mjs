@@ -120,11 +120,12 @@ async function handle(req,res){
   const lookupTurns=[...(historicalBuyerTurns.length?historicalBuyerTurns:
     context.filter(t=>t.role==="user").map(t=>t.content)),msg];
   const hint=priorMemory?.customer_reference||priorMemory?.selected_partnumber;
+  const requiredDraftSkus=(priorMemory?.draft_items||[]).map(x=>x.partnumber);
   const brandHint=typeof priorMemory?.brand==="string"&&!priorMemory?.selected_partnumber?priorMemory.brand:null;
   const catalogTurns=isExplicitProductSwitch(msg)?[affirmativeProductText(msg)]:
     hint?[...lookupTurns.slice(-14,-1),hint,msg]:
     brandHint?[brandHint,msg]:lookupTurns;
-  const lookup=await retrieveSalesCatalog(db,workspaceId,catalogTurns,{limit:18});
+  const lookup=await retrieveSalesCatalog(db,workspaceId,catalogTurns,{limit:18,requiredPartnumbers:requiredDraftSkus});
   const pn=lookup.products.map(x=>x.partnumber);
   const testOffers=simulated&&pn.length?await db.from("arm_offer_simulations")
     .select("partnumber,price_pen,stock_status,stock_units_demo,is_test_data")
@@ -140,7 +141,8 @@ async function handle(req,res){
   try{commercialByPn=await loadCommercialEvidence(db,workspaceId,lookup.products);}
   catch{console.error("ARM_COMMERCIAL_EVIDENCE_UNAVAILABLE");}
   const catalog=enrichCatalog(lookup.products,simulated,testOffers.data||[],
-    {factsByPn:lookup.factsByPn,commercialByPn,requestedQuantity:provisionalBuyer.quantity});
+    {factsByPn:lookup.factsByPn,commercialByPn,requestedQuantity:provisionalBuyer.quantity,
+     requestedQuantitiesByPn:Object.fromEntries(provisionalBuyer.draft_items.map(x=>[x.partnumber,x.quantity]))});
   const buyer=buildBuyerContext(priorMemory?[msg]:lookupTurns,{catalog,memory:priorMemory});
   const commercial=assessCommercialReadiness(buyer,{catalog,simulated});
   if(requestsProductPhoto(msg)){

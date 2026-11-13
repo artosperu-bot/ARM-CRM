@@ -1,4 +1,5 @@
 import {salesMoveInstructions} from "./sales-playbook.mjs";
+import {advanceDraftItems,draftSummary,normalizeDraftItems} from "./sales-draft-items.mjs";
 import {conversationTurnInstructions} from "./conversation-turn-plan.mjs";
 import {matchCustomerProduct,quantityForAnyCatalogItem,affirmativeProductText} from "./catalog-matching.mjs";
 import {classifyCustomerTopic,customerTopicInstructions,isExplicitProductSwitch,needsPostSaleSpecialist} from "./customer-topic.mjs";
@@ -110,7 +111,8 @@ export function buildBuyerContext(customerTurns,{leadProfile=null,catalog=[],mem
   current_intent:"sin_mensaje",current_topic:"comercial",last_message:"",
   mentioned_product_family:null,product_switched:false,objection:false,urgency:false,
   explicit_purchase:false,cancelled_purchase:false,
-  known_facts:[],next_step:"responder_consulta",requires_human:false,matched_partnumber:null,customer_reference:null
+  known_facts:[],next_step:"responder_consulta",requires_human:false,matched_partnumber:null,customer_reference:null,
+  draft_items:[],draft_focus:null,draft_ambiguous:false
  };
  // A stored partnumber is a hint, not verified evidence: validate against this
  // request's freshly retrieved catalogue before using it for price/stock.
@@ -121,8 +123,10 @@ export function buildBuyerContext(customerTurns,{leadProfile=null,catalog=[],mem
  }
  if(typeof memory?.customer_reference==="string")state.customer_reference=memory.customer_reference;
  let b2bExplicit=false,productSeen=Boolean(memory?.selected_partnumber||memory?.customer_reference);
+ let draft={items:normalizeDraftItems(memory?.draft_items),focus:memory?.draft_focus||null,ambiguous:false};
  let requestedAdvisor=memory?.requires_human===true;
  for(const raw of turns){
+  draft=advanceDraftItems(draft.items,raw,catalog,{focus:draft.focus});
   const text=norm(raw).slice(0,1600);
   if(RX.device.test(text))productSeen=true;
   const affirmative=affirmativeProductText(raw);
@@ -179,6 +183,9 @@ export function buildBuyerContext(customerTurns,{leadProfile=null,catalog=[],mem
   }
 
  }
+ state.draft_items=draft.items;
+ state.draft_focus=draft.focus;
+ state.draft_ambiguous=draft.ambiguous;
  state.last_message=norm(turns.at(-1)).slice(0,1500);
  state.current_topic=classifyCustomerTopic(state.last_message);
  state.current_intent=classifyLatest(state.last_message);
@@ -190,7 +197,12 @@ export function buildBuyerContext(customerTurns,{leadProfile=null,catalog=[],mem
  state.requires_human=requestedAdvisor||state.current_intent==="asesor"||Boolean(leadProfile?.requires_human);
  state.is_b2b_signal=b2bExplicit||(state.quantity!==null&&state.quantity>=2&&productSeen);
  state.buyer_type=b2bExplicit?"empresa_indicada":state.is_b2b_signal?"posible_b2b":"sin_confirmar";
- if(state.quantity!==null)state.known_facts.push("cantidad solicitada: "+state.quantity+" unidades (no asumir tipo de producto)");
+ if(state.quantity!==null&&state.draft_items.length<=1)state.known_facts.push("cantidad solicitada: "+state.quantity+" unidades (no asumir tipo de producto)");
+ if(state.draft_items.length){
+  const lines=draftSummary(state.draft_items,catalog);
+  state.known_facts.push("lista de interés sin pedido: "+lines.map(x=>x.partnumber+" x"+x.quantity+
+   (x.verifiedInCurrentCatalog?"":" (pendiente de revalidar)")).join("; "));
+ }
  if(state.budget)state.known_facts.push("presupuesto comunicado: S/ "+state.budget.pen+" ("+state.budget.scope+")");
  if(state.brand)state.known_facts.push("marca mencionada: "+state.brand);
  if(state.use_case)state.known_facts.push("uso indicado: "+state.use_case);
@@ -242,6 +254,8 @@ export function buyerGuidance(profile,{catalog=[]}={}){
  "No anuncies que vas a revisar, confirmar, verificar, cotizar o enviar algo posteriormente si no existe una herramienta conectada que realmente lo ejecute. No prometas contactar después.",
  "Nunca asegures que consultaste inventario, cotizaste, reservaste, autorizaste descuentos o enviaste mensajes si no recibiste confirmación.",
  "No describas al cliente score, etiquetas, reglas internas o el análisis; úsalo únicamente para dar una respuesta natural.",
+ p.draft_items?.length?"LISTA DE PRODUCTOS SOLICITADOS (interés provisional, no pedido): "+draftSummary(p.draft_items,catalog).map(x=>x.partnumber+" × "+x.quantity+(x.verifiedInCurrentCatalog?"":" (SKU pendiente de validar)")).join("; ")+". Cada cantidad pertenece exclusivamente a su SKU. No asumas que las cantidades de un producto aplican a los otros; no anuncies stock ni precio si la fuente vigente no los respalda. Nunca digas que se creó una cotización, reserva o pedido.":"",
+ p.draft_ambiguous?"El cliente corrigió una cantidad sin señalar modelo y tiene varios productos: NO cambies ninguna línea por adivinar. Pregunta solo a cuál artículo se refiere.":"",
  conversationTurnInstructions(p,catalog),
  salesMoveInstructions(p,{catalog})
  ].join("\n");

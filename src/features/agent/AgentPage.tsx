@@ -11,7 +11,9 @@ type TestOffer={partnumber:string;price_pen:number;stock_status:string;stock_uni
 type Turn={id:string;role:"user"|"assistant";content:string;created_at:string};
 type Usage={model:string;inputTokens:number;outputTokens:number;cachedTokens:number;estimatedUsd:number;usageRecorded:boolean};
 type DemoEstimate={testOnly:true;partnumber:string;quantity:number;unitPricePen:number;totalPen:number;status:"disponible"|"no disponible"|"por confirmar"};
-type CommercialReadiness={state:"requiere_validacion";intent:string;product:{partnumber:string;title:string}|null;quantity:number|null;budget:{pen:number;scope:string}|null;priceEvidence:boolean;saleableStock:boolean;demoEstimate:DemoEstimate|null;blockers:string[];quoteCreated:false;orderCreated:false;paymentRegistered:false;advisorAssigned:false;canManuallyCreateOpportunity:boolean;nextAction:string};
+type DraftLine={partnumber:string;quantity:number;title:string|null;inCurrentCatalog:boolean};
+type DemoBasket={testOnly:true;lines:Array<DraftLine & {unitPricePen:number|null;subtotalPen:number|null;availability:"disponible"|"no disponible"|"por confirmar"}>;totalPen:number|null;allPriced:boolean;allAvailable:boolean;ambiguousQuantity:boolean};
+type CommercialReadiness={draftLines:DraftLine[];demoBasket:DemoBasket|null;state:"requiere_validacion";intent:string;product:{partnumber:string;title:string}|null;quantity:number|null;budget:{pen:number;scope:string}|null;priceEvidence:boolean;saleableStock:boolean;demoEstimate:DemoEstimate|null;blockers:string[];quoteCreated:false;orderCreated:false;paymentRegistered:false;advisorAssigned:false;canManuallyCreateOpportunity:boolean;nextAction:string};
 const blockerLabels:Record<string,string>={modelo_por_confirmar:"modelo exacto",cantidad_por_confirmar:"cantidad",precio_vigente_por_confirmar:"precio vigente",disponibilidad_vendible_por_confirmar:"disponibilidad para venta",condiciones_cotizacion_por_confirmar:"condiciones de cotización"};
 export default function AgentPage({workspaceId,contacts,onNavigate,onCreateFollowup,onCreateDeal}:{
  workspaceId:string;contacts:Contact[];onNavigate:(section:Section)=>void;
@@ -42,6 +44,7 @@ export default function AgentPage({workspaceId,contacts,onNavigate,onCreateFollo
  const customers=turns.filter(t=>t.role==="user").map(t=>t.content);
  const signal=customers.length>0?detectCommercialSignal(customers):null;
  const lastQuestion=customers.at(-1)||"";
+ const buyerAskedAmount=/(?:precio|cu[aá]nto|total|cotiz|presupuesto|sale|cuestan|pagar|importe|sum[aa])/i.test(lastQuestion);
  async function createTask(e:React.FormEvent){
   e.preventDefault();setError("");setNotice("");
   if(simulated||signal?.key==="ended"){setError("No se puede registrar: la conversación es de prueba o el comprador desistió.");return;}
@@ -187,11 +190,18 @@ export default function AgentPage({workspaceId,contacts,onNavigate,onCreateFollo
       </div>}
       {commercial&&<div className="agent-readiness" role="status">
        <strong>{signal?.key==="ended"?"El cliente decidió no continuar · ninguna gestión pendiente":"Estado comercial de esta consulta · sin operación registrada"}</strong>
-       <div><span><b>Producto:</b> {commercial.product?.title||"Por identificar"}</span><span><b>Cantidad:</b> {commercial.quantity??"Por confirmar"}</span>{commercial.budget&&<span><b>Presupuesto del cliente:</b> S/ {commercial.budget.pen} ({commercial.budget.scope==="total"?"total":commercial.budget.scope==="por_unidad"?"por unidad":"sin aclarar"})</span>}</div>
+       <div>{commercial.draftLines.length>1?<span><b>Productos:</b> {commercial.draftLines.length} referencias solicitadas</span>:<><span><b>Producto:</b> {commercial.product?.title||"Por identificar"}</span><span><b>Cantidad:</b> {commercial.quantity??"Por confirmar"}</span></>}{commercial.budget&&<span><b>Presupuesto del cliente:</b> S/ {commercial.budget.pen} ({commercial.budget.scope==="total"?"total":commercial.budget.scope==="por_unidad"?"por unidad":"sin aclarar"})</span>}</div>
+       {commercial.draftLines.length>0&&signal?.key!=="ended"&&<div className="agent-draft-lines"><strong>Productos de interés · no es un pedido</strong>{commercial.draftLines.map(line=><span key={line.partnumber}>{line.quantity} × {line.title||line.partnumber}{!line.inCurrentCatalog?" · referencia por revalidar":""}</span>)}</div>}
        {signal?.key==="ended"?<small>Respetar su decisión. No solicitar datos, registrar seguimientos ni insistir en comprar.</small>:
        simulated?<small>Laboratorio privado. No hay cotización, pedido, reserva real, pago ni asesor asignado.</small>:
        <small><b>Pendiente:</b> {commercial.blockers.map(x=>blockerLabels[x]||x).join(" · ")}. No hay cotización, pedido, pago ni asesor asignado.</small>}
-       {simulated&&commercial.demoEstimate&&signal?.key!=="ended"&&<div className="agent-sandbox-quote-preview">
+       {simulated&&commercial.demoBasket&&commercial.demoBasket.lines.length>1&&buyerAskedAmount&&signal?.key!=="ended"&&<div className="agent-sandbox-quote-preview">
+        <strong>Cálculo multítem de prueba · no es cotización</strong>
+        {commercial.demoBasket.lines.map(line=><span key={line.partnumber}>{line.quantity} × {line.title||line.partnumber}: {line.subtotalPen===null?"precio por confirmar":"S/ "+line.subtotalPen.toFixed(2)} · {line.availability}</span>)}
+        <span><b>{commercial.demoBasket.totalPen===null?"Total pendiente: falta al menos un precio":"Total referencial: S/ "+commercial.demoBasket.totalPen.toFixed(2)}</b></span>
+        <small>{commercial.demoBasket.allAvailable?"Las cantidades figuran disponibles solo en el piloto.":"Una o más cantidades no están disponibles o requieren verificación."} No se creó cotización, reserva, pedido ni pago.</small>
+       </div>}
+       {simulated&&commercial.demoEstimate&&(!commercial.demoBasket||commercial.demoBasket.lines.length<=1)&&buyerAskedAmount&&signal?.key!=="ended"&&<div className="agent-sandbox-quote-preview">
         <strong>Estimación matemática de prueba (no es una cotización)</strong>
         <span>{commercial.demoEstimate.quantity} × S/ {commercial.demoEstimate.unitPricePen.toFixed(2)} = <b>S/ {commercial.demoEstimate.totalPen.toFixed(2)}</b></span>
         <small>Stock supuesto para esta cantidad: {commercial.demoEstimate.status}. Los impuestos y gastos de envío no están comprobados; no se ha creado ninguna operación.</small>

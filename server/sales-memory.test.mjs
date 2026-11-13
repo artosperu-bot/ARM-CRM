@@ -12,6 +12,40 @@ const event=(id,content,second)=>({
  created_at:new Date(Date.UTC(2026,10,7,19,0,second)).toISOString()
 });
 describe("ALEX durable commercial memory (only customer facts)",()=>{
+ it("persists two independent SKU quantities across a short context window",()=>{
+  const a=foldSalesMemory(null,[event("cart1","quiero 3 Armor X13 y 2 Armor 22",0)],{
+   catalog:[...catalog,{titulo:"Ulefone Armor 22 256GB",marca:"ULEFONE",partnumber:"ARMOR-22-256G"}]
+  });
+  expect(a.version).toBe(2);
+  expect(a.draft_items).toEqual([
+   {partnumber:"ARMOR-X13",quantity:3},{partnumber:"ARMOR-22-256G",quantity:2}
+  ]);
+  expect(a.draft_focus).toBeNull();
+  const rows=[event("cart1","quiero 3 Armor X13 y 2 Armor 22",0),
+   event("cart2","mejor 4 del Armor X13",1)];
+  const b=foldSalesMemory(a,rows,{
+   catalog:[...catalog,{titulo:"Ulefone Armor 22 256GB",marca:"ULEFONE",partnumber:"ARMOR-22-256G"}]
+  });
+  expect(b.draft_items).toEqual([
+   {partnumber:"ARMOR-X13",quantity:4},{partnumber:"ARMOR-22-256G",quantity:2}
+  ]);
+  const replay=foldSalesMemory(b,rows,{
+   catalog:[...catalog,{titulo:"Ulefone Armor 22 256GB",marca:"ULEFONE",partnumber:"ARMOR-22-256G"}]
+  });
+  expect(replay).toEqual(b);
+ });
+ it("migrates old v1 memories without hallucinating an unrequested draft",()=>{
+  const old=normalizeSalesMemory({version:1,quantity:2,selected_partnumber:"ARMOR-X13"});
+  expect(old.version).toBe(2);
+  expect(old.draft_items).toEqual([]);
+  expect(buildBuyerContext(["y que tal la batería?"],{catalog,memory:old}).matched_partnumber).toBe("ARMOR-X13");
+ });
+ it("does not persist a speculative amount or buyer personal identifiers in draft lines",()=>{
+  const b=buildBuyerContext(["Mi nombre es Juan, DNI 12345678; quiero 2 Armor X13"],{catalog});
+  const m=snapshotSalesMemory(b);
+  expect(m.draft_items).toEqual([{partnumber:"ARMOR-X13",quantity:2}]);
+  expect(JSON.stringify(m)).not.toMatch(/12345678|Juan|precio_soles|stock_units_demo|price_pen/);
+ });
  it("remembers quantity, budget and corrections after limited context windows",()=>{
   let memory=foldSalesMemory(null,[
    event("m1","Quiero 3 laptops con presupuesto de S/ 12000 en total",0)

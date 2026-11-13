@@ -68,11 +68,12 @@ export function createWhatsAppTestResponder({
   // product is only a search hint; retrieved evidence must verify its SKU.
   const previousMemory=normalizeSalesMemory(leadProfile?.sales_memory);
   const hint=previousMemory?.customer_reference||previousMemory?.selected_partnumber;
+  const requiredDraftSkus=(previousMemory?.draft_items||[]).map(x=>x.partnumber);
   const brandHint=typeof previousMemory?.brand==="string"&&!previousMemory?.selected_partnumber?previousMemory.brand:null;
   const catalogTurns=isExplicitProductSwitch(event.text)?[affirmativeProductText(event.text)]:
     hint?[...buyerTurns.slice(-14),hint,event.text]:
     brandHint?[brandHint,event.text]:buyerTurns;
-  const lookup=await retrieveSalesCatalog(client,thread.workspace_id,catalogTurns,{limit:18});
+  const lookup=await retrieveSalesCatalog(client,thread.workspace_id,catalogTurns,{limit:18,requiredPartnumbers:requiredDraftSkus});
   const pn=lookup.products.map(x=>x.partnumber);
   const offers=testOffers&&pn.length?await client.from("arm_offer_simulations")
     .select("partnumber,price_pen,stock_status,stock_units_demo,is_test_data")
@@ -90,7 +91,8 @@ export function createWhatsAppTestResponder({
   try{commercialByPn=await loadCommercialEvidence(client,thread.workspace_id,lookup.products);}
   catch{console.error("ARM_COMMERCIAL_EVIDENCE_UNAVAILABLE");}
   const catalog=enrichCatalog(lookup.products,testOffers,offers.data||[],
-    {factsByPn:lookup.factsByPn,commercialByPn,requestedQuantity:provisionalBuyer.quantity});
+    {factsByPn:lookup.factsByPn,commercialByPn,requestedQuantity:provisionalBuyer.quantity,
+     requestedQuantitiesByPn:Object.fromEntries(provisionalBuyer.draft_items.map(x=>[x.partnumber,x.quantity]))});
   const buyer=buildBuyerContext(previousMemory?[event.text]:buyerTurns,{
     leadProfile,catalog,memory:previousMemory
   });

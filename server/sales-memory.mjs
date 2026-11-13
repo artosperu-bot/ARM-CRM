@@ -1,4 +1,5 @@
 import {buildBuyerContext} from "./buyer-reasoning.mjs";
+import {normalizeDraftItems} from "./sales-draft-items.mjs";
 
 /**
  * Minimal, deterministic sales memory. Stores only buyer-supplied commercial
@@ -12,9 +13,14 @@ const budget=(v)=>v&&Number.isInteger(v.pen)&&v.pen>0&&v.pen<=1000000&&
   ["total","por_unidad","sin_aclarar"].includes(v.scope)?{pen:v.pen,scope:v.scope}:null;
 const phrase=(v)=>typeof v==="string"&&v.length<=50&&/^[\p{L}\p{N} ._-]+$/u.test(v)?v:null;
 export function normalizeSalesMemory(input){
- if(!input||input.version!==1||typeof input!=="object")return null;
+ if(!input||![1,2].includes(input.version)||typeof input!=="object")return null;
+ const draftItems=normalizeDraftItems(input.draft_items);
+ const draftFocus=reference(input.draft_focus);
  return {
-  version:1,
+  version:2,
+  draft_items:draftItems,
+  draft_focus:draftFocus&&draftItems.some(x=>x.partnumber===draftFocus)?draftFocus:null,
+  draft_ambiguous:input.draft_ambiguous===true,
   quantity:Number.isInteger(input.quantity)&&input.quantity>=1&&input.quantity<=999?input.quantity:null,
   budget:budget(input.budget),
   brand:phrase(input.brand),
@@ -35,8 +41,13 @@ export function snapshotSalesMemory(buyer,{previous=null,lastMessageAt=null,last
    newestReference!==old?.selected_partnumber);
  const selected=reference(buyer?.matched_partnumber)||
    (!newlyDifferent&&buyer?.product_switched!==true?old?.selected_partnumber:null)||null;
+ const draftItems=normalizeDraftItems(buyer?.draft_items||old?.draft_items);
+ const draftFocus=reference(buyer?.draft_focus);
  return {
-  version:1,
+  version:2,
+  draft_items:draftItems,
+  draft_focus:draftFocus&&draftItems.some(x=>x.partnumber===draftFocus)?draftFocus:null,
+  draft_ambiguous:buyer?.draft_ambiguous===true,
   quantity:Number.isInteger(buyer?.quantity)&&buyer.quantity>=1&&buyer.quantity<=999?buyer.quantity:null,
   budget:budget(buyer?.budget),
   brand:phrase(buyer?.brand),

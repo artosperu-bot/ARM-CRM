@@ -20,6 +20,17 @@ export function catalogQueries(customerMessages,{maxQueries=2}={}){
  const latest=normalize(turns.at(-1));
  if(/^(?:gracias(?: por todo)?|listo gracias|no me escriban|stop|ya no quiero comprar|mejor ya no voy a comprar|nada mas)$/u.test(latest))
    return [];
+ const capQueries=Math.max(1,Math.min(maxQueries,3));
+ // A two-line request must search BOTH models. A single combined query can
+ // otherwise return only the first ranked SKU from the indexed RPC.
+ const fragments=String(turns.at(-1)||"").split(/\s+(?:y|ademas)\s+|[,;+]/iu)
+  .map(part=>normalize(part).split(" ").filter(w=>
+   (w.length>=3||/^\d{2,}$/u.test(w))&&!stop.has(w) &&
+   !/^\d{4,6}$/u.test(w)).slice(0,8).join(" "))
+  .filter(x=>x.length>=3&&/\b(?:[a-z]{1,12}\d{2,5}|[a-z]{3,20}\s+\d{2,4})\b/u.test(x));
+ if(fragments.length>=2){
+  return [...new Set(fragments)].slice(0,capQueries).map(x=>x.slice(0,120));
+ }
  const queries=[];
  for(const raw of [...turns].reverse()){
   const tokens=normalize(raw).split(" ").filter(word=>
@@ -29,7 +40,7 @@ export function catalogQueries(customerMessages,{maxQueries=2}={}){
   const phrase=tokens.slice(0,8).join(" ").slice(0,120);
   if(phrase.length<3||queries.includes(phrase))continue;
   queries.push(phrase);
-  if(queries.length>=Math.max(1,Math.min(maxQueries,3)))break;
+  if(queries.length>=capQueries)break;
  }
  return queries;
 }
@@ -52,11 +63,13 @@ export function reviewedProductFacts(rows,{now=Date.now()}={}){
  }
  return factsByPn;
 }
-export async function retrieveSalesCatalog(client,workspaceId,customerMessages,{limit=18}={}){
+export async function retrieveSalesCatalog(client,workspaceId,customerMessages,{limit=18,requiredPartnumbers=[]}={}){
  if(!client||!workspaceId||typeof client.rpc!=="function")
   throw new Error("ARM_CATALOG_SEARCH_NOT_CONFIGURED");
  const queries=catalogQueries(customerMessages);
- if(!queries.length)return {products:[],factsByPn:{},searchQueries:[],limited:true};
+ const required=[...new Set((Array.isArray(requiredPartnumbers)?requiredPartnumbers:[])
+   .filter(x=>typeof x==="string"&&/^[A-Z0-9][A-Z0-9._-]{3,79}$/iu.test(x)).slice(0,12))];
+ if(!queries.length&&!required.length)return {products:[],factsByPn:{},searchQueries:[],limited:true};
  const cap=Math.min(24,Math.max(1,Math.floor(limit)));
  const scored=new Map();
  for(let i=0;i<queries.length;i++){
@@ -72,6 +85,18 @@ export async function retrieveSalesCatalog(client,workspaceId,customerMessages,{
     scored.set(row.partnumber,{product:row,score:weighted});
   }
  }
+ if(required.length){
+  // A saved draft SKU is a lookup hint, never an entitlement or a cached offer.
+  // RLS and workspace filters remain in force; missing/deleted items are omitted.
+  const {data:extra,error:extraError}=await client.from("arm_products")
+   .select("id,workspace_id,partnumber,title,brand,attributes,category_path,family_key,variant_options,price_pen,stock_erp,verified_at")
+   .eq("workspace_id",workspaceId).in("partnumber",required).limit(12);
+  if(extraError)throw new Error("ARM_CATALOG_DRAFT_LOOKUP_FAILED");
+  for(const row of extra||[]){
+   if(row?.workspace_id!==workspaceId||!required.includes(row.partnumber))continue;
+   if(!scored.has(row.partnumber))scored.set(row.partnumber,{product:row,score:130});
+  }
+ }
  const ranked=[...scored.values()].sort((a,b)=>b.score-a.score||
   String(a.product.partnumber).localeCompare(String(b.product.partnumber)));
  // When one exact model/SKU is far more relevant than every other candidate,
@@ -81,7 +106,9 @@ export async function retrieveSalesCatalog(client,workspaceId,customerMessages,{
   .replace(/[\u0300-\u036f]/g,"").toLowerCase();
  const comparing=/\b(?:compara\w*|diferencia\w*|alternativa\w*|opciones|versus|vs|mejor que|otra opcion)\b/u.test(current);
  const strongest=ranked[0];
- const exactFocus=!comparing&&strongest?.score>=140&&
+ const multiProduct=queries.length>=2&&
+   /\b(?:y|ademas)\b|[,;+]/u.test(current);
+ const exactFocus=!comparing&&!multiProduct&&required.length<=1&&strongest?.score>=140&&
    (!ranked[1]||strongest.score>ranked[1].score*1.7);
  const products=(exactFocus?[strongest]:ranked.slice(0,cap)).map(x=>x.product);
  if(!products.length)return {products:[],factsByPn:{},searchQueries:queries,limited:true};

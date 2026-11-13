@@ -41,6 +41,46 @@ describe("ALEX commercial operation readiness",()=>{
   expect(result.paymentRegistered).toBe(false);
   expect(result.canManuallyCreateOpportunity).toBe(false);
  });
+ it("calculates a two-line pilot basket without creating a real quote",()=>{
+  const rows=[
+   {...priced,oferta_simulada:true,origen_datos:"simulacion_solo_pruebas",disponibilidad:"disponible"},
+   {titulo:"Ulefone Armor 22",partnumber:"ARMOR-22-256G",marca:"ULEFONE",
+    precio_soles:999,disponibilidad:"disponible",oferta_simulada:true,origen_datos:"simulacion_solo_pruebas"}
+  ];
+  const b=buyer(["quiero 3 Armor X13 y 2 Armor 22"],rows);
+  const result=assessCommercialReadiness(b,{catalog:rows,simulated:true});
+  expect(result.draftLines).toHaveLength(2);
+  expect(result.demoBasket?.lines).toMatchObject([
+   {partnumber:"ARMOR-X13",quantity:3,unitPricePen:799,subtotalPen:2397},
+   {partnumber:"ARMOR-22-256G",quantity:2,unitPricePen:999,subtotalPen:1998}
+  ]);
+  expect(result.demoBasket).toMatchObject({testOnly:true,totalPen:4395,allPriced:true,allAvailable:true});
+  expect(result.quoteCreated).toBe(false);
+  expect(result.orderCreated).toBe(false);
+  expect(result.paymentRegistered).toBe(false);
+ });
+ it("does not output a basket total if one line lacks a verified demo price",()=>{
+  const rows=[
+   {...priced,oferta_simulada:true,origen_datos:"simulacion_solo_pruebas",disponibilidad:"disponible"},
+   {titulo:"Impresora Epson L1250",partnumber:"E-L1250",precio_soles:null,disponibilidad:"por confirmar",oferta_simulada:true,origen_datos:"simulacion_solo_pruebas"}
+  ];
+  const b=buyer(["quiero 2 Armor X13 y 1 Epson L1250"],rows);
+  const result=assessCommercialReadiness(b,{catalog:rows,simulated:true});
+  expect(result.demoBasket?.totalPen).toBeNull();
+  expect(result.demoBasket?.allPriced).toBe(false);
+ });
+ it("tracks out-of-stock lines separately, not as a confirmed sale",()=>{
+  const rows=[
+   {...priced,oferta_simulada:true,origen_datos:"simulacion_solo_pruebas",disponibilidad:"disponible"},
+   {titulo:"Ulefone Armor X12 Pro",partnumber:"ARMOR-X12Pro",precio_soles:659,
+    oferta_simulada:true,origen_datos:"simulacion_solo_pruebas",disponibilidad:"no disponible"}
+  ];
+  const b=buyer(["quiero 2 Armor X13 y 1 Armor X12 Pro"],rows);
+  const result=assessCommercialReadiness(b,{catalog:rows,simulated:true});
+  expect(result.demoBasket?.allAvailable).toBe(false);
+  expect(result.demoBasket?.lines[1].availability).toBe("no disponible");
+  expect(result.orderCreated).toBe(false);
+ });
  it("shows simulated insufficiency without pretending a reservation occurred",()=>{
   const demo={...priced,oferta_simulada:true,disponibilidad:"no disponible"};
   const result=assessCommercialReadiness(buyer(["Quiero comprar 6 Armor X13"],[demo]),{
