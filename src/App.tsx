@@ -50,7 +50,7 @@ export default function App(){
       sessionStorage.setItem(key,"verified");
       const summary=data.summary as Record<string,{active:number}> | undefined;
       const count=summary?Object.values(summary).reduce((sum,item)=>sum+(item.active||0),0):0;
-      setConnectionNotice("Composio verificado: "+count+" conexiones OAuth activas detectadas. Los envíos siguen deshabilitados.");
+      setConnectionNotice("Composio verificado: "+count+" conexiones OAuth activas detectadas. Los envíos automáticos siguen deshabilitados; respuestas manuales de WhatsApp disponibles solo para números de prueba autorizados.");
     })
     .catch(()=>{
       sessionStorage.setItem(key,"error");

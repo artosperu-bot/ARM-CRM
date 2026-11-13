@@ -23,3 +23,17 @@
 /* Human handoff: queue is distinct from an acknowledged assignment. */
 .inbox-assignment-info{padding:10px 17px;background:#f8fbfd;color:#38627a;font-size:11px;line-height:1.5;border-bottom:1px solid #e1edf3}
 .inbox-action-note{font-size:11px;color:#647c89;align-self:center}
+
+/* Human WhatsApp reply: one deliberate action, with server-verified permission. */
+.inbox-composer{display:flex;flex-direction:column;gap:9px;padding:14px 16px;background:#fff;border-top:1px solid #dceaf1}
+.inbox-composer>label{font-size:12px;font-weight:750;color:#244c61}
+.inbox-composer textarea{box-sizing:border-box;width:100%;resize:vertical;min-height:72px;max-height:190px;border:1px solid #bad8e8;border-radius:11px;padding:11px 12px;font-size:13px;font-family:inherit;line-height:1.5;outline:none;color:#183f53;background:#fff}
+.inbox-composer textarea:focus{border-color:#3aa7c5;box-shadow:0 0 0 3px #3aa7c51f}
+.inbox-composer textarea:disabled{background:#f4f8fa;color:#76909f}
+.inbox-composer-footer{display:flex;gap:13px;justify-content:space-between;align-items:center;flex-wrap:wrap}
+.inbox-composer-footer span{font-size:11px;color:#577e8f;flex:1}
+.inbox-send-button{border:0;border-radius:10px;background:#067e91;color:#fff;display:flex;align-items:center;gap:8px;padding:10px 14px;cursor:pointer;font-weight:700;font-size:12px}
+.inbox-send-button:hover:not(:disabled){background:#076a7b}
+.inbox-send-button:disabled{cursor:not-allowed;opacity:.5}
+.inbox-composer-hint{font-size:10px;color:#7193a2;line-height:1.5}
+@media(max-width:620px){.inbox-composer-footer{align-items:stretch;flex-direction:column}.inbox-send-button{justify-content:center}}

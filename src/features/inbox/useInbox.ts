@@ -21,6 +21,9 @@ export type InboxMessage = {
  id:string;thread_id:string|null;provider:string;direction:"inbound"|"outbound";
  content:string|null;message_type:string;created_at:string;
 };
+export type ManualReplyAccess = {
+ allowed:boolean;reason:string|null;description:string;windowEndsAt:string|null;
+};
 export function useInbox(workspaceId:string){
  const [threads,setThreads]=useState<Thread[]>([]);
  const [contacts,setContacts]=useState<InboxContact[]>([]);
@@ -64,18 +67,46 @@ export function useInbox(workspaceId:string){
   const timer=setInterval(()=>{if(!document.hidden)void load(true);},20000);
   return ()=>clearInterval(timer);
  },[load]);
+ const refreshMessages=useCallback(async(id=selectedId)=>{
+  if(!supabase||!id)return;
+  const {data,error:failure}=await supabase.from("arm_messages")
+   .select("id,thread_id,provider,direction,content,message_type,created_at")
+   .eq("workspace_id",workspaceId).eq("thread_id",id)
+   .order("created_at",{ascending:true}).limit(500);
+  if(failure)setError(failure.message);
+  else if(id===selectedId)setMessages((data??[]) as InboxMessage[]);
+ },[workspaceId,selectedId]);
  useEffect(()=>{
   if(!selectedId||!supabase){setMessages([]);return;}
-  let active=true;setMessageLoading(true);setError("");
-  void supabase.from("arm_messages").select("id,thread_id,provider,direction,content,message_type,created_at")
-   .eq("workspace_id",workspaceId).eq("thread_id",selectedId).order("created_at",{ascending:true}).limit(500)
-   .then(({data,error:failure})=>{
-    if(!active)return;
-    if(failure)setError(failure.message);else setMessages((data??[]) as InboxMessage[]);
-    setMessageLoading(false);
-   });
-  return ()=>{active=false;};
- },[workspaceId,selectedId]);
+  setMessages([]);setMessageLoading(true);setError("");
+  void refreshMessages().finally(()=>setMessageLoading(false));
+  const timer=setInterval(()=>{if(!document.hidden)void refreshMessages();},12000);
+  return ()=>clearInterval(timer);
+ },[selectedId,refreshMessages]);
+ async function manualRequest(path:string,body?:Record<string,string>){
+  if(!supabase)throw new Error("Supabase no está configurado.");
+  const {data:{session},error:authError}=await supabase.auth.getSession();
+  if(authError||!session?.access_token)throw new Error("Vuelve a iniciar sesión.");
+  const response=await fetch("http://127.0.0.1:8789/manual-whatsapp/"+path,{
+   method:body?"POST":"GET",
+   headers:{"Authorization":"Bearer "+session.access_token,...(body?{"Content-Type":"application/json"}:{})},
+   ...(body?{body:JSON.stringify(body)}:{})
+  });
+  const result=await response.json();
+  if(!response.ok)throw new Error(result.error||"No se pudo comunicar con el servicio de WhatsApp.");
+  return result;
+ }
+ async function manualStatus(id:string):Promise<ManualReplyAccess>{
+  return manualRequest("status?"+new URLSearchParams({workspaceId,threadId:id}).toString());
+ }
+ async function sendManualMessage(id:string,text:string,requestId:string){
+  const result=await manualRequest("send",{
+   workspaceId,threadId:id,text,requestId
+  }) as {ok:boolean;acceptedByMeta:boolean;persisted:boolean;notice:string};
+  if(result.persisted)await refreshMessages(id);
+  await load(true);
+  return result;
+ }
  async function humanAction(id:string,action:HumanAction){
   if(!supabase)throw new Error("Supabase no está configurado.");
   const {data,error:failure}=await supabase.rpc("arm_human_thread_action",{
@@ -87,5 +118,6 @@ export function useInbox(workspaceId:string){
   return data as {action:HumanAction;status:ThreadStatus;assigned_to:string|null};
  }
  return {threads,contacts,insights,messages,selectedId,setSelectedId,userId,
-  loading,messageLoading,error,refresh:()=>load(false),humanAction};
+  loading,messageLoading,error,refresh:()=>load(false),refreshMessages,
+  manualStatus,sendManualMessage,humanAction};
 }

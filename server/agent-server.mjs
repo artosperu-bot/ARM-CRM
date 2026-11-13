@@ -2,6 +2,7 @@ import { createServer } from "node:http";
 import { readFileSync } from "node:fs";
 import { createClient } from "@supabase/supabase-js";
 import { randomUUID } from "node:crypto";
+import { createManualWhatsAppService } from "./whatsapp-manual-reply.mjs";
 import { estimateUsd } from "./agent-cost.mjs";
 import { salesInstructions } from "./sales-policy.mjs";
 import { enrichCatalog } from "./product-knowledge.mjs";
@@ -36,6 +37,17 @@ const ai=envFile(process.env.OPENAI_ENV_FILE||"C:\\DESAROLLO\\STECH_AGENT\\.env"
 const apiKey=process.env.OPENAI_API_KEY||ai.OPENAI_API_KEY;
 const supabaseUrl=process.env.SUPABASE_URL||crm.VITE_SUPABASE_URL;
 const publishableKey=process.env.SUPABASE_PUBLISHABLE_KEY||crm.VITE_SUPABASE_PUBLISHABLE_KEY;
+const gatewayEnv=envFile(process.env.ARM_LEGACY_ENV_FILE||"C:\\DESAROLLO\\n8n\\backend\\.env");
+const metaToken=process.env.WHATSAPP_ACCESS_TOKEN||gatewayEnv.WHATSAPP_ACCESS_TOKEN;
+const metaPhoneId=process.env.WHATSAPP_PHONE_NUMBER_ID||gatewayEnv.WHATSAPP_PHONE_NUMBER_ID;
+const serviceRole=process.env.SUPABASE_SERVICE_ROLE_KEY||gatewayEnv.SUPABASE_SERVICE_ROLE_KEY;
+const testNumbers=(process.env.ARM_WHATSAPP_TEST_NUMBERS||crm.ARM_WHATSAPP_TEST_NUMBERS||"")
+ .split(",").map(x=>x.replace(/\D/g,"")).filter(Boolean);
+const manualWhatsApp=createManualWhatsAppService({
+ db:supabaseUrl&&serviceRole?createClient(supabaseUrl,serviceRole,{auth:{persistSession:false,autoRefreshToken:false}}):null,
+ phoneId:metaPhoneId,accessToken:metaToken,allowlist:testNumbers,
+ graphVersion:process.env.WHATSAPP_GRAPH_API_VERSION||gatewayEnv.WHATSAPP_GRAPH_API_VERSION||"v25.0"
+});
 const origin="http://127.0.0.1:5175",port=8789,model="gpt-5.4-mini",maxOutput=450,maxDaily=20;
 const busy=new Set(), localCount=new Map();
 function send(res,status,value) {
@@ -56,7 +68,36 @@ function answerText(resp) {
 function clientFor(jwt){return createClient(supabaseUrl,publishableKey,{
  global:{headers:{Authorization:"Bearer "+jwt}},auth:{persistSession:false,autoRefreshToken:false}
 });}
+async function handleManualWhatsApp(req,res){
+ if(!supabaseUrl||!publishableKey||!serviceRole)return send(res,503,{error:"Servicio manual de WhatsApp sin configuración."});
+ const jwt=(req.headers.authorization||"").match(/^Bearer\s+([^\s]+)$/iu)?.[1];
+ if(!jwt)return send(res,401,{error:"Inicia sesión en ARM-CRM."});
+ const db=clientFor(jwt);
+ const {data:{user},error:authError}=await db.auth.getUser(jwt);
+ if(authError||!user?.id||!user?.email)return send(res,401,{error:"Sesión expirada."});
+ const {data:permission,error:permissionError}=await db.from("crm_usuarios").select("activo")
+  .eq("email",user.email.toLowerCase()).maybeSingle();
+ if(permissionError||!permission?.activo)return send(res,403,{error:"Acceso al CRM no autorizado."});
+ const url=new URL(req.url||"/","http://127.0.0.1:8789");
+ const isStatus=req.method==="GET"&&url.pathname==="/manual-whatsapp/status";
+ const isSend=req.method==="POST"&&url.pathname==="/manual-whatsapp/send";
+ if(!isStatus&&!isSend)return send(res,404,{error:"Ruta inexistente."});
+ const body=isSend?await requestJson(req):Object.fromEntries(url.searchParams);
+ const workspaceId=body.workspaceId,threadId=body.threadId;
+ const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/iu;
+ if(!uuid.test(workspaceId||"")||!uuid.test(threadId||""))
+  return send(res,400,{error:"Conversación inválida."});
+ // RLS of the signed-in user must authorize this workspace. The service
+ // role is used only after authorization and exact thread/assignee checks.
+ const {data:ws,error:wsError}=await db.from("arm_workspaces").select("id").eq("id",workspaceId).maybeSingle();
+ if(wsError||!ws)return send(res,403,{error:"No tienes acceso a este espacio."});
+ const args={workspaceId,threadId,userId:user.id};
+ if(isStatus)return send(res,200,await manualWhatsApp.status(args));
+ const result=await manualWhatsApp.send({...args,text:body.text,requestId:body.requestId});
+ return send(res,200,result);
+}
 async function handle(req,res){
+ if((req.url||"").startsWith("/manual-whatsapp/"))return handleManualWhatsApp(req,res);
  if(req.method==="GET"&&req.url==="/health")return send(res,200,{ok:!!(apiKey&&supabaseUrl&&publishableKey),configured:!!apiKey,provider:"OpenAI",model,mode:"supervised",maxOutput,maxDaily});
  if(req.method!=="POST"||req.url!=="/chat")return send(res,404,{error:"Ruta inexistente"});
  if(!apiKey||!supabaseUrl||!publishableKey)return send(res,503,{error:"El backend no tiene las credenciales locales necesarias."});

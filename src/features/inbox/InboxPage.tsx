@@ -1,6 +1,6 @@
-import { useMemo,useState } from "react";
-import { CheckCircle2,Clock3,Inbox,MessageSquare,RefreshCw,Search,ShieldCheck,UserRoundCheck } from "lucide-react";
-import { useInbox,type ThreadStatus,type HumanAction } from "./useInbox";
+import { useEffect,useMemo,useState,type FormEvent } from "react";
+import { CheckCircle2,Clock3,Inbox,MessageSquare,RefreshCw,Search,Send,ShieldCheck,UserRoundCheck } from "lucide-react";
+import { useInbox,type ThreadStatus,type HumanAction,type ManualReplyAccess } from "./useInbox";
 import {parseAgentPhotoMessage} from "../agent/photoMessage";
 import "./inbox.css";
 
@@ -13,6 +13,9 @@ const dates=(date:string)=>new Date(date).toLocaleString("es-PE",{month:"short",
 export default function InboxPage({workspaceId}:{workspaceId:string}){
  const inbox=useInbox(workspaceId);
  const [filter,setFilter]=useState("all");const [leadFilter,setLeadFilter]=useState("all");const [query,setQuery]=useState("");const [busy,setBusy]=useState(false);const [notice,setNotice]=useState("");
+ const [draft,setDraft]=useState("");const [sendAttemptId,setSendAttemptId]=useState<string|null>(null);const [sending,setSending]=useState(false);
+ const [manualAccess,setManualAccess]=useState<ManualReplyAccess|null>(null);
+ const [manualLoading,setManualLoading]=useState(false);
  const contactsById=useMemo(()=>new Map(inbox.contacts.map(c=>[c.id,c])),[inbox.contacts]);
  const leadByThread=useMemo(()=>new Map(inbox.insights.map(x=>[x.thread_id,x])),[inbox.insights]);
  const filtered=useMemo(()=>inbox.threads.filter(t=>{
@@ -33,6 +36,38 @@ export default function InboxPage({workspaceId}:{workspaceId:string}){
  const person=selected?contactsById.get(selected.contact_id):null;
  const isMine=Boolean(selected?.assigned_to&&selected.assigned_to===inbox.userId);
  const unassigned=inbox.threads.filter(t=>t.status==="human"&&!t.assigned_to).length;
+ useEffect(()=>{
+  let active=true;
+  setDraft("");setSendAttemptId(null);setManualAccess(null);
+  if(!selected||!isMine||selected.status!=="human"||selected.channel!=="whatsapp")return;
+  setManualLoading(true);
+  const verify=()=>inbox.manualStatus(selected.id)
+   .then(status=>{if(active)setManualAccess(status);})
+   .catch(error=>{if(active)setManualAccess({
+    allowed:false,reason:"service_unavailable",
+    description:error instanceof Error?error.message:"Servicio de WhatsApp no disponible.",
+    windowEndsAt:null
+   });})
+   .finally(()=>{if(active)setManualLoading(false);});
+  void verify();
+  const timer=setInterval(()=>{if(!document.hidden)void verify();},60000);
+  return ()=>{active=false;clearInterval(timer);};
+ },[selected?.id,selected?.status,selected?.assigned_to,isMine]);
+ async function sendReply(event:FormEvent<HTMLFormElement>){
+  event.preventDefault();
+  if(!selected||!isMine||!manualAccess?.allowed||sending||!draft.trim())return;
+  const content=draft.trim();const requestId=sendAttemptId||crypto.randomUUID();
+  setSendAttemptId(requestId);setSending(true);setNotice("");
+  try{
+   const result=await inbox.sendManualMessage(selected.id,content,requestId);
+   if(result.acceptedByMeta){
+    setDraft("");setSendAttemptId(null);setNotice(result.notice);
+    setManualAccess(await inbox.manualStatus(selected.id));
+   }
+  }catch(error){
+   setNotice("No se pudo enviar: "+(error instanceof Error?error.message:"Error desconocido."));
+  }finally{setSending(false);}
+ }
  const assignmentLabel=(t:typeof selected)=>{
    if(!t)return "";
    if(t.status!=="human")return statusLabels[t.status];
@@ -106,7 +141,7 @@ export default function InboxPage({workspaceId}:{workspaceId:string}){
            {selectedLead.opt_out&&<strong className="inbox-intelligence-stop">No contactar: el cliente solicitó detener comunicaciones.</strong>}
            {selectedLead.requires_human&&<small>Requiere revisión de un asesor. ALEX no debe responder.</small>}
            {selectedLead.source_mode==="sandbox"&&<small>PRUEBA: no convertir automáticamente a venta ni programar mensajes.</small>}
-           <small>Seguimiento saliente: bloqueado hasta autorización y verificación.</small>
+           <small>Seguimientos automáticos bloqueados. Un asesor asignado puede responder manualmente solo a números de WhatsApp autorizados.</small>
          </section>}
          <div className="inbox-assignment-info" role="status">
            {selected.status==="human"&&!selected.assigned_to&&<>En cola para atención humana. Ningún asesor la ha tomado todavía.{selected.human_queued_at&&<> Desde {dates(selected.human_queued_at)}.</>}</>}
@@ -140,7 +175,30 @@ export default function InboxPage({workspaceId}:{workspaceId:string}){
            {selected.status==="human"&&selected.assigned_to&&!isMine&&<span className="inbox-action-note">Ya la recibió otro asesor. No puedes apropiarte de esta conversación.</span>}
            {selected.status==="closed"&&<button className="secondary-button" disabled={busy} onClick={()=>void runAction("reopen")}><Clock3 size={16}/> Reabrir (administrador)</button>}
          </div>
-         <div className="inbox-disabled"><ShieldCheck size={16}/> La asignación no envía mensajes al cliente. La respuesta manual permanece deshabilitada hasta verificar canal, consentimiento y ventana de envío.</div>
+         {selected.channel==="whatsapp"&&selected.status==="human"&&isMine?
+          <form className="inbox-composer" onSubmit={e=>void sendReply(e)}>
+           <label htmlFor="inbox-human-message">Tu respuesta como asesor</label>
+           <textarea id="inbox-human-message" rows={3} maxLength={800} value={draft}
+            onChange={e=>{setDraft(e.target.value);setSendAttemptId(null);}}
+            disabled={!manualAccess?.allowed||sending||manualLoading}
+            placeholder={manualAccess?.allowed?"Escribe tu mensaje de WhatsApp…":"Verificando autorización para responder…"}
+            aria-describedby="inbox-reply-status"/>
+           <div className="inbox-composer-footer">
+            <span id="inbox-reply-status" role="status">
+             {manualLoading?"Verificando canal y ventana de WhatsApp…":
+               manualAccess?.allowed?"Número de prueba autorizado · "+
+                (manualAccess.windowEndsAt?"Ventana hasta "+new Date(manualAccess.windowEndsAt).toLocaleString("es-PE",{hour:"2-digit",minute:"2-digit",day:"2-digit",month:"short"}):"24 horas vigentes"):
+                manualAccess?.description||"El envío manual está pendiente de autorización."}
+            </span>
+            <button type="submit" className="inbox-send-button" disabled={!manualAccess?.allowed||sending||!draft.trim()}>
+             <Send size={15}/>{sending?"Enviando…":"Enviar por WhatsApp"}
+            </button>
+           </div>
+           {manualAccess?.allowed&&<small className="inbox-composer-hint">Se enviará al número de prueba seleccionado. Meta acepta el envío antes de confirmar la entrega.</small>}
+          </form>:
+          <div className="inbox-disabled"><ShieldCheck size={16}/> {selected.channel!=="whatsapp"?
+           "Por ahora las respuestas manuales solo están habilitadas para WhatsApp de prueba.":
+           "Toma una conversación de WhatsApp para escribir. ALEX no responderá mientras esté asignada a un asesor."}</div>}
        </>:<div className="inbox-no-selection"><MessageSquare size={40}/><h2>No hay conversaciones nuevas</h2><p>Cuando se active una integración verificada, los mensajes entrantes aparecerán aquí sin importar historiales antiguos.</p></div>}
      </section>
    </div>

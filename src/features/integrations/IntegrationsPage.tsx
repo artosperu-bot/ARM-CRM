@@ -63,7 +63,7 @@ export default function IntegrationsPage({workspaceId,isAdmin}:{workspaceId:stri
      Administrar Auth Configs en Composio <ExternalLink size={15}/>
    </a>
   </section>
-  <div className="info-strip"><ShieldAlert size={20}/><div><strong>Recibir mensajes no equivale a enviarlos</strong><span>La bandeja ya dispone de receptor firmado Meta y control de duplicados, pero aún requiere vincular IDs de cuentas, secret de Meta y suscripciones webhooks. Los envíos continúan deshabilitados.</span></div></div>
+  <div className="info-strip"><ShieldAlert size={20}/><div><strong>WhatsApp manual: piloto autorizado</strong><span>El receptor firmado Meta y la conexión de WhatsApp están activos. Solo el asesor asignado puede responder desde la bandeja a los dos números de prueba, si el cliente escribió dentro de las últimas 24 horas y no se opuso al contacto. Los envíos automáticos y los demás canales permanecen deshabilitados.</span></div></div>
   <div className="info-strip"><LockKeyhole size={20}/><div><strong>Clave privada solo en servidor</strong><span>Para verificar el proyecto de Composio desde ARM-CRM, registra COMPOSIO_API_KEY como secreto de Supabase, nunca en una variable VITE_ ni en GitHub.</span></div></div>
   <div className="info-strip"><CheckCircle2 size={20}/><div><strong>Supabase CRM y autenticación con Google</strong><span>Datos separados por workspace y acceso restringido a usuarios de STECH.</span></div></div>
  </div>;
