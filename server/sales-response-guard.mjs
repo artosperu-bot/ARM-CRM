@@ -134,6 +134,25 @@ export function protectSalesResponse(reply,{catalog=[],buyer=null,simulated=fals
     blocked:true,reason:"demo_basket_calculated"};
   }
  }
+ // For an explicit quantity revision, independently summarize each SKU.
+ // This also protects against a nearly blank AI reply and false promises that
+ // a six-unit line is ready when pilot stock can only support five.
+ if(simulated&&!buyer?.draft_ambiguous&&
+   (buyer?.draft_items||[]).length>1&&
+   /\b(?:mejor|sube|aumenta|corrige|dejalo|dejala|dejamos)\b/u.test(buyerText)&&
+   /\b(?:\d{1,3}|dos|tres|cuatro|cinco|seis)\b/u.test(buyerText)){
+  const details=buyer.draft_items.map(item=>{
+   const product=(Array.isArray(catalog)?catalog:[]).find(x=>x.partnumber===item.partnumber);
+   return {quantity:item.quantity,name:String(product?.titulo||product?.title||item.partnumber),
+    available:product?.disponibilidad==="disponible"};
+  });
+  const desc=details.map(x=>x.quantity+" × "+x.name).join("; ");
+  const short=details.filter(x=>!x.available);
+  const note=short.length?" Para la cantidad indicada, falta disponibilidad de: "+
+   short.map(x=>x.name).join(", ")+".":"";
+  return {reply:"Simulación: queda anotado el interés por "+desc+"."+note+
+    " No es pedido ni reserva.",blocked:true,reason:"demo_draft_revision"};
+ }
  const askedCommercialPrice=turnPlan.asksPrice||["consultar_precio","cotizar","comparar","objecion","comprar"].includes(intent);
  const available=(Array.isArray(catalog)?catalog:[]).filter(p=>p?.precio_soles!==null&&
    p?.precio_soles!==undefined&&Number.isFinite(Number(p.precio_soles))&&Number(p.precio_soles)>0);
@@ -332,10 +351,14 @@ export function protectSalesResponse(reply,{catalog=[],buyer=null,simulated=fals
   const next=shortfall?
     "Hay al menos un artículo cuya disponibilidad para esa cantidad requiere revisión. ":
     "El siguiente paso es validar los datos comerciales vigentes con STECH. ";
-  return {reply:(simulated?"Simulación: ":"")+opening+next+
-    "Aún no se ha creado un pedido, reserva, cotización ni pago. "+
-    "Antes de concretar la compra se deben confirmar precio, stock y condiciones de entrega.",
-    blocked:true,reason:"purchase_interest_no_checkout"};
+  return {reply:lines.length>1?
+    (simulated?"Simulación: ":"")+opening+next+
+      "Aún no se ha creado un pedido, reserva, cotización ni pago. "+
+      "Antes de concretar la compra se deben confirmar precio, stock y condiciones de entrega.":
+    (simulated?"Simulación: ":"")+opening+
+      "Todavía no puedo crear un pedido ni un enlace de pago desde este chat. "+
+      "Antes hay que confirmar precio, disponibilidad y condiciones vigentes con STECH.",
+    blocked:true,reason:lines.length>1?"purchase_interest_no_checkout":"purchase_not_ready"};
  }
   return {reply:polishCommercialReply(withoutUnsolicitedStockAside(text,buyer),buyer),blocked:false,reason:null};
  }
