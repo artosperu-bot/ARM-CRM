@@ -54,9 +54,9 @@
 
 ## Validación técnica
 
-- `npm test -- --reporter=dot`: **467/467** tests (37 archivos), después de los cambios de lógica.
+- `npm test -- --reporter=dot`: **468/468** tests (37 archivos), después de los cambios de lógica.
 - `npm run typecheck`: OK.
-- `server/qa-conversion20-regressions.test.mjs`: 5 nuevos casos de regresión incluidos en la suite.
+- `server/qa-conversion20-regressions.test.mjs`: 6 nuevos casos de regresión incluidos en la suite.
 - Scripts reproducibles: `node server/qa-conversion20-live.mjs` y conjunto `server/qa-conversion20-scenarios.mjs`.
 - El evaluador permite `ALEX_QA_IDS=C01,C05` como filtro de retest; las salidas del subconjunto se guardan por separado.
 
