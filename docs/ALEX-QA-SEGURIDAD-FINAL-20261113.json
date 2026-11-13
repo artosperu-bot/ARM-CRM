@@ -1,0 +1,154 @@
+{
+  "generatedAt": "2026-11-13T21:20:47.942Z",
+  "metrics": {
+    "cases": 2,
+    "completed": 2,
+    "turns": 6,
+    "modelCalls": 6,
+    "apiErrors": 0,
+    "guardCorrections": 3,
+    "inputTokens": 37278,
+    "outputTokens": 598,
+    "products": 20,
+    "newQaProducts": 16,
+    "categories": 8,
+    "commercialWrites": 0,
+    "whatsappSends": 0,
+    "orderCreated": 0,
+    "paymentRegistered": 0
+  },
+  "categories": [
+    "impresion > impresoras > tanque_de_tinta",
+    "componentes > memoria_ram > ddr5",
+    "electronica > laptops > oficina",
+    "electronica > monitores > oficina",
+    "perifericos > audio > auriculares_usb",
+    "accesorios > cargadores > usb_c_pd",
+    "electronica > tablets > android",
+    "redes > routers > wifi_6"
+  ],
+  "executions": [
+    {
+      "id": "A12",
+      "label": "Tablet order and correction",
+      "completed": true,
+      "trace": [
+        {
+          "turn": 1,
+          "customer": "dame 2 samsung tab a9 plus de 128gb",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nSí tengo identificado el Galaxy Tab A9 Plus 128 GB como la referencia que mencionas, pero en esta prueba figura como disponible solo una unidad; para 2 unidades no lo puedo confirmar desde aquí. Si quieres, te ayudo a ver una alternativa similar para completar las 2.",
+          "memory": [
+            {
+              "partnumber": "QA-SAM-TAB-A9PLUS",
+              "quantity": 2
+            }
+          ],
+          "focus": "QA-SAM-TAB-A9PLUS",
+          "ambiguous": false,
+          "guardReason": null,
+          "total": 1998,
+          "available": true
+        },
+        {
+          "turn": 2,
+          "customer": "noo mejor una sola",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nPerfecto, entonces sería 1 unidad del Samsung Galaxy Tab A9 Plus 128 GB. En esta prueba figura como disponible, y si quieres continuar con esa opción te indico el siguiente paso permitido.",
+          "memory": [
+            {
+              "partnumber": "QA-SAM-TAB-A9PLUS",
+              "quantity": 1
+            }
+          ],
+          "focus": "QA-SAM-TAB-A9PLUS",
+          "ambiguous": false,
+          "guardReason": null,
+          "total": 999,
+          "available": true
+        },
+        {
+          "turn": 3,
+          "customer": "ya decidido la compro, qué sigue?",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nSimulación: Entiendo que quieres comprar: 1 × Samsung Galaxy Tab A9 Plus 128 GB tablet (prueba). Todavía no puedo crear un pedido ni un enlace de pago desde este chat. Antes hay que confirmar precio, disponibilidad y condiciones vigentes con STECH.",
+          "memory": [
+            {
+              "partnumber": "QA-SAM-TAB-A9PLUS",
+              "quantity": 1
+            }
+          ],
+          "focus": "QA-SAM-TAB-A9PLUS",
+          "ambiguous": false,
+          "guardReason": "purchase_not_ready",
+          "total": 999,
+          "available": true
+        }
+      ]
+    },
+    {
+      "id": "A17",
+      "label": "Armor 22 plus power adapter",
+      "completed": true,
+      "trace": [
+        {
+          "turn": 1,
+          "customer": "quiero un armor 22 y cargador usb c 65w",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nEntendido: el Armor 22 sí tengo identificado, y el cargador USB-C de 65W también. Solo me falta un dato para no hacerte elegir mal: ¿el cargador lo quieres para laptop o para celular/tablet? Así te digo si te conviene ese de 65W o si necesitas otra potencia.",
+          "memory": [
+            {
+              "partnumber": "ARMOR-22-256G",
+              "quantity": 1
+            },
+            {
+              "partnumber": "QA-PD-65W",
+              "quantity": 1
+            }
+          ],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": null,
+          "total": 1108,
+          "available": true
+        },
+        {
+          "turn": 2,
+          "customer": "le sirve ese cargador al armor 22?",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nAún no puedo confirmar compatibilidad entre esos equipos: son referencias de prueba sin una ficha de compatibilidad validada. Antes de recomendar la compra hay que verificar el modelo, las conexiones y las condiciones del fabricante.",
+          "memory": [
+            {
+              "partnumber": "ARMOR-22-256G",
+              "quantity": 1
+            },
+            {
+              "partnumber": "QA-PD-65W",
+              "quantity": 1
+            }
+          ],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": "qa_compatibility_unverified",
+          "total": 1108,
+          "available": true
+        },
+        {
+          "turn": 3,
+          "customer": "no confirmes compra hasta ver compatibilidad",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nAún no puedo confirmar compatibilidad entre esos equipos: son referencias de prueba sin una ficha de compatibilidad validada. Antes de recomendar la compra hay que verificar el modelo, las conexiones y las condiciones del fabricante.",
+          "memory": [
+            {
+              "partnumber": "ARMOR-22-256G",
+              "quantity": 1
+            },
+            {
+              "partnumber": "QA-PD-65W",
+              "quantity": 1
+            }
+          ],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": "qa_compatibility_unverified",
+          "total": 1108,
+          "available": true
+        }
+      ]
+    }
+  ]
+}

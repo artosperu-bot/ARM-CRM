@@ -99,6 +99,28 @@ export function protectSalesResponse(reply,{catalog=[],buyer=null,simulated=fals
   return {reply:lawfulComplaintBookReply,blocked:true,reason:"official_complaint_book_access"};
  if(/\bno quiero (?:dar|compartir) (?:mi )?(?:dni|ruc|tel[eé]fono|n[uú]mero)\b/iu.test(buyer?.last_message||""))
    return {reply:"Sí, puedes consultar productos y recibir orientación sin dar tu DNI ni otros datos personales.",blocked:true,reason:"privacy_preference"};
+ // Without a confirmed checkout or human workflow, asking for personal data
+ // to "register" a simulated interest is premature even if the model offers.
+ if(/\b(?:env[ií]ame|p[aá]same|dame|comp[aá]rteme|m[aá]ndame|ind[ií]came)\b.{0,85}\b(?:nombre|celular|tel[eé]fono|direcci[oó]n|dni|ruc)\b/iu.test(text)&&
+    !/\b(?:no\s+(?:me\s+)?(?:env[ií]es|pases|mandes|compartas))\b/iu.test(text))
+  return {reply:"Tengo presente lo que necesitas. Primero hay que confirmar el producto, la disponibilidad y las condiciones. No necesitas compartir datos personales para consultar.",
+   blocked:true,reason:"premature_personal_data"};
+ // Test fixtures have no approved compatibility claims. Never let the AI
+ // assert a charger/device, RAM/motherboard, or Teams combination by guess.
+ const lastQuestion=String(buyer?.last_message||"");
+ const qaRows=(Array.isArray(catalog)?catalog:[]).filter(p=>
+   String(p?.partnumber||"").startsWith("QA-")&&p?.nivel_evidencia!=="hechos_revisados");
+ const explicitQa=new Set(explicitlyMentionedCatalogProducts(lastQuestion,catalog));
+ const relatedQa=qaRows.some(p=>explicitQa.has(p.partnumber)||
+  buyer?.matched_partnumber===p.partnumber||
+  (buyer?.draft_items||[]).some(x=>x.partnumber===p.partnumber));
+ const asksCompat=/\b(?:compatible|compatibilidad|le\s+sirve|le\s+cae|funciona\s+con|sin\s+problema|calza|se\s+puede\s+usar\s+con)\b/iu.test(lastQuestion);
+ const claimsCompat=/\b(?:s[ií],?\s+(?:le\s+)?(?:sirve|funciona|es\s+compatible)|combina\s+bien|le\s+puede\s+servir|queda\s+compatible|sin\s+problema\s+con)\b/iu.test(text);
+ if(simulated&&relatedQa&&(asksCompat||claimsCompat)&&
+    !/\b(?:no\s+(?:puedo|se\s+puede)\s+confirmar|sin\s+verificar|falta\s+validar|por\s+confirmar)\b/iu.test(text)){
+  return {reply:"Aún no puedo confirmar compatibilidad entre esos equipos: son referencias de prueba sin una ficha de compatibilidad validada. Antes de recomendar la compra hay que verificar el modelo, las conexiones y las condiciones del fabricante.",
+   blocked:true,reason:"qa_compatibility_unverified"};
+ }
 
  if(buyer?.draft_ambiguous===true&&Array.isArray(buyer?.draft_items)&&
    buyer.draft_items.length>1&&["comercial","facturacion_pago"].includes(buyer?.current_topic||"comercial")){
@@ -109,9 +131,12 @@ export function protectSalesResponse(reply,{catalog=[],buyer=null,simulated=fals
  }
  const buyerText=String(buyer?.last_message||"").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase();
  const askedAll=/(?:\b(?:cuanto(?: me)? (?:sale|cuesta|salen|saldria)|calcula|dame|pasame|precio|cotiza\w*)\b.{0,60}\b(?:total|todo|todos|los dos|ambos)\b|\b(?:total|todo)\b.{0,35}\b(?:cuanto|precio|cotiza\w*)\b|\b(?:y\s+)?el\s+total\b|^(?:y\s+)?(?:el\s+)?total\s*\??$)/u.test(buyerText);
+ // "¿Cuánto es todo?" and "total yape aceptan" also refer to the draft.
+ // Deterministic arithmetic only; never infer an order or payment.
+ const askedWholeBasket=/\b(?:cuanto\s+(?:es|seria)\s+todo|total\s+(?:de\s+todo|de\s+la\s+lista|cuanto|yape|plin|tarjeta)|y\s+total)\b/u.test(buyerText);
  // Deterministic private calculation: the AI is not allowed to invent a
  // basket total. This does not create anything in Supabase or checkout.
- if(simulated&&askedAll&&["comercial","facturacion_pago"].includes(buyer?.current_topic)&&
+ if(simulated&&(askedAll||askedWholeBasket)&&["comercial","facturacion_pago"].includes(buyer?.current_topic)&&
    !buyer?.cancelled_purchase&&Array.isArray(buyer?.draft_items)&&buyer.draft_items.length>1){
   const basket=assessCommercialReadiness(buyer,{catalog,simulated:true}).demoBasket;
   if(basket?.lines?.length>1){

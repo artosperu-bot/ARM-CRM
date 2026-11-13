@@ -1,0 +1,390 @@
+[
+  {
+    "partnumber": "QA-EPS-L1250",
+    "title": "Epson EcoTank L1250 impresora tanque de tinta (prueba)",
+    "brand": "EPSON",
+    "category_path": [
+      "impresion",
+      "impresoras",
+      "tanque_de_tinta"
+    ],
+    "family_key": "EPSON-ECOTANK",
+    "variant_options": {
+      "model": "L1250"
+    },
+    "attributes": {
+      "source": "ALEX LABORATORIO 2026-11",
+      "qa_only": true,
+      "description": "Ficha y precio simulados para pruebas conversacionales; no prometer compatibilidad ni disponibilidad real.",
+      "commercially_verified": false
+    },
+    "demo_price_pen": 799,
+    "demo_stock_units": 4,
+    "demo_stock_status": "disponible",
+    "is_test_data": true
+  },
+  {
+    "partnumber": "QA-EPS-L15150",
+    "title": "Epson EcoTank L15150 impresora tanque de tinta (prueba)",
+    "brand": "EPSON",
+    "category_path": [
+      "impresion",
+      "impresoras",
+      "tanque_de_tinta"
+    ],
+    "family_key": "EPSON-ECOTANK",
+    "variant_options": {
+      "model": "L15150"
+    },
+    "attributes": {
+      "source": "ALEX LABORATORIO 2026-11",
+      "qa_only": true,
+      "description": "Ficha y precio simulados para pruebas conversacionales; no prometer compatibilidad ni disponibilidad real.",
+      "commercially_verified": false
+    },
+    "demo_price_pen": 3499,
+    "demo_stock_units": 0,
+    "demo_stock_status": "no disponible",
+    "is_test_data": true
+  },
+  {
+    "partnumber": "QA-KIN-DDR5-5600",
+    "title": "Kingston DDR5 16 GB 5600 MT/s (prueba)",
+    "brand": "KINGSTON",
+    "category_path": [
+      "componentes",
+      "memoria_ram",
+      "ddr5"
+    ],
+    "family_key": "DDR5-UDIMM",
+    "variant_options": {
+      "speed": "5600 MT/s",
+      "memory": "16 GB"
+    },
+    "attributes": {
+      "source": "ALEX LABORATORIO 2026-11",
+      "qa_only": true,
+      "description": "Ficha y precio simulados para pruebas conversacionales; no prometer compatibilidad ni disponibilidad real.",
+      "commercially_verified": false
+    },
+    "demo_price_pen": 289,
+    "demo_stock_units": 0,
+    "demo_stock_status": "no disponible",
+    "is_test_data": true
+  },
+  {
+    "partnumber": "QA-KIN-DDR5-7200",
+    "title": "Kingston FURY DDR5 16 GB 7200 MT/s (prueba)",
+    "brand": "KINGSTON",
+    "category_path": [
+      "componentes",
+      "memoria_ram",
+      "ddr5"
+    ],
+    "family_key": "DDR5-UDIMM",
+    "variant_options": {
+      "speed": "7200 MT/s",
+      "memory": "16 GB"
+    },
+    "attributes": {
+      "source": "ALEX LABORATORIO 2026-11",
+      "qa_only": true,
+      "description": "Ficha y precio simulados para pruebas conversacionales; no prometer compatibilidad ni disponibilidad real.",
+      "commercially_verified": false
+    },
+    "demo_price_pen": 589,
+    "demo_stock_units": 2,
+    "demo_stock_status": "disponible",
+    "is_test_data": true
+  },
+  {
+    "partnumber": "QA-LEN-T14-16",
+    "title": "Lenovo ThinkPad T14 16 GB RAM / 512 GB SSD (prueba)",
+    "brand": "LENOVO",
+    "category_path": [
+      "electronica",
+      "laptops",
+      "oficina"
+    ],
+    "family_key": "LENOVO-T14",
+    "variant_options": {
+      "ram": "16 GB",
+      "ssd": "512 GB"
+    },
+    "attributes": {
+      "source": "ALEX LABORATORIO 2026-11",
+      "qa_only": true,
+      "description": "Ficha y precio simulados para pruebas conversacionales; no prometer compatibilidad ni disponibilidad real.",
+      "commercially_verified": false
+    },
+    "demo_price_pen": 3299,
+    "demo_stock_units": 3,
+    "demo_stock_status": "disponible",
+    "is_test_data": true
+  },
+  {
+    "partnumber": "QA-LEN-T14-32",
+    "title": "Lenovo ThinkPad T14 32 GB RAM / 1 TB SSD (prueba)",
+    "brand": "LENOVO",
+    "category_path": [
+      "electronica",
+      "laptops",
+      "oficina"
+    ],
+    "family_key": "LENOVO-T14",
+    "variant_options": {
+      "ram": "32 GB",
+      "ssd": "1 TB"
+    },
+    "attributes": {
+      "source": "ALEX LABORATORIO 2026-11",
+      "qa_only": true,
+      "description": "Ficha y precio simulados para pruebas conversacionales; no prometer compatibilidad ni disponibilidad real.",
+      "commercially_verified": false
+    },
+    "demo_price_pen": 4299,
+    "demo_stock_units": 1,
+    "demo_stock_status": "disponible",
+    "is_test_data": true
+  },
+  {
+    "partnumber": "QA-LG-27MR400",
+    "title": "LG 27MR400 monitor 27 pulgadas (prueba)",
+    "brand": "LG",
+    "category_path": [
+      "electronica",
+      "monitores",
+      "oficina"
+    ],
+    "family_key": "LG-MONITOR",
+    "variant_options": {
+      "size": "27 pulgadas"
+    },
+    "attributes": {
+      "source": "ALEX LABORATORIO 2026-11",
+      "qa_only": true,
+      "description": "Ficha y precio simulados para pruebas conversacionales; no prometer compatibilidad ni disponibilidad real.",
+      "commercially_verified": false
+    },
+    "demo_price_pen": 699,
+    "demo_stock_units": 2,
+    "demo_stock_status": "disponible",
+    "is_test_data": true
+  },
+  {
+    "partnumber": "QA-LOG-H390",
+    "title": "Logitech H390 USB audífonos con micrófono (prueba)",
+    "brand": "LOGITECH",
+    "category_path": [
+      "perifericos",
+      "audio",
+      "auriculares_usb"
+    ],
+    "family_key": "LOGITECH-AUDIO",
+    "variant_options": {
+      "kind": "usb"
+    },
+    "attributes": {
+      "source": "ALEX LABORATORIO 2026-11",
+      "qa_only": true,
+      "description": "Ficha y precio simulados para pruebas conversacionales; no prometer compatibilidad ni disponibilidad real.",
+      "commercially_verified": false
+    },
+    "demo_price_pen": 159,
+    "demo_stock_units": 8,
+    "demo_stock_status": "disponible",
+    "is_test_data": true
+  },
+  {
+    "partnumber": "QA-LOG-H570E",
+    "title": "Logitech H570e Stereo USB audífonos Teams (prueba)",
+    "brand": "LOGITECH",
+    "category_path": [
+      "perifericos",
+      "audio",
+      "auriculares_usb"
+    ],
+    "family_key": "LOGITECH-AUDIO",
+    "variant_options": {
+      "kind": "stereo"
+    },
+    "attributes": {
+      "source": "ALEX LABORATORIO 2026-11",
+      "qa_only": true,
+      "description": "Ficha y precio simulados para pruebas conversacionales; no prometer compatibilidad ni disponibilidad real.",
+      "commercially_verified": false
+    },
+    "demo_price_pen": 319,
+    "demo_stock_units": 4,
+    "demo_stock_status": "disponible",
+    "is_test_data": true
+  },
+  {
+    "partnumber": "QA-PD-100W",
+    "title": "Cargador USB-C Power Delivery 100 W genérico (prueba)",
+    "brand": "GENERICO-QA",
+    "category_path": [
+      "accesorios",
+      "cargadores",
+      "usb_c_pd"
+    ],
+    "family_key": "USBC-PD",
+    "variant_options": {
+      "power": "100 W"
+    },
+    "attributes": {
+      "source": "ALEX LABORATORIO 2026-11",
+      "qa_only": true,
+      "description": "Ficha y precio simulados para pruebas conversacionales; no prometer compatibilidad ni disponibilidad real.",
+      "commercially_verified": false
+    },
+    "demo_price_pen": 189,
+    "demo_stock_units": 0,
+    "demo_stock_status": "por confirmar",
+    "is_test_data": true
+  },
+  {
+    "partnumber": "QA-PD-65W",
+    "title": "Cargador USB-C Power Delivery 65 W genérico (prueba)",
+    "brand": "GENERICO-QA",
+    "category_path": [
+      "accesorios",
+      "cargadores",
+      "usb_c_pd"
+    ],
+    "family_key": "USBC-PD",
+    "variant_options": {
+      "power": "65 W"
+    },
+    "attributes": {
+      "source": "ALEX LABORATORIO 2026-11",
+      "qa_only": true,
+      "description": "Ficha y precio simulados para pruebas conversacionales; no prometer compatibilidad ni disponibilidad real.",
+      "commercially_verified": false
+    },
+    "demo_price_pen": 109,
+    "demo_stock_units": 12,
+    "demo_stock_status": "disponible",
+    "is_test_data": true
+  },
+  {
+    "partnumber": "QA-SAM-LS24D300",
+    "title": "Samsung LS24D300GALXPE monitor 24 pulgadas (prueba)",
+    "brand": "SAMSUNG",
+    "category_path": [
+      "electronica",
+      "monitores",
+      "oficina"
+    ],
+    "family_key": "SAMSUNG-MONITOR",
+    "variant_options": {
+      "size": "24 pulgadas"
+    },
+    "attributes": {
+      "source": "ALEX LABORATORIO 2026-11",
+      "qa_only": true,
+      "description": "Ficha y precio simulados para pruebas conversacionales; no prometer compatibilidad ni disponibilidad real.",
+      "commercially_verified": false
+    },
+    "demo_price_pen": 459,
+    "demo_stock_units": 5,
+    "demo_stock_status": "disponible",
+    "is_test_data": true
+  },
+  {
+    "partnumber": "QA-SAM-TAB-A9",
+    "title": "Samsung Galaxy Tab A9 64 GB tablet (prueba)",
+    "brand": "SAMSUNG",
+    "category_path": [
+      "electronica",
+      "tablets",
+      "android"
+    ],
+    "family_key": "SAMSUNG-TAB-A9",
+    "variant_options": {
+      "storage": "64 GB"
+    },
+    "attributes": {
+      "source": "ALEX LABORATORIO 2026-11",
+      "qa_only": true,
+      "description": "Ficha y precio simulados para pruebas conversacionales; no prometer compatibilidad ni disponibilidad real.",
+      "commercially_verified": false
+    },
+    "demo_price_pen": 599,
+    "demo_stock_units": 5,
+    "demo_stock_status": "disponible",
+    "is_test_data": true
+  },
+  {
+    "partnumber": "QA-SAM-TAB-A9PLUS",
+    "title": "Samsung Galaxy Tab A9 Plus 128 GB tablet (prueba)",
+    "brand": "SAMSUNG",
+    "category_path": [
+      "electronica",
+      "tablets",
+      "android"
+    ],
+    "family_key": "SAMSUNG-TAB-A9",
+    "variant_options": {
+      "storage": "128 GB"
+    },
+    "attributes": {
+      "source": "ALEX LABORATORIO 2026-11",
+      "qa_only": true,
+      "description": "Ficha y precio simulados para pruebas conversacionales; no prometer compatibilidad ni disponibilidad real.",
+      "commercially_verified": false
+    },
+    "demo_price_pen": 999,
+    "demo_stock_units": 2,
+    "demo_stock_status": "disponible",
+    "is_test_data": true
+  },
+  {
+    "partnumber": "QA-TPL-AX23",
+    "title": "TP-Link Archer AX23 router Wi-Fi 6 (prueba)",
+    "brand": "TP-LINK",
+    "category_path": [
+      "redes",
+      "routers",
+      "wifi_6"
+    ],
+    "family_key": "TPLINK-ARCHER",
+    "variant_options": {
+      "generation": "Wi-Fi 6"
+    },
+    "attributes": {
+      "source": "ALEX LABORATORIO 2026-11",
+      "qa_only": true,
+      "description": "Ficha y precio simulados para pruebas conversacionales; no prometer compatibilidad ni disponibilidad real.",
+      "commercially_verified": false
+    },
+    "demo_price_pen": 229,
+    "demo_stock_units": 6,
+    "demo_stock_status": "disponible",
+    "is_test_data": true
+  },
+  {
+    "partnumber": "QA-TPL-AX55",
+    "title": "TP-Link Archer AX55 router Wi-Fi 6 (prueba)",
+    "brand": "TP-LINK",
+    "category_path": [
+      "redes",
+      "routers",
+      "wifi_6"
+    ],
+    "family_key": "TPLINK-ARCHER",
+    "variant_options": {
+      "generation": "Wi-Fi 6"
+    },
+    "attributes": {
+      "source": "ALEX LABORATORIO 2026-11",
+      "qa_only": true,
+      "description": "Ficha y precio simulados para pruebas conversacionales; no prometer compatibilidad ni disponibilidad real.",
+      "commercially_verified": false
+    },
+    "demo_price_pen": 359,
+    "demo_stock_units": 1,
+    "demo_stock_status": "disponible",
+    "is_test_data": true
+  }
+]

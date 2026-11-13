@@ -8,7 +8,7 @@ const clean=s=>String(s||"").normalize("NFD").replace(/[\u0300-\u036f]/gu,"")
 const words={un:1,una:1,uno:1,dos:2,tres:3,cuatro:4,cinco:5,seis:6,siete:7,ocho:8,nueve:9,diez:10};
 const numToken="(?:\\d{1,3}|un|una|uno|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez)";
 const quantityAtEnd=new RegExp("\\b("+numToken+")(?:\\s+(?:unidades?|equipos?|celulares?|telefonos?|laptops?|impresoras?|tablets?|productos?|modelos?|del?|los?|las?|de)){0,4}\\s*$","u");
-const quantityAtStart=new RegExp("^\\s*(?:(?:para|de|los|las|por)\\s+)?("+numToken+")(?:\\s+(?:unidades?|equipos?|celulares?|telefonos?|laptops?|impresoras?|tablets?|productos?|del?|los?|las?|de)){0,4}\\b","u");
+const quantityAtStart=new RegExp("^\\s*(?:(?:quiero|necesito|dame|agrega(?:me)?|anade(?:me)?|incluye|cotiza(?:me)?|llevo|me llevo|me quedo con|mejor|para|de|los|las|por)\\s+)?("+numToken+")(?:\\s+(?:unidades?|equipos?|celulares?|telefonos?|laptops?|impresoras?|tablets?|productos?|del?|los?|las?|de)){0,4}\\b","u");
 const quantityAfter=new RegExp("^\\s*(?:x\\s*|por\\s+|son\\s+|serian\\s+|a\\s+|en\\s+)("+numToken+")\\b","u");
 const parseQty=s=>Object.hasOwn(words,s)?words[s]:/^\d{1,3}$/u.test(s)?Number(s):null;
 const itemPattern=/\b(?:quiero|necesito|dame|agrega(?:me)?|anade(?:me)?|ponme|sumame|sumale|incluye|cotizame|cotiza|llev[oa]|comprar|comprame|pedido de|me llevo|me quedo con|voy a comprar|pido|para llevar)\b/u;
@@ -42,6 +42,10 @@ function aliases(row){
  }
  return [...new Map(result.map(x=>[x.name,x])).values()];
 }
+// Only in product matching: standardize spaced units without changing quantity parsing.
+const modelTokens=s=>clean(s).replace(/\b(\d{1,5})\s+(gb|tb|w|mt)\b/gu,"$1$2")
+ .split(" ").filter(Boolean);
+const isModelCode=t=>t.length>=2&&/^(?:[a-z]{1,15}\d[a-z0-9]*|\d+[a-z]{1,12}[a-z0-9]*)$/u.test(t);
 function findLineProduct(segment,catalog){
  const padded=" "+clean(segment)+" ";
  const hits=[];
@@ -51,11 +55,32 @@ function findLineProduct(segment,catalog){
   if(all.length)hits.push({row,hit:all.sort((a,b)=>(b.weight+b.name.length)-(a.weight+a.name.length))[0]});
  }
  const ranked=hits.sort((a,b)=>b.hit.weight+b.hit.name.length-(a.hit.weight+a.hit.name.length));
- if(!ranked.length)return null;
- if(ranked[1]&&ranked[0].hit.weight+ranked[0].hit.name.length<=ranked[1].hit.weight+ranked[1].hit.name.length)
-  return null;
- return {partnumber:ranked[0].row.partnumber,alias:ranked[0].hit.name,
-  index:padded.indexOf(" "+ranked[0].hit.name+" ")};
+ if(ranked.length&&(!ranked[1]||
+    ranked[0].hit.weight+ranked[0].hit.name.length>ranked[1].hit.weight+ranked[1].hit.name.length))
+  return {partnumber:ranked[0].row.partnumber,alias:ranked[0].hit.name,
+   index:padded.indexOf(" "+ranked[0].hit.name+" ")};
+ // A common model name (T14, Tab A9, DDR5) can describe multiple variants.
+ // Rank all *explicit* customer model/variant tokens, never infer by category alone.
+ const queryTokens=modelTokens(segment);
+ const codes=queryTokens.filter(isModelCode);
+ if(!codes.length)return null;
+ const numeric=queryTokens.filter(t=>/^\d{3,5}$/u.test(t));
+ const alternatives=[];
+ for(const row of Array.isArray(catalog)?catalog:[]){
+  if(!allowedSku(row?.partnumber))continue;
+  const known=new Set([...modelTokens(row.titulo||row.title),...modelTokens(row.partnumber)]);
+  const matched=codes.filter(t=>known.has(t)||
+   (t.length>=5&&[...known].some(k=>k.startsWith(t))));
+  if(!matched.length)continue;
+  const nMatches=numeric.filter(t=>known.has(t)).length;
+  const extra=queryTokens.filter(t=>t.length>=4&&!codes.includes(t)&&!numeric.includes(t)&&known.has(t)).length;
+  const score=matched.length*80+nMatches*30+Math.min(extra,4)*5;
+  alternatives.push({row,score,matched});
+ }
+ alternatives.sort((a,b)=>b.score-a.score);
+ if(!alternatives.length||alternatives[1]?.score>=alternatives[0].score)return null;
+ const best=alternatives[0],token=best.matched.find(t=>padded.includes(" "+t+" "))||best.matched[0];
+ return {partnumber:best.row.partnumber,alias:token,index:padded.indexOf(" "+token+" ")};
 }
 /** Resolve explicitly named models, without implying purchase or stock. */
 export function explicitlyMentionedCatalogProducts(message,catalog=[]){
@@ -92,7 +117,11 @@ export function advanceDraftItems(previous,text,catalog=[],{focus=null}={}){
  if(!raw)return {items:starting,focus:items.has(focus)?focus:null,ambiguous:false,changed:false};
  if(cancelPattern.test(raw))return {items:[],focus:null,ambiguous:false,changed:items.size>0};
  let last=items.has(focus)?focus:null,ambiguous=false,changed=false;
- const chunks=raw.split(/\s+(?:y|ademas)\s+|\s*[,;+]\s*/u).filter(Boolean).slice(0,12);
+ // Preserve punctuation until after splitting. clean() removes commas, which
+ // previously merged "mejor 3 H390, el H570e igual" into a single wrong SKU.
+ const chunks=String(text).normalize("NFD").replace(/[\u0300-\u036f]/gu,"")
+  .toLowerCase().split(/\s+(?:y|ademas)\s+|\s*[,;+]\s*/u)
+  .map(clean).filter(Boolean).slice(0,12);
  const matches=chunks.map(part=>({part,found:findLineProduct(part,catalog)}));
  const explicit=matches.filter(x=>x.found);
  const multiple=explicit.length>1;
@@ -103,9 +132,11 @@ export function advanceDraftItems(previous,text,catalog=[],{focus=null}={}){
  for(const {part,found} of matches){
   if(!found)continue;
   const sku=found.partnumber,qty=quantityFor(part,found);
-  const localRemove=removePattern.test(part)||/\bsin\s+(?:el|la|los|las)\s+/u.test(part);
+  const localRemove=removePattern.test(part)||
+   /\bsin\s+(?:el|la|los|las)\s+/u.test(part)||
+   /^(?:no\s+con\s+(?:el|la|los|las)?|no\s+(?:el|la)|sin\s+(?:el|la))\b/u.test(part);
   const localAdd=!exploratoryOnly&&!supportIssue&&
-   (itemPattern.test(part)||(hasGlobalAdd&&multiple&&qty!==null));
+   (itemPattern.test(part)||(hasGlobalAdd&&multiple));
   const localCorrection=(correctionPattern.test(part)&&qty!==null)||
    /\b(?:mejor quiero|mejor dame|en vez de|reemplaza|cambia(?:me)?)\b/u.test(part);
   // "¿Cuál es mejor?" compares products: it is never a correction to the draft.
@@ -148,7 +179,32 @@ export function advanceDraftItems(previous,text,catalog=[],{focus=null}={}){
   }else{
   const n=parseBareCorrection(raw);
   if(n!==null){
-   const target=last&&items.has(last)?last:items.size===1?[...items.keys()][0]:null;
+   // Resolve "mejor 3 monitores LG" only when the existing draft has
+   // exactly one matching category/brand. Never guess between two monitors.
+   const type=[
+    [/\bmonitores?\b/u,"monitor"],[/\blaptops?\b/u,"laptop"],
+    [/\bimpresoras?\b/u,"impresora"],[/\baudifonos?\b/u,"audifon"],
+    [/\brouters?\b/u,"router"],[/\bcargadores?\b/u,"cargador"],
+    [/\btablets?\b/u,"tablet"],[/\bcelulares?\b/u,"celular"]
+   ].find(([pattern])=>pattern.test(raw));
+   let typed=[];
+   if(type){
+    typed=starting.filter(x=>{
+     const row=(Array.isArray(catalog)?catalog:[]).find(p=>p.partnumber===x.partnumber);
+     const words=clean((row?.titulo||row?.title||"")+" "+(row?.categoria||row?.category_path||[]).join(" "));
+     return words.includes(type[1]);
+    });
+    if(typed.length>1){
+     const named=typed.filter(x=>{
+      const row=catalog.find(p=>p.partnumber===x.partnumber);
+      const brand=clean(row?.marca||row?.brand||"");
+      return brand&&(" "+raw+" ").includes(" "+brand+" ");
+     });
+     if(named.length)typed=named;
+    }
+   }
+   const target=type?(typed.length===1?typed[0].partnumber:null):
+    last&&items.has(last)?last:items.size===1?[...items.keys()][0]:null;
    if(target){if(items.get(target)!==n){items.set(target,n);changed=true;} last=target;}
    else if(items.size>1)ambiguous=true;
   }

@@ -1,0 +1,975 @@
+{
+  "generatedAt": "2026-11-13T21:04:52.780Z",
+  "metrics": {
+    "cases": 20,
+    "completed": 20,
+    "turns": 60,
+    "modelCalls": 60,
+    "apiErrors": 0,
+    "guardCorrections": 17,
+    "inputTokens": 367972,
+    "outputTokens": 6479,
+    "products": 20,
+    "newQaProducts": 16,
+    "categories": 8,
+    "commercialWrites": 0,
+    "whatsappSends": 0,
+    "orderCreated": 0,
+    "paymentRegistered": 0
+  },
+  "categories": [
+    "impresion > impresoras > tanque_de_tinta",
+    "componentes > memoria_ram > ddr5",
+    "electronica > laptops > oficina",
+    "electronica > monitores > oficina",
+    "perifericos > audio > auriculares_usb",
+    "accesorios > cargadores > usb_c_pd",
+    "electronica > tablets > android",
+    "redes > routers > wifi_6"
+  ],
+  "executions": [
+    {
+      "id": "A01",
+      "label": "Lenovo T14 variants",
+      "completed": true,
+      "trace": [
+        {
+          "turn": 1,
+          "customer": "oe una lenovo t14, mejor 16 o 32 de ram?",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nPara uso de oficina, clases, navegación y trabajo con varias pestañas, la de 16 GB ya va muy bien y suele rendir fluida; la de 32 GB te conviene más si vas a abrir máquinas virtuales, edición pesada o muchos programas a la vez. En ese T14, la diferencia más notoria es la holgura para multitarea y para que te dure más tiempo sin quedarte corto.",
+          "memory": [],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": null,
+          "total": null,
+          "available": null
+        },
+        {
+          "turn": 2,
+          "customer": "quiero 2 de la t14 con 32 gb, no la de 16",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nEntendido, te dejo la de 32 GB entonces. Solo como referencia: ese T14 de 32 GB y 1 TB está en opción disponible dentro de la simulación de prueba, así que seguimos con ese modelo y no con el de 16 GB.",
+          "memory": [],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": null,
+          "total": null,
+          "available": null
+        },
+        {
+          "turn": 3,
+          "customer": "ya los llevo, cuál es el siguiente paso?",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nPerfecto, ya te quedas con los 2 Lenovo ThinkPad T14 de 32 GB. Para seguir, solo indícame nombre y apellido del contacto, y tu celular peruano para validar el seguimiento.",
+          "memory": [],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": null,
+          "total": null,
+          "available": null
+        }
+      ]
+    },
+    {
+      "id": "A02",
+      "label": "Epson L1250 quantity correction",
+      "completed": true,
+      "trace": [
+        {
+          "turn": 1,
+          "customer": "quiero 2 epson l1250 pa mi tienda",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nPara la Epson L1250 tengo una referencia cargada, pero no con ficha verificada completa; además en este momento figura como no disponible. Si te sirve, la alternativa más cercana que sí veo validada es una EcoTank de otra serie, pero no te la recomiendo sin confirmar si la necesitas para impresión simple o para volúmenes más altos.",
+          "memory": [
+            {
+              "partnumber": "QA-EPS-L1250",
+              "quantity": 1
+            }
+          ],
+          "focus": "QA-EPS-L1250",
+          "ambiguous": false,
+          "guardReason": null,
+          "total": 799,
+          "available": true
+        },
+        {
+          "turn": 2,
+          "customer": "noo mejor una sola l1250",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nTengo presente tu consulta y sus requisitos. Sin precios verificados no puedo asegurar importes ni que los equipos entren en el presupuesto.",
+          "memory": [
+            {
+              "partnumber": "QA-EPS-L1250",
+              "quantity": 1
+            }
+          ],
+          "focus": "QA-EPS-L1250",
+          "ambiguous": false,
+          "guardReason": "unverified_price",
+          "total": 799,
+          "available": true
+        },
+        {
+          "turn": 3,
+          "customer": "cuanto me sale y tienen para hoy?",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nNo dispongo de un precio vigente verificado para ese modelo. Prefiero no darte una cifra que pueda ser incorrecta.",
+          "memory": [
+            {
+              "partnumber": "QA-EPS-L1250",
+              "quantity": 1
+            }
+          ],
+          "focus": "QA-EPS-L1250",
+          "ambiguous": false,
+          "guardReason": "unverified_price",
+          "total": 799,
+          "available": true
+        }
+      ]
+    },
+    {
+      "id": "A03",
+      "label": "Epson L15150 out of stock",
+      "completed": true,
+      "trace": [
+        {
+          "turn": 1,
+          "customer": "hola busco una Epson L15150",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nHola, la Epson L15150 aparece como no disponible en esta consulta. Si te interesa una alternativa similar en tanque de tinta para oficina, puedo decirte cuál sí está disponible y qué cambia en rendimiento, pero esta referencia puntual no la tengo para compra ahora.",
+          "memory": [],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": null,
+          "total": null,
+          "available": null
+        },
+        {
+          "turn": 2,
+          "customer": "si no hay, que otra epson de tinta tienes?",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nLa disponibilidad de ese modelo está por confirmar. Por ahora no puedo asegurarte stock para entrega.",
+          "memory": [],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": "unverified_availability",
+          "total": null,
+          "available": null
+        },
+        {
+          "turn": 3,
+          "customer": "mejor lo veo luego gracias",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nDe una, gracias a ti. Cuando quieras retomar la búsqueda, te ayudo a ubicar una Epson de tinta que te convenga para oficina o casa.",
+          "memory": [],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": null,
+          "total": null,
+          "available": null
+        }
+      ]
+    },
+    {
+      "id": "A04",
+      "label": "Samsung vs LG monitors",
+      "completed": true,
+      "trace": [
+        {
+          "turn": 1,
+          "customer": "comparame el monitor samsung ls24d300 con el lg 27mr400",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nEl Samsung LS24D300 es de 24\" y el LG 27MR400 es de 27\", así que la diferencia más clara es el tamaño de pantalla: el LG te da más área de trabajo para oficina, hojas y multitarea; el Samsung es más compacto y va mejor si tienes menos espacio en el escritorio. De ambos, lo verificable en este momento es solo el tamaño; no tengo ficha técnica confirmada para comparar resolución, puertos o panel sin inventar.",
+          "memory": [],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": null,
+          "total": null,
+          "available": null
+        },
+        {
+          "turn": 2,
+          "customer": "el segundo de cuantas pulgadas es?",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nEl segundo, el LG 27MR400, es de 27 pulgadas.",
+          "memory": [],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": null,
+          "total": null,
+          "available": null
+        },
+        {
+          "turn": 3,
+          "customer": "me quedo con 1 lg 27mr400",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nPerfecto, te quedas con 1 LG 27MR400. Si deseas que lo dejemos registrado para seguimiento, solo me faltaría tu nombre completo, celular peruano y tu consentimiento para continuar con la gestión.",
+          "memory": [],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": null,
+          "total": null,
+          "available": null
+        }
+      ]
+    },
+    {
+      "id": "A05",
+      "label": "Logitech USB and Teams",
+      "completed": true,
+      "trace": [
+        {
+          "turn": 1,
+          "customer": "buenas, H570e de logitech o H390 para videollamadas?",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nPara videollamadas te conviene más el H570e: está pensado para uso de oficina/Teams y su sonido stereo ayuda a que la voz se sienta más natural en reuniones largas. El H390 también sirve, pero es una opción más simple y básica para llamadas ocasionales.",
+          "memory": [],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": null,
+          "total": null,
+          "available": null
+        },
+        {
+          "turn": 2,
+          "customer": "el H570e me sirve seguro para Teams?",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nPara Teams, el H570e sí está orientado a ese uso y te va a servir mejor que el H390 en videollamadas de oficina. Lo que no puedo prometer sin validar en ficha exacta es compatibilidad al 100% con tu equipo; si me dices si usas Windows o Mac, te lo afino rápido.",
+          "memory": [],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": null,
+          "total": null,
+          "available": null
+        },
+        {
+          "turn": 3,
+          "customer": "quiero 2 h570e, cómo sigue?",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nListo, para seguir solo falta dejar tu nombre completo y un celular peruano de contacto. Cuando me lo pases, voy a verificar si se puede registrar.",
+          "memory": [
+            {
+              "partnumber": "QA-LOG-H570E",
+              "quantity": 2
+            }
+          ],
+          "focus": "QA-LOG-H570E",
+          "ambiguous": false,
+          "guardReason": null,
+          "total": 638,
+          "available": true
+        }
+      ]
+    },
+    {
+      "id": "A06",
+      "label": "Two different USB headsets",
+      "completed": true,
+      "trace": [
+        {
+          "turn": 1,
+          "customer": "quiero 2 logitech h390 y un h570e",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nLo solicitado requiere información o una acción comercial que todavía no está confirmada. No afirmaré que se haya realizado.",
+          "memory": [
+            {
+              "partnumber": "QA-LOG-H390",
+              "quantity": 2
+            },
+            {
+              "partnumber": "QA-LOG-H570E",
+              "quantity": 1
+            }
+          ],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": "unconfirmed_action",
+          "total": 637,
+          "available": true
+        },
+        {
+          "turn": 2,
+          "customer": "mejor 3 h390, el h570e queda en uno",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nSimulación: queda anotado el interés por 2 × Logitech H390 USB audífonos con micrófono (prueba); 1 × Logitech H570e Stereo USB audífonos Teams (prueba). No es pedido ni reserva.",
+          "memory": [
+            {
+              "partnumber": "QA-LOG-H390",
+              "quantity": 2
+            },
+            {
+              "partnumber": "QA-LOG-H570E",
+              "quantity": 1
+            }
+          ],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": "demo_draft_revision",
+          "total": 637,
+          "available": true
+        },
+        {
+          "turn": 3,
+          "customer": "y cuanto es todo?",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nTengo presente tu consulta y sus requisitos. Sin precios verificados no puedo asegurar importes ni que los equipos entren en el presupuesto.",
+          "memory": [
+            {
+              "partnumber": "QA-LOG-H390",
+              "quantity": 2
+            },
+            {
+              "partnumber": "QA-LOG-H570E",
+              "quantity": 1
+            }
+          ],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": "unverified_price",
+          "total": 637,
+          "available": true
+        }
+      ]
+    },
+    {
+      "id": "A07",
+      "label": "DDR5 speed and compatibility",
+      "completed": true,
+      "trace": [
+        {
+          "turn": 1,
+          "customer": "kingston ddr5 7200 o 5600, cual es mas rapida?",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nLa de 7200 MT/s es más rápida que la de 5600 MT/s, así que te da mayor velocidad de memoria. Ojo nomás: para aprovecharla bien, tu placa y procesador tienen que soportar DDR5 a esa frecuencia; si no, igual funcionará pero bajará al perfil que permita el equipo.",
+          "memory": [],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": null,
+          "total": null,
+          "available": null
+        },
+        {
+          "turn": 2,
+          "customer": "le entra a mi laptop lenovo?",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nDepende del modelo exacto de tu Lenovo, porque muchas laptops usan memoria SO-DIMM y otras no aceptan DDR5 o no llegan a 7200 MT/s. Si me dices el modelo de tu laptop, te digo cuál te conviene y si esa memoria le puede servir.",
+          "memory": [],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": null,
+          "total": null,
+          "available": null
+        },
+        {
+          "turn": 3,
+          "customer": "todavia no compro",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nYa tengo el modelo que indicaste. No necesitas repetirlo. Aún no dispongo de una ficha o precio vigente verificado de esa referencia.",
+          "memory": [],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": "redundant_model_question",
+          "total": null,
+          "available": null
+        }
+      ]
+    },
+    {
+      "id": "A08",
+      "label": "DDR5 5600 stock",
+      "completed": true,
+      "trace": [
+        {
+          "turn": 1,
+          "customer": "necesito 2 ram kingston ddr5 5600",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nTenemos la Kingston DDR5 16 GB 5600 MT/s para ese uso. La referencia que me figura está como no disponible, así que no te la puedo confirmar para compra ahora mismo; si buscas, te conviene validar también que tu placa o laptop acepte DDR5 UDIMM y esa velocidad para evitar incompatibilidad.",
+          "memory": [],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": null,
+          "total": null,
+          "available": null
+        },
+        {
+          "turn": 2,
+          "customer": "si no hay, cuanto sale la de 7200?",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nNecesito verificar el modelo exacto antes de darte un precio; no quiero mezclar productos diferentes.",
+          "memory": [],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": "product_mismatch",
+          "total": null,
+          "available": null
+        },
+        {
+          "turn": 3,
+          "customer": "no me la agregues aun solo comparo",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nClaro. La de 7200 va orientada a equipos que sí soportan esa velocidad y te da más margen para tareas más pesadas o gaming, mientras que la 5600 es una opción más estándar y suele ser más compatible en general. Si tu placa soporta 7200, esa te conviene más; si no estás seguro, mejor revisar compatibilidad antes de elegir.",
+          "memory": [],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": null,
+          "total": null,
+          "available": null
+        }
+      ]
+    },
+    {
+      "id": "A09",
+      "label": "USB-C PD 65 vs 100",
+      "completed": true,
+      "trace": [
+        {
+          "turn": 1,
+          "customer": "busco cargador usb c de 65w para mi lenovo",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nPara una Lenovo, un cargador USB-C de 65W suele ser una buena opción si tu equipo carga por USB-C y admite Power Delivery. Ojo: para confirmarte compatibilidad real necesito el modelo exacto de la laptop, porque no todas las Lenovo aceptan carga por ese puerto ni al mismo voltaje.",
+          "memory": [],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": null,
+          "total": null,
+          "available": null
+        },
+        {
+          "turn": 2,
+          "customer": "el de 100w tambien le sirve sin problema?",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nEn general, un cargador USB-C de 100W no debería hacerle daño a una Lenovo que cargue por USB-C, porque el equipo toma solo la potencia que necesita. Igual, para decirte “sin problema” de forma segura falta confirmar que tu modelo sí soporte carga por USB-C; si me dices el modelo exacto, te lo verifico.",
+          "memory": [],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": null,
+          "total": null,
+          "available": null
+        },
+        {
+          "turn": 3,
+          "customer": "por ahora solo consulto",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nDe una, entonces queda como consulta. En general, 100W puede funcionar mejor que 65W si tu Lenovo acepta carga por USB-C, porque le sobra potencia y el equipo regula lo que toma; pero la compatibilidad depende del modelo exacto de la laptop, no solo del wattaje del cargador.",
+          "memory": [],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": null,
+          "total": null,
+          "available": null
+        }
+      ]
+    },
+    {
+      "id": "A10",
+      "label": "USB-C mixed availability",
+      "completed": true,
+      "trace": [
+        {
+          "turn": 1,
+          "customer": "quiero 3 cargadores usb c de 65w y 2 de 100w",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nPara esos USB-C, el de 65W sí aparece como disponible; el de 100W figura no disponible. Si tu idea es cubrir laptops más demandantes, te conviene revisar primero el de 100W porque para varios equipos queda más holgado, pero ahorita no te lo puedo confirmar para entrega.",
+          "memory": [],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": null,
+          "total": null,
+          "available": null
+        },
+        {
+          "turn": 2,
+          "customer": "en serio hay para los 5?",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nLa disponibilidad de ese modelo está por confirmar. Por ahora no puedo asegurarte stock para entrega.",
+          "memory": [],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": "unverified_availability",
+          "total": null,
+          "available": null
+        },
+        {
+          "turn": 3,
+          "customer": "total cuanto sale?",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nNo dispongo de un precio vigente verificado para ese modelo. Prefiero no darte una cifra que pueda ser incorrecta.",
+          "memory": [],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": "unverified_price",
+          "total": null,
+          "available": null
+        }
+      ]
+    },
+    {
+      "id": "A11",
+      "label": "Galaxy Tab A9 variants",
+      "completed": true,
+      "trace": [
+        {
+          "turn": 1,
+          "customer": "oe quiero comparar samsung tab a9 y la tab a9 plus",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nEntre esas dos, la Tab A9 Plus te conviene más si quieres una pantalla más grande y una experiencia más cómoda para videos, clases o multitarea. La Tab A9 es la opción más compacta y sencilla para uso básico y llevarla fácil; si me dices si la quieres para estudio, trabajo o entretenimiento, te digo cuál te calza mejor.",
+          "memory": [],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": null,
+          "total": null,
+          "available": null
+        },
+        {
+          "turn": 2,
+          "customer": "el segundo tiene mas memoria?",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nSí, el segundo tiene más almacenamiento: la Tab A9 Plus viene con 128 GB, mientras la Tab A9 trae 64 GB. Para guardar más apps, fotos y archivos, te conviene la Plus.",
+          "memory": [],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": null,
+          "total": null,
+          "available": null
+        },
+        {
+          "turn": 3,
+          "customer": "no agregues nada, estoy comparando",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nSí, la Tab A9 Plus tiene más memoria: 128 GB vs 64 GB.",
+          "memory": [],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": null,
+          "total": null,
+          "available": null
+        }
+      ]
+    },
+    {
+      "id": "A12",
+      "label": "Tablet order and correction",
+      "completed": true,
+      "trace": [
+        {
+          "turn": 1,
+          "customer": "dame 2 samsung tab a9 plus de 128gb",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nTe puedo orientar con la Galaxy Tab A9 Plus 128 GB que sí aparece en la búsqueda, pero en este momento figura como no disponible. Como referencia, el único dato de catálogo que tengo es esa variante de 128 GB; si buscas 2 unidades para uso empresarial o familiar, conviene confirmar disponibilidad antes de avanzar.",
+          "memory": [],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": null,
+          "total": null,
+          "available": null
+        },
+        {
+          "turn": 2,
+          "customer": "noo mejor una sola",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nPerfecto, entonces sería 1 unidad de la Samsung Galaxy Tab A9 Plus 128 GB. Ojo que la referencia que tengo figura con disponibilidad para prueba, así que el siguiente paso real sería verificar si se puede registrar tu pedido con esa variante.",
+          "memory": [],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": null,
+          "total": null,
+          "available": null
+        },
+        {
+          "turn": 3,
+          "customer": "ya decidido la compro, qué sigue?",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nSimulación: Entiendo que quieres comprar: Samsung Galaxy Tab A9 Plus 128 GB tablet (prueba). Todavía no puedo crear un pedido ni un enlace de pago desde este chat. Antes hay que confirmar precio, disponibilidad y condiciones vigentes con STECH.",
+          "memory": [],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": "purchase_not_ready",
+          "total": null,
+          "available": null
+        }
+      ]
+    },
+    {
+      "id": "A13",
+      "label": "Routers AX23 vs AX55",
+      "completed": true,
+      "trace": [
+        {
+          "turn": 1,
+          "customer": "entre TP Link archer ax23 y ax55 cual conviene para mi casa?",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nPara una casa, el AX23 conviene si buscas algo sólido para uso normal: navegas, streaming y varios equipos sin complicarte. El AX55 te conviene más si tu casa tiene más dispositivos conectados al mismo tiempo o quieres un margen mejor para videollamadas, juegos y uso más pesado. Si tu internet es de hasta 300–500 Mbps y el área no es muy grande, el AX23 ya te rinde bien; si quieres más holgura, el AX55 es la mejor apuesta.",
+          "memory": [],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": null,
+          "total": null,
+          "available": null
+        },
+        {
+          "turn": 2,
+          "customer": "y precios de prueba de los dos?",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\n🧪 PRECIO SIMULADO DE PRUEBA: no veo coincidencias verificadas para TP-Link Archer AX23 ni AX55 en el material cargado, así que no te puedo dar un precio de prueba confiable de esos dos sin inventar. Si quieres, te digo cuál te conviene según cuántos ambientes y equipos tienes en casa.",
+          "memory": [],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": null,
+          "total": null,
+          "available": null
+        },
+        {
+          "turn": 3,
+          "customer": "gracias lo veo despues",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nPerfecto, cuando lo veas me escribes y lo revisamos sin problema.",
+          "memory": [],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": null,
+          "total": null,
+          "available": null
+        }
+      ]
+    },
+    {
+      "id": "A14",
+      "label": "Two routers, remove first",
+      "completed": true,
+      "trace": [
+        {
+          "turn": 1,
+          "customer": "quiero 2 router archer ax23 y 1 archer ax55",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nPerfecto, tomo como interés 2 Archer AX23 y 1 Archer AX55. Ojo que no tengo ficha verificada ni precio confirmado de esos modelos en este momento, así que prefiero no inventarte datos; si me confirmas si los quieres para casa o negocio, te oriento cuál te conviene más según cobertura y cantidad de equipos.",
+          "memory": [
+            {
+              "partnumber": "QA-TPL-AX23",
+              "quantity": 1
+            },
+            {
+              "partnumber": "QA-TPL-AX55",
+              "quantity": 1
+            }
+          ],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": null,
+          "total": 588,
+          "available": true
+        },
+        {
+          "turn": 2,
+          "customer": "quita el ax23, deja solo el ax55",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nListo, queda solo 1 Archer AX55. Ojo que no tengo ficha verificada ni cotización confirmada de ese modelo en este momento, así que no te doy datos inventados; si quieres, me dices para qué ambiente lo usarás y te indico si te conviene ese AX55 o uno más adecuado.",
+          "memory": [
+            {
+              "partnumber": "QA-TPL-AX23",
+              "quantity": 1
+            },
+            {
+              "partnumber": "QA-TPL-AX55",
+              "quantity": 1
+            }
+          ],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": null,
+          "total": 588,
+          "available": true
+        },
+        {
+          "turn": 3,
+          "customer": "cuanto cuesta el que quedó?",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nNo dispongo de un precio vigente verificado para ese modelo. Prefiero no darte una cifra que pueda ser incorrecta.",
+          "memory": [
+            {
+              "partnumber": "QA-TPL-AX23",
+              "quantity": 1
+            },
+            {
+              "partnumber": "QA-TPL-AX55",
+              "quantity": 1
+            }
+          ],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": "unverified_price",
+          "total": 588,
+          "available": true
+        }
+      ]
+    },
+    {
+      "id": "A15",
+      "label": "Laptop plus LG monitors",
+      "completed": true,
+      "trace": [
+        {
+          "turn": 1,
+          "customer": "quiero una lenovo thinkpad t14 16 gb y dos monitores lg 27mr400",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nPerfecto, la ThinkPad T14 de 16 GB sí la tengo identificada como opción para oficina y trabajo fluido, y además te puedo apoyar con los 2 monitores LG 27MR400. Solo ojo: esa referencia de monitor no aparece con ficha validada aquí, así que conviene confirmar el modelo exacto antes de cerrar la selección.",
+          "memory": [],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": null,
+          "total": null,
+          "available": null
+        },
+        {
+          "turn": 2,
+          "customer": "mejor 3 monitores lg, la laptop igual",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nListo, entonces quedaría 1 Lenovo ThinkPad T14 de 16 GB y 3 monitores LG tipo 27MR400. Solo te aclaro que la referencia del monitor que tengo en sistema es ambigua y no está con ficha verificada, así que para no confundirte conviene confirmar si es exactamente ese modelo o una variante cercana.",
+          "memory": [],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": null,
+          "total": null,
+          "available": null
+        },
+        {
+          "turn": 3,
+          "customer": "cuanto sale todo?",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nNo dispongo de un precio vigente verificado para ese modelo. Prefiero no darte una cifra que pueda ser incorrecta.",
+          "memory": [],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": "unverified_price",
+          "total": null,
+          "available": null
+        }
+      ]
+    },
+    {
+      "id": "A16",
+      "label": "Printer + headset",
+      "completed": true,
+      "trace": [
+        {
+          "turn": 1,
+          "customer": "quiero 2 epson l1250 y 1 logitech h390",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nPerfecto, te ayudo con eso. De lo que tengo para ubicar ahora, la Epson L1250 aparece como referencia no validada en ficha y el Logitech H390 sí figura como audífono USB; para avanzar con ambos, conviene revisar primero la L1250 para no darte algo incorrecto.",
+          "memory": [
+            {
+              "partnumber": "QA-EPS-L1250",
+              "quantity": 1
+            },
+            {
+              "partnumber": "QA-LOG-H390",
+              "quantity": 1
+            }
+          ],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": null,
+          "total": 958,
+          "available": true
+        },
+        {
+          "turn": 2,
+          "customer": "y si agrego uno más de logitech h390?",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nSi agregas uno más, quedarían 2 Logitech H390 en total. Para la Epson L1250 sigo tomando la referencia que mencionaste, pero ese modelo no está con ficha verificada en lo que veo; no te quiero inventar compatibilidad ni existencia exacta.",
+          "memory": [
+            {
+              "partnumber": "QA-EPS-L1250",
+              "quantity": 1
+            },
+            {
+              "partnumber": "QA-LOG-H390",
+              "quantity": 1
+            }
+          ],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": null,
+          "total": 958,
+          "available": true
+        },
+        {
+          "turn": 3,
+          "customer": "total de todo por favor",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nTengo presente tu consulta y sus requisitos. Sin precios verificados no puedo asegurar importes ni que los equipos entren en el presupuesto.",
+          "memory": [
+            {
+              "partnumber": "QA-EPS-L1250",
+              "quantity": 1
+            },
+            {
+              "partnumber": "QA-LOG-H390",
+              "quantity": 1
+            }
+          ],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": "unverified_price",
+          "total": 958,
+          "available": true
+        }
+      ]
+    },
+    {
+      "id": "A17",
+      "label": "Armor 22 plus power adapter",
+      "completed": true,
+      "trace": [
+        {
+          "turn": 1,
+          "customer": "quiero un armor 22 y cargador usb c 65w",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nPerfecto. El Armor 22 tiene 256 GB y batería de 6600 mAh; el cargador USB-C 65W te sirve para carga rápida, pero para asegurar compatibilidad exacta con tu equipo lo clave es revisar si tu equipo soporta Power Delivery por USB-C. Si me dices eso, te confirmo mejor qué tan bien te va a cargar.",
+          "memory": [
+            {
+              "partnumber": "ARMOR-22-256G",
+              "quantity": 1
+            }
+          ],
+          "focus": "ARMOR-22-256G",
+          "ambiguous": false,
+          "guardReason": null,
+          "total": 999,
+          "available": true
+        },
+        {
+          "turn": 2,
+          "customer": "le sirve ese cargador al armor 22?",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nPara el Armor 22 no te lo puedo confirmar solo con esa información, porque no tengo verificación de compatibilidad del cargador con ese modelo. Si lo que buscas es cargar por USB-C, el dato decisivo es si el equipo acepta Power Delivery; con eso sí te digo si calza bien.",
+          "memory": [
+            {
+              "partnumber": "ARMOR-22-256G",
+              "quantity": 1
+            }
+          ],
+          "focus": "ARMOR-22-256G",
+          "ambiguous": false,
+          "guardReason": null,
+          "total": 999,
+          "available": true
+        },
+        {
+          "turn": 3,
+          "customer": "no confirmes compra hasta ver compatibilidad",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nEntendido, primero vemos compatibilidad y recién luego avanzamos. Para decirte si ese cargador USB-C 65W le va bien al Armor 22, solo me falta confirmar si el equipo carga por USB-C con Power Delivery; con eso ya te doy una respuesta más precisa.",
+          "memory": [
+            {
+              "partnumber": "ARMOR-22-256G",
+              "quantity": 1
+            }
+          ],
+          "focus": "ARMOR-22-256G",
+          "ambiguous": false,
+          "guardReason": null,
+          "total": 999,
+          "available": true
+        }
+      ]
+    },
+    {
+      "id": "A18",
+      "label": "X13 vs A9 comparison not purchase",
+      "completed": true,
+      "trace": [
+        {
+          "turn": 1,
+          "customer": "mejor para fotos, armor x13 o samsung tab a9?",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nPara fotos, el Armor X13 te conviene más: trae cámara principal de 50 MP y una cámara de visión nocturna, así que está más orientado a capturar imagen en distintas condiciones. La Tab A9 no está pensada principalmente para fotografía; rinde más como tablet para consumo y tareas. Si tu prioridad es sacar fotos, yo iría por el Ulefone.",
+          "memory": [],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": null,
+          "total": null,
+          "available": null
+        },
+        {
+          "turn": 2,
+          "customer": "la tableta sirve para llamar?",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nSí, puede servir para llamadas si tiene la app y conexión a internet; para llamadas normales por chip solo sería si el modelo trae función celular/SIM. En el caso de la Tab A9, con lo que tenemos no puedo confirmar esa compatibilidad exacta, así que conviene revisar la variante precisa antes de asumirlo.",
+          "memory": [],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": null,
+          "total": null,
+          "available": null
+        },
+        {
+          "turn": 3,
+          "customer": "solo compara, no quiero comprar por ahora",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nEntendido, solo comparo. Si tu foco es fotos, el Armor X13 va mejor porque sí tiene cámara principal de 50 MP y cámara de visión nocturna; la Tab A9 es más para uso general, contenido y estudio, no como equipo fotográfico. Para llamadas, la tablet puede servir por apps si está conectada a internet, pero no puedo asegurar que esa variante tenga chip/SIM sin verificar el modelo exacto.",
+          "memory": [],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": null,
+          "total": null,
+          "available": null
+        }
+      ]
+    },
+    {
+      "id": "A19",
+      "label": "Three-category provisional basket",
+      "completed": true,
+      "trace": [
+        {
+          "turn": 1,
+          "customer": "necesito una laptop t14 de 32gb, 2 logitech h570e y un router ax55",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nPuedo ayudarte con la T14 de 32 GB y los 2 H570e; esos sí los tengo identificados. Del router AX55 no me aparece una ficha validada en el catálogo, así que prefiero no inventarte el modelo exacto. Si quieres, te separo la info de los productos confirmados y revisamos ese router por nombre completo.",
+          "memory": [
+            {
+              "partnumber": "QA-LOG-H570E",
+              "quantity": 2
+            },
+            {
+              "partnumber": "QA-TPL-AX55",
+              "quantity": 1
+            }
+          ],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": null,
+          "total": 997,
+          "available": true
+        },
+        {
+          "turn": 2,
+          "customer": "mejor 3 audifonos h570e, los otros igual",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nSimulación: queda anotado el interés por 2 × Logitech H570e Stereo USB audífonos Teams (prueba); 1 × TP-Link Archer AX55 router Wi-Fi 6 (prueba). No es pedido ni reserva.",
+          "memory": [
+            {
+              "partnumber": "QA-LOG-H570E",
+              "quantity": 2
+            },
+            {
+              "partnumber": "QA-TPL-AX55",
+              "quantity": 1
+            }
+          ],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": "demo_draft_revision",
+          "total": 997,
+          "available": true
+        },
+        {
+          "turn": 3,
+          "customer": "y total yape aceptan?",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nSobre Yape no tengo la política de pagos verificada para confirmártelo, así que prefiero no asegurarlo. Si me dices si necesitas boleta o factura, te orientó con lo que sí puedo revisar del pedido.",
+          "memory": [
+            {
+              "partnumber": "QA-LOG-H570E",
+              "quantity": 2
+            },
+            {
+              "partnumber": "QA-TPL-AX55",
+              "quantity": 1
+            }
+          ],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": null,
+          "total": 997,
+          "available": true
+        }
+      ]
+    },
+    {
+      "id": "A20",
+      "label": "Cross-category reversal and human",
+      "completed": true,
+      "trace": [
+        {
+          "turn": 1,
+          "customer": "hola tengo dudas de impresoras y monitores, que venden?",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nHola, sí manejamos impresoras y monitores. En impresoras hay opciones de tanque de tinta para oficina o casa, y en monitores hay tamaños para trabajo diario, diseño o uso más básico. Si me dices qué uso le vas a dar, te oriento con la opción que más te conviene.",
+          "memory": [],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": null,
+          "total": null,
+          "available": null
+        },
+        {
+          "turn": 2,
+          "customer": "mejor necesito un asesor humano",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nEntiendo que prefieres hablar con una persona. Desde este chat aún no hay una derivación o un asesor asignado que pueda confirmar.",
+          "memory": [],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": "human_requested",
+          "total": null,
+          "available": null
+        },
+        {
+          "turn": 3,
+          "customer": "ya me asignaron alguien?",
+          "reply": "🧪 *PRUEBA STECH* (precios y disponibilidad simulados)\n\nEntiendo que prefieres hablar con una persona. Desde este chat aún no hay una derivación o un asesor asignado que pueda confirmar.",
+          "memory": [],
+          "focus": null,
+          "ambiguous": false,
+          "guardReason": "human_requested",
+          "total": null,
+          "available": null
+        }
+      ]
+    }
+  ]
+}
